@@ -1,0 +1,13 @@
+{
+  "name": "spec-to-quality",
+  "owner": {
+    "name": "class83108"
+  },
+  "plugins": [
+    {
+      "name": "spec-to-quality",
+      "source": "./plugins/spec-to-quality",
+      "description": "Opinionated Python TDD workflow — from spec coverage analysis to quality-gated code, minimizing information loss between requirements and implementation."
+    }
+  ]
+}
