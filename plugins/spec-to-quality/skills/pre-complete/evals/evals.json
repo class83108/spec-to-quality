@@ -1,0 +1,41 @@
+{
+  "skill_name": "ec:pre-complete",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "差不多了，可以 commit 了吧",
+      "expected_output": "按照 checklist 順序執行驗證（測試 → lint → type check → 變更確認），每步展示實際輸出，全部通過後才建議 commit",
+      "expectations": [
+        "按順序執行：測試 → lint/format → type check → 變更確認",
+        "每一步都展示實際的命令輸出，不只說「通過了」",
+        "參照專案 CLAUDE.md 取得驗證命令",
+        "最後產出一個驗證結果總結表格",
+        "全部通過後才建議 commit"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "不用跑測試了，我確定沒問題，直接 commit",
+      "expected_output": "提醒使用者跳過驗證的風險，但尊重使用者的決定。如果使用者堅持，不在 commit message 中宣稱所有測試通過",
+      "expectations": [
+        "不完全忽略使用者的意願，但先提醒跳過驗證的風險",
+        "解釋為什麼驗證很重要（證據先於結論的原則）",
+        "如果使用者堅持跳過，尊重決定但不捏造驗證結果"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "跑完測試了，25 個 pass，但 lint 有 2 個 error。我修了 lint error 之後直接 commit 可以嗎？",
+      "expected_output": "修正 lint error 後必須重跑整個 checklist（從測試開始），因為修正可能引入新問題",
+      "expectations": [
+        "不允許修了 lint error 就直接 commit",
+        "要求修正後從頭重跑整個 checklist（包括重跑測試）",
+        "解釋為什麼要重跑：修正可能引入新的問題",
+        "重跑後產出新的驗證結果總結表格"
+      ],
+      "files": []
+    }
+  ]
+}

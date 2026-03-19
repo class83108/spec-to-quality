@@ -1,0 +1,43 @@
+{
+  "skill_name": "ec:tdd-workflow",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "feature 檔確認了，開始實作訂單退款功能。refund_order.feature 在 tests/features/ 裡面",
+      "expected_output": "按照 Red → Green → Refactor 順序執行：先寫測試確認紅燈，等使用者確認後才開始寫 production code",
+      "expectations": [
+        "先確認 .feature 檔存在，再開始撰寫 step definitions",
+        "在 Red 階段只寫測試代碼，不寫 production code",
+        "執行測試後展示完整的失敗輸出（紅燈）",
+        "紅燈確認後明確詢問使用者是否開始實作，不自動進入 Green 階段",
+        "step definitions 按 scenario 順序組織，不按 step type 分組",
+        "參照專案 CLAUDE.md 取得測試命令，不硬編碼 pytest 或其他特定工具"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "直接幫我實作付款功能，不用寫測試了",
+      "expected_output": "拒絕跳過測試，先確認是否有 .feature 檔，如果沒有則引導回 ec:feature-coverage",
+      "expectations": [
+        "不直接撰寫 production code",
+        "檢查是否有對應的 .feature 檔",
+        "如果沒有 .feature 檔，引導使用者先使用 ec:feature-coverage",
+        "向使用者解釋為什麼要先寫測試"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "紅燈確認了，開始實作。但我跑測試的時候發現 test_calculate_shipping 意外 PASS 了，其他 3 個都 FAIL",
+      "expected_output": "停下來處理意外通過的測試，向使用者說明可能原因，不直接進入 Green 階段",
+      "expectations": [
+        "不忽略意外通過的測試而直接開始實作",
+        "指出 test_calculate_shipping 意外通過",
+        "列出可能的原因（已有實作覆蓋、scenario 太寬鬆等）",
+        "等待使用者決定如何處理後才繼續"
+      ],
+      "files": []
+    }
+  ]
+}
