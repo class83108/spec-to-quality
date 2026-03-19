@@ -32,6 +32,8 @@ description: >
 | 5 | **State mutation** — DB/檔案寫入正確性、冪等性、re-run 清理 | | | |
 | 6 | **Output contract** — 回傳格式符合 schema、欄位完整性 | | | |
 
+完成分析表後，**接著做 Step 3 交叉比對**，不要跳過。
+
 ### Step 3: 與既有 feature 交叉比對
 
 如果專案中有結構類似的 .feature 檔（例如同一層級的其他模組），列出：
@@ -48,6 +50,8 @@ description: >
 3. 與既有 feature 的差異是否可接受？
 
 **在使用者明確確認前，不得開始撰寫 .feature 檔。**
+
+回應的最後一句必須明確說：「確認後，我會使用 `ec:gherkin` 開始撰寫 .feature 檔。」
 
 ### Step 5: 進入 Gherkin 撰寫
 
@@ -72,9 +76,12 @@ description: >
 
 ### Example 2: 使用者跳過分析直接要求寫 feature
 
-使用者說：「直接幫我寫 .feature 檔」
+使用者說：「直接幫我寫 .feature 檔，不用分析了」
 
-正確行為：不要直接寫。告訴使用者「需要先做覆蓋率分析，確認要覆蓋哪些類別的 scenario」，然後開始 Step 1。
+正確行為：提醒使用者覆蓋率分析的價值，然後讓使用者決定：
+
+1. 使用者堅持跳過 → 尊重決定，直接交給 `ec:gherkin` 撰寫 .feature
+2. 使用者接受建議 → 開始 Step 1，走完整流程
 
 ### Example 3: 某些類別明顯不適用
 
