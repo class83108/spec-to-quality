@@ -4,14 +4,14 @@
 
 ## 為什麼做這個
 
-用 AI 工具開發的時候，我發現每一段交接都在丟東西：
+使用 claude code 進行開發時，我常常會遇到一些問題：
 
-- 從 spec 到 .feature 檔，AI 會漏掉 edge case 跟 error handling
+- 從 spec 到 .feature 檔，AI 生成的 edge case 跟 error handling 可能每次都不太一樣，很容易只把重點放在我強調的部分
 - 從 .feature 到測試，step definitions 常常沒有完整對應 scenario
 - 測試通過了，但 code 的設計很糟——職責混在一起、依賴方向亂跑
 - 說「完成了」，但其實沒跑過 lint 或 type check
 
-這些問題單獨看都有工具可以解：OpenSpec 可以管 spec、pytest-bdd 可以綁 feature 跟測試。但問題是**沒有東西能讓這整段流程每次都穩定跑完**。沒人盯的時候，步驟就會被跳過，品質就開始飄。
+這些問題單獨看都有工具可以解：OpenSpec 可以管 spec、pytest-bdd 可以綁 feature 跟測試。但問題是**沒有東西能讓這整段流程每次都穩定跑完**。有時候 auto edit 開下去蠻多在 claude.md 說好的內容還是蠻容易被忽略的
 
 所以我把這套流程包成 6 個 Claude Code skills，用前置條件串起來，強制按順序走：
 
@@ -24,7 +24,7 @@ flowchart LR
     F[ec:debugging] -.-> |任何階段| A & B & C & D & E
 ```
 
-這不是那種裝了就能全自動開發的東西。它比較像是一套有主見的開發流程，讓 AI 在幫你寫 code 的時候不要亂跳步驟、不要漏東西。
+不過要聲明一下這不適合做全自動化開發，這是一套按照我開發流程習慣所生的產物，目的是希望在我的每次開發時都能夠有相對平穩的輸出。
 
 ## Skills 在幹嘛
 
@@ -39,15 +39,15 @@ flowchart LR
 
 ## 適合什麼情境
 
-- Python 後端，有用 pytest-bdd
-- 想讓 TDD 流程穩定下來、不要每次都不一樣
-- 希望不只是「測試通過就好」，還要有一定的設計品質
+- Python 後端，有用 pytest-bdd，並且有使用 ruff, pyright 等 CI 常見工具
+- 想讓 TDD 流程穩定下來，不要每次都不一樣
+- 同時讓 TDD 意義最大化，有測試的保護下，可以審視剛剛的設計看需不需要重構
 
 ## 不適合什麼
 
 - 前端開發
 - 寫個小 script、改 config、快速原型
-- 沒在用 pytest 或 Gherkin 的專案
+- 沒在用 pytest 或 Gherkin 的專案，如果都完全沒接觸過應該會非常痛苦
 
 ## 安裝
 
@@ -67,7 +67,7 @@ flowchart LR
 
 ### 建議的工具組合
 
-這套 skills 是圍繞這些工具設計的（但沒有硬綁定，你可以換）：
+這套 skills 是圍繞這些工具設計的：
 
 - **OpenSpec** — 需求與變更管理（skills 會讀 spec 內容來輔助覆蓋率分析）
 - **uv** — 套件管理
@@ -76,7 +76,18 @@ flowchart LR
 - **pyright** — 型別檢查
 
 參考 [templates/pyproject.toml.snippet](templates/pyproject.toml.snippet) 看建議設定。
+**如果未來哪個步驟出現更適合我的新工具，那這個 skill 也會跟著進行更新**
 
 ## 選用整合
 
 - **Feature Scenario 具體化對應表**：可以在專案 CLAUDE.md 加一個表，把 6 類通用 scenario 類別對應到你專案的概念（例如「Error paths → Celery task timeout」）
+
+## 關於迭代
+
+這套 skills 目前跑過幾輪 eval（用 `claude -p` 對比 with/without skill 的輸出差異），確認基本行為符合預期，也根據 eval 結果修了一些 SKILL.md 的寫法。但還沒有在大量真實 session 中長期驗證過。
+
+老實說，這本來就是我個人開發流程的產物 — 相當於「如果我手動開發的話，我大概會怎麼想、怎麼檢查」的自動化版本。所以：
+
+- **一定有定義更好的工具**。專門做 code review 的、專門驗證 Gherkin 寫法的、專門做 mutation testing 的，這些在各自領域都比我這邊做得更深入
+- **這套的重點是流程串接**。不是每一步都做到最好，而是確保從 spec → .feature → test → code → review → 完成這條路每次都穩定走完，不跳步驟、不漏東西
+- **會持續迭代**。只要我在日常開發中發現哪裡用得不順手，或是軟體開發的工具鏈有什麼新進展，skill 就會跟著更新。eval workspace 也一起放在 repo 裡，方便追蹤每次改動的前後對比
