@@ -15,10 +15,13 @@
 
 所以我把這套流程包成 6 個 Claude Code skills，用前置條件串起來，強制按順序走：
 
-```
-feature-coverage → gherkin → tdd-workflow → design-review → pre-complete
-                                                  ↑
-                                            debugging（隨時）
+```mermaid
+flowchart LR
+    A[ec:feature-coverage] --> B[ec:gherkin]
+    B --> C[ec:tdd-workflow]
+    C --> D[ec:design-review]
+    D --> E[ec:pre-complete]
+    F[ec:debugging] -.-> |任何階段| A & B & C & D & E
 ```
 
 這不是那種裝了就能全自動開發的東西。它比較像是一套有主見的開發流程，讓 AI 在幫你寫 code 的時候不要亂跳步驟、不要漏東西。
@@ -27,12 +30,12 @@ feature-coverage → gherkin → tdd-workflow → design-review → pre-complete
 
 | Skill | 做什麼 |
 |-------|--------|
-| **feature-coverage** | 寫 .feature 之前，強制對 6 類 scenario 逐一分析，避免漏掉情境 |
-| **gherkin** | 照著覆蓋率分析的結果寫 .feature，遵循 Feature / Rule / Scenario 結構 |
-| **tdd-workflow** | 嚴格的 Red → Green → Refactor，紅燈沒確認不能開始寫 code |
-| **design-review** | 綠燈之後的設計審查，用提問方式引導思考，不是直接叫你改 |
-| **debugging** | 遇到 bug 先收集證據、建假說、驗證，不准猜著改 |
-| **pre-complete** | 要說「完成」之前，跑完測試 + lint + type check，拿到實際輸出才算數 |
+| **ec:feature-coverage** | 寫 .feature 之前，強制對 6 類 scenario 逐一分析，避免漏掉情境 |
+| **ec:gherkin** | 照著覆蓋率分析的結果寫 .feature，遵循 Feature / Rule / Scenario 結構 |
+| **ec:tdd-workflow** | 嚴格的 Red → Green → Refactor，紅燈沒確認不能開始寫 code |
+| **ec:design-review** | 綠燈之後的設計審查，用提問方式引導思考，不是直接叫你改 |
+| **ec:debugging** | 遇到 bug 先收集證據、建假說、驗證，不准猜著改 |
+| **ec:pre-complete** | 要說「完成」之前，跑完測試 + lint + type check，拿到實際輸出才算數 |
 
 ## 適合什麼情境
 
