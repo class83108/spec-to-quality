@@ -1,7 +1,7 @@
 ---
 name: ec:gherkin
 description: >
-  產生符合最佳實踐的 Gherkin .feature 功能規格文件。使用繁體中文撰寫，遵循 Feature / Rule / Scenario 結構。
+  產生符合最佳實踐的 Gherkin .feature 功能規格文件。關鍵字使用英文（Feature/Scenario/Given/When/Then），內容描述使用繁體中文，遵循 Feature / Rule / Scenario 結構。
   當使用者提到要建立功能規格、撰寫 .feature 檔、定義驗收條件、描述使用情境、或想用 Gherkin 語法記錄需求時，
   都應觸發此 skill。即使使用者只是說「幫我寫規格」、「整理這個功能的情境」、「定義 acceptance criteria」，
   也應使用此 skill。
@@ -56,6 +56,28 @@ Feature: 功能名稱
 - 是否漏掉了重要情境？
 - Rule 的分組是否合理？
 - Scenario 的粒度是否適當？
+
+## 語言規範
+
+- **Gherkin 關鍵字一律使用英文**：`Feature`、`Rule`、`Scenario`、`Given`、`When`、`Then`、`And`、`But`、`Background`、`Scenario Outline`、`Examples`
+- **內容描述使用繁體中文**：Feature 名稱、Scenario 名稱、步驟描述、Rule 描述等
+- 不要使用中文關鍵字（如「功能」、「場景」、「假設」、「當」、「那麼」）— pytest-bdd 不支援，且降低工具相容性
+
+```gherkin
+# 正確
+Feature: 密碼重設
+  Scenario: 發送重設密碼信件
+    Given 系統中存在一個已註冊的使用者
+    When 使用者輸入註冊的 email 並請求重設密碼
+    Then 系統應寄送一封包含重設連結的 email
+
+# 錯誤 — 關鍵字不可用中文
+功能: 密碼重設
+  場景: 發送重設密碼信件
+    假設 系統中存在一個已註冊的使用者
+    當 使用者輸入註冊的 email 並請求重設密碼
+    那麼 系統應寄送一封包含重設連結的 email
+```
 
 ## 撰寫原則
 

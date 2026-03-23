@@ -23,6 +23,52 @@ description: >
 
 ## 流程
 
+### Phase 0: Verification Ledger（Mock 邊界審查）
+
+在寫任何測試之前，先對照 spec 的 SHALL 語句，規劃每個 SHALL 的驗證歸屬。
+
+#### Step 1: 列出 SHALL 清單
+
+從 OpenSpec 的 spec.md 中提取所有 SHALL / MUST 語句。如果沒有 OpenSpec，從 .feature 的 Then 步驟反推應驗證的行為。
+
+#### Step 2: 規劃 Mock 邊界
+
+對每個 SHALL，判斷：
+
+1. **可以 unit test 直接驗證？** → 標記為 unit test，規劃 mock 邊界
+2. **需要外部服務才能驗證？** → 分級處理：
+   - 等級 1（可本地跑）：testcontainers / in-memory 替代 → unit test
+   - 等級 2（不可本地跑，output 可預測）：寫 Fake（非 MagicMock）回傳固定 response → unit test + 標記
+   - 等級 3（不可本地跑，行為不可預測）：標記為「需要整合測試」
+
+#### Step 3: Mock 邊界檢查（Checkpoint A + B）
+
+對每個計畫中的 mock：
+- **Checkpoint A**：這個 mock 遮掉的是「外部服務的行為」還是「自己的邏輯」？如果是自己的邏輯 → 調整 mock 邊界，mock 應該在外部依賴的最外層切
+- **Checkpoint B**：跨元件的資料流（A 產出 → B 消費），A 的 output 形狀 = B 期望的 input 形狀？有驗證嗎？
+- 如果使用 `MagicMock`，必須加 `spec=` 參數限制介面；否則優先使用自定義 Fake
+
+#### Step 4: 產出 Verification Ledger
+
+在 spec 旁邊（或 openspec 對應的 spec 目錄下）建立 `verification.md`：
+
+```markdown
+# Verification Ledger — [功能名稱]
+
+## Unit Test 覆蓋
+- SHALL xxx → ✅ mock 邊界：mock [外部依賴]，驗證 [自己的邏輯]
+
+## 需要整合測試
+- SHALL xxx
+  - 原因：[為什麼 unit test 無法驗證]
+  - 最低驗證方式：[具體可執行的驗證方法]
+
+## 明確不測（附理由）
+- SHALL xxx — [原因，例如 scope out 或 v1 不做]
+```
+
+**展示 ledger 給使用者確認後，才進入 Phase 1。**
+
 ### Phase 1: Red（寫測試，確認失敗）
 
 1. **建立測試檔**：在專案的測試目錄下建立對應的測試檔
@@ -69,11 +115,12 @@ description: >
 使用者說：「feature 檔確認了，開始實作使用者註冊」
 
 1. 確認 `user_registration.feature` 存在
-2. 建立 `test_user_registration.py`，撰寫 step definitions
-3. 跑測試 → 全部 FAIL → 展示紅燈輸出 → 「紅燈確認，要開始實作嗎？」
-4. 使用者確認 → 逐 scenario 實作，每完成一個跑一次測試
-5. 全部 PASS → 展示綠燈 → 跑 lint + type check → 修正問題 → 重跑測試確認綠
-6. 提醒可以做 ec:design-review
+2. **Verification Ledger**：從 spec 提取 6 個 SHALL，規劃 mock 邊界 → 5 個 unit test 直接驗證，1 個（email 實際寄送）標記需要整合測試 → 展示 ledger 給使用者確認
+3. 建立 `test_user_registration.py`，依照 ledger 的 mock 邊界撰寫 step definitions
+4. 跑測試 → 全部 FAIL → 展示紅燈輸出 → 「紅燈確認，要開始實作嗎？」
+5. 使用者確認 → 逐 scenario 實作，每完成一個跑一次測試
+6. 全部 PASS → 展示綠燈 → 跑 lint + type check → 修正問題 → 重跑測試確認綠
+7. 提醒可以做 ec:design-review
 
 ### Example 2: 紅燈階段有測試意外通過
 

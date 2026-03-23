@@ -51,7 +51,7 @@ description: >
 
 **在使用者明確確認前，不得開始撰寫 .feature 檔。**
 
-回應的最後一句必須明確說：「確認後，我會使用 `ec:gherkin` 開始撰寫 .feature 檔。」
+回應的最後一句必須明確說：「確認後，我會使用 `ec:gherkin` 開始撰寫 .feature 檔。撰寫完成後會進入 Verification Ledger（Mock 邊界審查）再開始寫測試。」
 
 ### Step 5: 進入 Gherkin 撰寫
 
