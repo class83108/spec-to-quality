@@ -1,0 +1,32 @@
+{
+  "eval": "eval-4-integration-test-timing",
+  "variant": "without_skill",
+  "assertions": {
+    "A1_standard_checklist": {
+      "pass": false,
+      "note": "沒有按照標準 checklist 順序執行（測試 → lint → type check → 變更確認），只提到環境問題"
+    },
+    "A2_delta_spec_sync": {
+      "pass": false,
+      "note": "沒有提醒 delta spec 需要同步到主規格"
+    },
+    "A3_read_verification_ledger": {
+      "pass": true,
+      "note": "有讀取 verification.md 並辨識出 2 個等級 2 項目"
+    },
+    "A4_timing_trigger": {
+      "pass": false,
+      "note": "沒有判斷為「整合測試時機」——只是列出了 verification.md 的內容，沒有因為「最後一個 spec」而主動建議現在補寫整合測試"
+    },
+    "A5_specific_suggestions": {
+      "pass": false,
+      "note": "沒有建議具體的整合測試內容（如 smoke test、contract test）"
+    },
+    "A6_summary_table": {
+      "pass": false,
+      "note": "沒有產出包含 Delta Spec 同步和整合測試缺口欄位的總結表格"
+    }
+  },
+  "score": "1/6",
+  "summary": "Without skill：辨識出 verification.md 的內容（+1），但沒有 delta spec 同步提醒、沒有整合測試時機判斷、沒有具體建議、沒有結構化的 checklist。舊版 CLAUDE.md 只有「完成驗證」一行，沒有 pre-complete 的細節流程。"
+}

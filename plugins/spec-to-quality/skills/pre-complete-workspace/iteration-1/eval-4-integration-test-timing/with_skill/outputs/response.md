@@ -1,45 +1,54 @@
-我注意到這個目錄**不是 git repo**，也**沒有可執行的 Python 專案結構**（沒有 pyproject.toml）。在這種情況下，我無法執行完整的 pre-complete checklist。
+我看到 openspec/specs/ 只有 `translation/spec.md`，但 change 目錄有 `conversation-api/spec.md`。這表示 **conversation-api 的主規格尚未建立**，需要同步。
 
-讓我向你說明目前的狀況：
-
----
-
-## ⚠️ Pre-Complete Verification 無法執行
-
-目前目錄 `/tmp/eval-workspace` 缺少以下必要元件：
-
-| 項目 | 狀態 | 問題 |
-|------|------|------|
-| Git repo | ❌ 缺失 | 無 `.git` 目錄，無法執行 `git diff`/`git status` |
-| pyproject.toml | ❌ 缺失 | 無法執行 `uv run pytest`、`ruff`、`pyright` |
-| Python 原始碼 | ❓ 未知 | 沒有可測試的 code |
+由於這不是一個真實的 git repo（且沒有實際的 Python 程式碼），我無法執行測試、lint、type check。但讓我根據你提供的資訊整理 Pre-Complete Verification 的發現：
 
 ---
 
-## 關於整合測試缺口
+## ⚠️ Pre-Complete Verification 結果
 
-你提到這是 **conversation 模組的最後一個 spec**，而且 verification.md 有 **2 個等級 2 項目**：
-- WebRTC offer/answer 交換
-- GeminiHandler Live API session
-
-根據整合測試時機規則，**這是應該主動建議補寫整合測試的時機**，因為：
-1. ✅ Ledger 中有等級 2 項目
-2. ✅ 這是模組的最後一個 spec
-
-**建議**：在 commit 前，至少補寫以下整合測試之一：
-1. **WebRTC signaling smoke test** — 驗證 offer/answer 能正確交換
-2. **FakeGeminiSession contract test** — 驗證 Live API session 建立的資料流
+| 驗證項目 | 狀態 | 備註 |
+|---------|------|------|
+| 測試 | ⏸️ 無法執行 | 非 git repo / 無 Python code |
+| Lint | ⏸️ 無法執行 | 同上 |
+| Format | ⏸️ 無法執行 | 同上 |
+| Type check | ⏸️ 無法執行 | 同上 |
+| 變更檔案 | ⏸️ 無法檢查 | 非 git repo |
+| OpenSpec tasks | ✅ 全部完成 | 3/3 tasks 已勾選 |
+| **Delta Spec 同步** | ❌ **需要處理** | `conversation-api/spec.md` 未同步到 `openspec/specs/` |
+| **整合測試缺口** | ⚠️ **2 項需處理** | 等級 2，conversation 最後一個 spec |
 
 ---
 
-## 關於 Delta Spec 同步
+## 🚨 需要處理的項目
 
-你提到 openspec 的 change 目錄裡 `specs/` 有修改過的 spec.md。這需要同步到 `openspec/specs/` 主規格。
+### 1. Delta Spec 同步（必須）
+
+change 目錄有 `openspec/changes/2026-03-23-conversation/specs/conversation-api/spec.md`，但主規格目錄 `openspec/specs/` 沒有對應的 `conversation-api/spec.md`。
+
+**需要建立：** `openspec/specs/conversation-api/spec.md`
+
+### 2. 整合測試缺口（這是 conversation 模組的最後一個 spec）
+
+verification.md 有 **2 個等級 2 項目**：
+
+| 項目 | 最低驗證方式 | 狀態 |
+|------|-------------|------|
+| WebRTC offer/answer 交換 | 本地跑 app + 瀏覽器手動測試 | ❓ 未驗證 |
+| GeminiHandler Live API session | staging 環境 smoke test | ❓ 未驗證 |
+
+**既然這是 conversation 模組的最後一個 spec**，建議現在補寫整合測試：
+
+1. **WebRTC signaling contract test** — 驗證 offer/answer exchange 流程
+2. **GeminiHandler smoke test** — staging 環境驗證 Live API session 建立
 
 ---
 
 ## 下一步
 
-請問：
-1. 這個專案的**實際路徑**在哪裡？（我需要切到正確的目錄執行驗證）
-2. 整合測試你想**現在補**還是**先記錄到 issue 追蹤**？
+1. **要現在同步 delta spec 嗎？** 我可以建立 `openspec/specs/conversation-api/spec.md`
+2. **整合測試怎麼處理？**
+   - A) 現在補寫整合測試
+   - B) 先記錄到 issue，之後再補
+   - C) 手動測試過了就 commit（需確認有跑過手動測試）
+
+請告訴我你的決定。

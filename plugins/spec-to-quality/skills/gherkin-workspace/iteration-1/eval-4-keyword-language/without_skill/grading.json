@@ -1,0 +1,28 @@
+{
+  "eval": "eval-4-keyword-language",
+  "variant": "without_skill",
+  "assertions": {
+    "A1_english_keywords": {
+      "pass": true,
+      "note": "關鍵字使用英文：Feature, Rule, Scenario, Scenario Outline, Given, When, Then, And, Examples, Background"
+    },
+    "A2_no_chinese_keywords": {
+      "pass": true,
+      "note": "沒有出現中文關鍵字"
+    },
+    "A3_chinese_content": {
+      "pass": true,
+      "note": "Feature 名稱、Scenario 名稱、步驟描述使用繁體中文"
+    },
+    "A4_no_language_tag": {
+      "pass": true,
+      "note": "沒有 # language: zh-TW 標記"
+    },
+    "A5_coverage": {
+      "pass": true,
+      "note": "涵蓋 Happy path、Error path、Input boundary，甚至額外加了偽裝副檔名的 edge case"
+    }
+  },
+  "score": "5/5",
+  "summary": "Without skill 也通過了所有 assertion。舊版全域 CLAUDE.md 寫了「Gherkin 繁體中文」但模型預設就用英文關鍵字。此 eval 的 delta 為 0——關鍵字語言規範的 skill 價值在於「防止偶發錯誤」而非「修正常態行為」。"
+}

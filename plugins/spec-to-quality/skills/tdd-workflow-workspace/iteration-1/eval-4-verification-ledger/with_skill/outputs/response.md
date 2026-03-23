@@ -1,4 +1,4 @@
-好，我已經讀取了 spec.md 和 translation.feature。現在進入 **Phase 0: Verification Ledger**。
+現在我有了足夠的資訊來進行 **Phase 0: Verification Ledger**。
 
 ---
 
@@ -16,15 +16,24 @@
 | 4 | SHALL 在 API 回傳 429 時自動重試（最多 3 次） |
 | 5 | SHALL 將翻譯結果存入 TranslationRecord model |
 
-### Step 2 & 3: Mock 邊界規劃 + Checkpoint
+---
+
+### Step 2 & 3: Mock 邊界規劃 + Checkpoint A/B
 
 | SHALL | 驗證方式 | Mock 邊界 | Checkpoint A | Checkpoint B |
 |-------|---------|----------|--------------|--------------|
-| **1** 使用 xai_sdk.Client | Unit test | Mock `xai_sdk.Client` 的 `chat.completions.create` | ✅ 遮掉的是「外部 API 呼叫」，不是自己的邏輯 | N/A |
-| **2** 從 response.usage 提取 tokens | Unit test | 同上，Fake response 包含 `.usage.input_tokens`, `.usage.output_tokens` | ✅ 遮掉的是「外部回傳值」 | ✅ 自己解析 usage 的邏輯被測試覆蓋 |
-| **3** 支援 batch 翻譯 | Unit test | 同上 | ✅ 遮掉的是「外部 API」 | ✅ 多段輸入 → 多筆輸出的對應關係需驗證 |
-| **4** 429 自動重試 | Unit test | Mock Client，讓前 N 次呼叫回傳 429 exception，第 N+1 次成功 | ✅ 遮掉的是「外部錯誤」 | ✅ 重試計數邏輯被測試覆蓋 |
-| **5** 存入 TranslationRecord | Unit test | 不需 mock 外部服務，直接驗證回傳的 model | ✅ 這是自己的邏輯，不需 mock | ✅ model 欄位完整性需驗證 |
+| **1. 使用 xai_sdk.Client** | Unit test | Mock `xai_sdk.Client` — 這是外部 SDK，mock 在最外層切 | ✅ Mock 的是外部服務（xai_sdk），不是自己邏輯 | N/A |
+| **2. 從 response.usage 提取 token** | Unit test | 承上，mock 的 response 需包含 `.usage.input_tokens` 和 `.usage.output_tokens` 形狀 | ✅ Mock 外部回傳的 response 結構 | ✅ 需驗證我們產出的 token 數量 = response.usage 的值 |
+| **3. Batch 翻譯** | Unit test | 同上 mock xai_sdk.Client，測試傳入多筆 → 回傳多筆 | ✅ 自己的 batch 邏輯，mock 外部 | ✅ 輸入 N 筆 → 輸出 N 筆對應關係需驗證 |
+| **4. 429 重試** | Unit test | Mock xai_sdk.Client 的呼叫，讓它先回 429 再成功（side_effect 控制） | ✅ Mock 外部服務的行為（429 response） | ✅ 驗證重試次數、最終成功/失敗 |
+| **5. 存入 TranslationRecord** | Unit test | Mock 儲存層（Repository 或 DB session），驗證被呼叫時傳入正確的 model | ✅ Mock 的是儲存層（外部依賴） | ✅ TranslationRecord 的欄位 = 翻譯結果的欄位 |
+
+**Mock 技術決策**：
+- 使用自定義 **Fake** 或 `MagicMock(spec=...)` 來限制介面
+- `xai_sdk.Client` → 建立 `FakeXaiClient` 回傳固定 response 結構
+- 儲存層 → 定義 `TranslationRepository` Protocol，測試用 in-memory 實作
+
+---
 
 ### Step 4: Verification Ledger
 
@@ -33,60 +42,31 @@
 
 ## Unit Test 覆蓋
 
-- SHALL 1（使用 xai_sdk.Client）
-  → ✅ mock 邊界：mock `xai_sdk.Client.chat.completions.create`
-  → 驗證：呼叫時傳入正確的 model、messages 參數
+- SHALL 1 (使用 xai_sdk.Client)
+  → ✅ mock 邊界：mock xai_sdk.Client，驗證我們的翻譯 service 正確呼叫 API
 
-- SHALL 2（提取 token 數量）
-  → ✅ mock 邊界：Fake response 含 `.usage.input_tokens`, `.usage.output_tokens`
-  → 驗證：回傳結果包含正確的 token 數量
+- SHALL 2 (從 response.usage 提取 token)
+  → ✅ mock 邊界：mock response 包含 usage 結構，驗證提取出正確的 token 數量
 
-- SHALL 3（batch 翻譯）
-  → ✅ mock 邊界：同 SHALL 1
-  → 驗證：傳入 N 段文字，回傳 N 筆結果
+- SHALL 3 (batch 翻譯)
+  → ✅ mock 邊界：同上，驗證 N 筆輸入 → N 筆輸出
 
-- SHALL 4（429 重試）
-  → ✅ mock 邊界：mock Client 依序回傳 429 → 429 → 成功
-  → 驗證：最多重試 3 次，超過則拋出例外
+- SHALL 4 (429 重試)
+  → ✅ mock 邊界：mock Client 用 side_effect 控制先 429 再成功，驗證重試邏輯
 
-- SHALL 5（存入 TranslationRecord）
-  → ✅ 無需 mock
-  → 驗證：TranslationRecord 包含 source_text, translated_text, input_tokens, output_tokens
+- SHALL 5 (存入 TranslationRecord)
+  → ✅ mock 邊界：mock Repository，驗證被呼叫時傳入正確的 TranslationRecord
 
 ## 需要整合測試
 
-（無 — 所有 SHALL 皆可透過 unit test + Fake 驗證）
+- 無。所有 SHALL 都可透過 unit test + mock 外部依賴來驗證。
+- 若未來需要驗證「實際呼叫 Grok API」，可另開整合測試 scope。
 
 ## 明確不測（附理由）
 
-（無）
+- （無）
 ```
 
 ---
 
-### Mock 實作細節
-
-我計畫使用 **自定義 Fake** 而非 MagicMock，來模擬 `xai_sdk.Client` 的回應：
-
-```python
-# Fake 結構（概念）
-class FakeUsage:
-    input_tokens: int
-    output_tokens: int
-
-class FakeMessage:
-    content: str
-
-class FakeChoice:
-    message: FakeMessage
-
-class FakeResponse:
-    choices: list[FakeChoice]
-    usage: FakeUsage
-```
-
-對於 429 重試測試，會用一個 counter 來控制「前幾次失敗、之後成功」的行為。
-
----
-
-**請確認這個 Verification Ledger 是否 OK，確認後我就開始寫測試（進入 Phase 1: Red）。**
+**請確認這個 Verification Ledger**，確認後我會進入 Phase 1: Red（寫測試、確認失敗）。
