@@ -8,6 +8,8 @@
 
 - 從 spec 到 .feature 檔，AI 生成的 edge case 跟 error handling 可能每次都不太一樣，很容易只把重點放在我強調的部分
 - 從 .feature 到測試，step definitions 常常沒有完整對應 scenario
+- 測試通過了，但 mock 邊界畫錯——spec 要求驗證的邏輯被 `MagicMock()` 整個遮掉，測試綠了但什麼都沒驗證到
+- 單元件測試都過，但元件接起來時資料形狀對不上，跨元件的接合處沒人守門
 - 測試通過了，但 code 的設計很糟——職責混在一起、依賴方向亂跑
 - 說「完成了」，但其實沒跑過 lint 或 type check
 
@@ -18,9 +20,9 @@
 ```mermaid
 flowchart LR
     A[ec:feature-coverage] --> B[ec:gherkin]
-    B --> C[ec:tdd-workflow]
+    B --> C[ec:tdd-workflow<br/>含 Verification Ledger]
     C --> D[ec:design-review]
-    D --> E[ec:pre-complete]
+    D --> E[ec:pre-complete<br/>含 Delta Spec 同步]
     F[ec:debugging] -.-> |任何階段| A & B & C & D & E
 ```
 
@@ -31,11 +33,11 @@ flowchart LR
 | Skill | 做什麼 |
 |-------|--------|
 | **ec:feature-coverage** | 寫 .feature 之前，強制對 6 類 scenario 逐一分析，避免漏掉情境 |
-| **ec:gherkin** | 照著覆蓋率分析的結果寫 .feature，遵循 Feature / Rule / Scenario 結構 |
-| **ec:tdd-workflow** | 嚴格的 Red → Green → Refactor，紅燈沒確認不能開始寫 code |
+| **ec:gherkin** | 照著覆蓋率分析的結果寫 .feature，遵循 Feature / Rule / Scenario 結構（關鍵字英文、內容繁體中文） |
+| **ec:tdd-workflow** | 寫測試前先做 Verification Ledger（mock 邊界審查），然後嚴格 Red → Green → Refactor |
 | **ec:design-review** | 綠燈之後的設計審查，用提問方式引導思考，不是直接叫你改 |
 | **ec:debugging** | 遇到 bug 先收集證據、建假說、驗證，不准猜著改 |
-| **ec:pre-complete** | 要說「完成」之前，跑完測試 + lint + type check，拿到實際輸出才算數 |
+| **ec:pre-complete** | 要說「完成」之前，跑完測試 + lint + type check + delta spec 同步 + 整合測試缺口確認，拿到實際輸出才算數 |
 
 ## 適合什麼情境
 
@@ -81,10 +83,19 @@ flowchart LR
 ## 選用整合
 
 - **Feature Scenario 具體化對應表**：可以在專案 CLAUDE.md 加一個表，把 6 類通用 scenario 類別對應到你專案的概念（例如「Error paths → Celery task timeout」）
+- **OpenSpec**：使用 OpenSpec 管理 spec 的話，tdd-workflow 會從 spec.md 提取 SHALL 語句做 Verification Ledger，pre-complete 會檢查 delta spec 是否同步到主規格。新專案記得先跑 `openspec init`
 
 ## 關於迭代
 
-這套 skills 目前跑過幾輪 eval（用 `claude -p` 對比 with/without skill 的輸出差異），確認基本行為符合預期，也根據 eval 結果修了一些 SKILL.md 的寫法。但還沒有在大量真實 session 中長期驗證過。
+這套 skills 目前跑過幾輪 eval（用 `claude -p` 對比 with/without skill 的輸出差異），確認基本行為符合預期，也根據 eval 結果修了一些 SKILL.md 的寫法。最近一輪 eval（v0.2.0）的重點結果：
+
+| Eval | with_skill | without_skill | Delta |
+|------|-----------|--------------|-------|
+| Verification Ledger（mock 邊界審查） | 7/7 | 0/7 | +7 |
+| Gherkin 關鍵字語言 | 5/5 | 5/5 | 0 |
+| 整合測試時機判斷 | 4/6 | 1/6 | +3 |
+
+但還沒有在大量真實 session 中長期驗證過。
 
 老實說，這本來就是我個人開發流程的產物 — 相當於「如果我手動開發的話，我大概會怎麼想、怎麼檢查」的自動化版本。所以：
 
