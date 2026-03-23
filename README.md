@@ -87,7 +87,36 @@ flowchart LR
 
 ## 關於迭代
 
-這套 skills 目前跑過幾輪 eval（用 `claude -p` 對比 with/without skill 的輸出差異），確認基本行為符合預期，也根據 eval 結果修了一些 SKILL.md 的寫法。最近一輪 eval（v0.2.0）的重點結果：
+老實說，這本來就是我個人開發流程的產物 — 相當於「如果我手動開發的話，我大概會怎麼想、怎麼檢查」的自動化版本。所以：
+
+- **一定有定義更好的工具**。專門做 code review 的、專門驗證 Gherkin 寫法的、專門做 mutation testing 的，這些在各自領域都比我這邊做得更深入
+- **這套的重點是流程串接**。不是每一步都做到最好，而是確保從 spec → .feature → test → code → review → 完成這條路每次都穩定走完，不跳步驟、不漏東西
+- **會持續迭代**。只要我在日常開發中發現哪裡用得不順手，或是軟體開發的工具鏈有什麼新進展，skill 就會跟著更新。eval workspace 也一起放在 repo 裡，方便追蹤每次改動的前後對比
+
+### v0.2.0 — Verification Ledger 與整合測試時機
+
+**發現的問題**
+
+在兩個專案實際走完整套流程後，發現 spec 寫得完整、.feature 也有覆蓋，但實作出來還是跟預期對不上。追查後發現問題不在 spec 也不在 .feature，而是在 **step definition 層**：
+
+1. **Mock 邊界畫錯**：spec 明確寫了「SHALL 使用 xai_sdk.Client」，但 step definition 用 `MagicMock()` 把整個 client mock 掉了——spec 要求驗證的呼叫方式完全在 mock 的另一側，測試綠了但什麼都沒驗證到。同樣的問題也出現在 volume masking 數學運算、ffmpeg 參數組裝等場景
+2. **跨元件接合處沒人守門**：單元件測試全過，但元件接起來時 API response 形狀對不上、模板期望巢狀結構但 service 回傳 flat 資料、第三方 library 的實際行為跟 spec 假設的不同（FastRTC handler copy 機制、Gemini Live API 需要 native-audio model）
+
+共同根因：**測試守門的東西 ≠ spec 要求守門的東西**。coverage analysis 確保了「有哪些情境要測」，但缺少「每個 SHALL 由誰驗證、mock 邊界畫在哪」的規劃步驟。
+
+**做了什麼**
+
+- **tdd-workflow 新增 Phase 0: Verification Ledger** — 寫測試前先對照 spec 的 SHALL 語句，規劃每個 SHALL 的驗證歸屬與 mock 邊界。包含兩個 checkpoint：
+  - Checkpoint A：mock 遮掉的是「外部服務的行為」還是「自己的邏輯」？
+  - Checkpoint B：跨元件資料流（A 的 output → B 的 input），形狀有驗證嗎？
+- **pre-complete 新增整合測試時機判斷** — 不只追蹤缺口，主動判斷「現在是否該補整合測試」（最後一個 spec 完成時 / 跨元件接合處 / merge 到 main 前）
+- **pre-complete 新增 delta spec 同步檢查** — 確保 openspec change 的 spec 修改會同步到主規格
+- **gherkin 新增語言規範** — 關鍵字英文、內容繁體中文，附正反例
+- **流程規範** — 一個 spec 走完再做下一個、開新分支再開發、OpenSpec init 提醒
+
+**Eval 結果**
+
+用 `claude -p` 對比 with/without skill（使用舊版全域 CLAUDE.md 作為乾淨 baseline）：
 
 | Eval | with_skill | without_skill | Delta |
 |------|-----------|--------------|-------|
@@ -95,10 +124,4 @@ flowchart LR
 | Gherkin 關鍵字語言 | 5/5 | 5/5 | 0 |
 | 整合測試時機判斷 | 4/6 | 1/6 | +3 |
 
-但還沒有在大量真實 session 中長期驗證過。
-
-老實說，這本來就是我個人開發流程的產物 — 相當於「如果我手動開發的話，我大概會怎麼想、怎麼檢查」的自動化版本。所以：
-
-- **一定有定義更好的工具**。專門做 code review 的、專門驗證 Gherkin 寫法的、專門做 mutation testing 的，這些在各自領域都比我這邊做得更深入
-- **這套的重點是流程串接**。不是每一步都做到最好，而是確保從 spec → .feature → test → code → review → 完成這條路每次都穩定走完，不跳步驟、不漏東西
-- **會持續迭代**。只要我在日常開發中發現哪裡用得不順手，或是軟體開發的工具鏈有什麼新進展，skill 就會跟著更新。eval workspace 也一起放在 repo 裡，方便追蹤每次改動的前後對比
+Verification Ledger 的 delta 最大（+7）——without skill 完全不知道要做 mock 邊界審查，直接跳到寫測試。這正好對應一開始發現的問題：流程裡缺少「spec 到 step definition 之間的品質關卡」。
