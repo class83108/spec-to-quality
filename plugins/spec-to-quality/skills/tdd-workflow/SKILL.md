@@ -50,14 +50,14 @@ description: >
 
 #### Step 4: 產出 Verification Ledger
 
-將 ledger 展示給使用者，並詢問兩件事：
+將完整 ledger（三區）展示給使用者，並詢問兩件事：
 
 1. **Ledger 內容是否正確？**（mock 邊界、分級是否合理）
-2. **是否要將 ledger 寫入 `verification.md` 檔案？**
-   - 如果使用者同意建檔 → 在 spec 旁邊（或 openspec 對應的 spec 目錄下）建立 `verification.md`
+2. **是否要建立 `verification.md`？**（只有「需要整合測試」和「明確不測」兩區才有建檔價值；Unit Test 覆蓋的 mock 邊界在 step definitions 裡已體現，不需要持久化）
+   - 如果使用者同意建檔 → 在 spec 旁邊（或 openspec 對應的 spec 目錄下）建立 `verification.md`，只記錄缺口區段
    - 如果使用者不需要建檔 → 不建立，僅以對話中的 ledger 作為後續 mock 邊界依據
 
-Ledger 格式：
+對話展示格式（完整三區）：
 
 ```markdown
 # Verification Ledger — [功能名稱]
@@ -73,6 +73,22 @@ Ledger 格式：
 ## 明確不測（附理由）
 - SHALL xxx — [原因，例如 scope out 或 v1 不做]
 ```
+
+建檔格式（僅缺口，作為 pre-complete 的追蹤依據）：
+
+```markdown
+# Verification Ledger — [功能名稱]
+
+## 需要整合測試
+- SHALL xxx
+  - 原因：[為什麼 unit test 無法驗證]
+  - 最低驗證方式：[具體可執行的驗證方法]
+
+## 明確不測（附理由）
+- SHALL xxx — [原因，例如 scope out 或 v1 不做]
+```
+
+如果兩個缺口區段都是空的，通常不需要建檔。
 
 **使用者確認 ledger 內容後，才進入 Phase 1。**
 
