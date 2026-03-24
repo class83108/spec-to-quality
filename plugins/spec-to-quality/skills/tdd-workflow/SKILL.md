@@ -50,7 +50,14 @@ description: >
 
 #### Step 4: 產出 Verification Ledger
 
-在 spec 旁邊（或 openspec 對應的 spec 目錄下）建立 `verification.md`：
+將 ledger 展示給使用者，並詢問兩件事：
+
+1. **Ledger 內容是否正確？**（mock 邊界、分級是否合理）
+2. **是否要將 ledger 寫入 `verification.md` 檔案？**
+   - 如果使用者同意建檔 → 在 spec 旁邊（或 openspec 對應的 spec 目錄下）建立 `verification.md`
+   - 如果使用者不需要建檔 → 不建立，僅以對話中的 ledger 作為後續 mock 邊界依據
+
+Ledger 格式：
 
 ```markdown
 # Verification Ledger — [功能名稱]
@@ -67,7 +74,7 @@ description: >
 - SHALL xxx — [原因，例如 scope out 或 v1 不做]
 ```
 
-**展示 ledger 給使用者確認後，才進入 Phase 1。**
+**使用者確認 ledger 內容後，才進入 Phase 1。**
 
 ### Phase 1: Red（寫測試，確認失敗）
 
@@ -115,7 +122,7 @@ description: >
 使用者說：「feature 檔確認了，開始實作使用者註冊」
 
 1. 確認 `user_registration.feature` 存在
-2. **Verification Ledger**：從 spec 提取 6 個 SHALL，規劃 mock 邊界 → 5 個 unit test 直接驗證，1 個（email 實際寄送）標記需要整合測試 → 展示 ledger 給使用者確認
+2. **Verification Ledger**：從 spec 提取 6 個 SHALL，規劃 mock 邊界 → 5 個 unit test 直接驗證，1 個（email 實際寄送）標記需要整合測試 → 展示 ledger 並詢問「內容 OK 嗎？要建 verification.md 嗎？」 → 使用者確認內容、決定是否建檔
 3. 建立 `test_user_registration.py`，依照 ledger 的 mock 邊界撰寫 step definitions
 4. 跑測試 → 全部 FAIL → 展示紅燈輸出 → 「紅燈確認，要開始實作嗎？」
 5. 使用者確認 → 逐 scenario 實作，每完成一個跑一次測試

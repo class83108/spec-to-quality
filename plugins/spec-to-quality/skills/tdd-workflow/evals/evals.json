@@ -49,8 +49,10 @@
         "對每個 SHALL 規劃 mock 邊界，區分「可直接 unit test」和「需要整合測試」",
         "檢查 Checkpoint A：mock 不能遮掉自己的邏輯（例如 xai_sdk.Client 的呼叫方式應被驗證，不能被 MagicMock 整個取代）",
         "檢查 Checkpoint B：跨元件資料流的形狀是否有驗證",
-        "產出 verification.md 格式的 ledger，分為 unit test 覆蓋 / 需要整合測試 / 明確不測",
-        "展示 ledger 給使用者確認後，才進入 Phase 1 Red"
+        "展示 ledger 內容（分為 unit test 覆蓋 / 需要整合測試 / 明確不測）",
+        "詢問使用者 ledger 內容是否正確",
+        "詢問使用者是否要將 ledger 寫入 verification.md 檔案",
+        "等使用者確認後，才進入 Phase 1 Red"
       ],
       "files": []
     }
