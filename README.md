@@ -1,112 +1,139 @@
-# spec-to-quality
+# insight-to-quality
 
-一套給 Claude Code 用的 Python TDD 工作流 Skills。核心目標是讓需求到程式碼之間的資訊流失盡可能少，同時確保產出的 code 有一定的設計品質。
+一套 Claude Code skills，涵蓋從**架構理解到程式碼品質**的完整弧線——兩個 plugin 協同運作，確保從「我們在蓋什麼？」到「蓋得對嗎？」之間不遺失資訊。
 
 ## 為什麼做這個
 
-使用 claude code 進行開發時，我常常會遇到一些問題：
+用 Claude Code 開發時，我遇到兩類問題：
 
-- 從 spec 到 .feature 檔，AI 生成的 edge case 跟 error handling 可能每次都不太一樣，很容易只把重點放在我強調的部分
-- 從 .feature 到測試，step definitions 常常沒有完整對應 scenario
-- 測試通過了，但 mock 邊界畫錯——spec 要求驗證的邏輯被 `MagicMock()` 整個遮掉，測試綠了但什麼都沒驗證到
-- 單元件測試都過，但元件接起來時資料形狀對不上，跨元件的接合處沒人守門
-- 測試通過了，但 code 的設計很糟——職責混在一起、依賴方向亂跑
-- 說「完成了」，但其實沒跑過 lint 或 type check
+**理解問題**（寫 code 之前）：
+- 還沒理解系統壓力在哪就跳進實作
+- 多 agent 開發時容易迷失目標跟設計決策
+- 技術選擇基於習慣而非追溯到約束條件
 
-這些問題單獨看都有工具可以解：OpenSpec 可以管 spec、pytest-bdd 可以綁 feature 跟測試。但問題是**沒有東西能讓這整段流程每次都穩定跑完**。有時候 auto edit 開下去蠻多在 claude.md 說好的內容還是蠻容易被忽略的
+**實作問題**（寫 code 時）：
+- Spec 到測試的覆蓋率缺口、mock 邊界畫錯、跨元件資料形狀對不上
+- 測試過了但設計品質很差
+- 說「完成了」但其實沒跑過 lint 或 type check
 
-所以我把這套流程包成 6 個 Claude Code skills，用前置條件串起來，強制按順序走：
+### 核心觀點
+
+**Bad research 會衍生出更多 bad plans，而一個 bad plan 可以衍生出大量的 bad code。**
+
+如果一開始就沒搞清楚系統的目標和壓力在哪，後面的每一個 spec 都可能在錯誤的方向上寫得很精確。修正一個 spec 的成本是可控的，但如果 10 個 spec 全都基於錯誤的前提，回頭成本會爆炸性增長。
+
+所以 `discovery` 存在的目的就是：**在寫任何 spec 之前，先用結構化的方式把理解做對。** 而 `spec-to-quality` 則確保理解正確之後，實作過程不走樣。
+
+## 兩個 Plugin
 
 ```mermaid
-flowchart LR
-    A[ec:feature-coverage] --> B[ec:gherkin]
-    B --> C[ec:tdd-workflow<br/>含 Verification Ledger]
-    C --> D[ec:design-review]
-    D --> E[ec:pre-complete<br/>含 Delta Spec 同步]
-    F[ec:debugging] -.-> |任何階段| A & B & C & D & E
+flowchart TD
+    subgraph "discovery（理解階段）"
+        G[ec:goals-discovery] --> D[ec:dominant-ops]
+        D --> S[ec:system-map]
+        S --> AI[ec:align-internals]
+        S --> AS[ec:align-surface]
+    end
+
+    subgraph "spec-to-quality（實作階段）"
+        FC[ec:feature-coverage] --> GK[ec:gherkin]
+        GK --> TDD[ec:tdd-workflow]
+        TDD --> DR[ec:design-review]
+        DR --> PC[ec:pre-complete]
+        DB[ec:debugging] -.-> |任何階段| FC & GK & TDD & DR & PC
+    end
+
+    AI --> FC
+    AS --> FC
 ```
 
-不過要聲明一下這不適合做全自動化開發，這是一套按照我開發流程習慣所生的產物，目的是希望在我的每次開發時都能夠有相對平穩的輸出。
+### discovery — 架構理解
 
-## Skills 在幹嘛
+5 個 skills，從「這系統是什麼？」引導到「內部跟介面有沒有對齊真正重要的東西？」
 
 | Skill | 做什麼 |
 |-------|--------|
-| **ec:feature-coverage** | 寫 .feature 之前，強制對 6 類 scenario 逐一分析，避免漏掉情境 |
-| **ec:gherkin** | 照著覆蓋率分析的結果寫 .feature，遵循 Feature / Rule / Scenario 結構（關鍵字英文、內容繁體中文） |
-| **ec:tdd-workflow** | 寫測試前先做 Verification Ledger（mock 邊界審查），然後嚴格 Red → Green → Refactor |
-| **ec:design-review** | 綠燈之後的設計審查，用提問方式引導思考，不是直接叫你改 |
-| **ec:debugging** | 遇到 bug 先收集證據、建假說、驗證，不准猜著改 |
-| **ec:pre-complete** | 要說「完成」之前，跑完測試 + lint + type check + delta spec 同步 + 整合測試缺口確認，拿到實際輸出才算數 |
+| **ec:goals-discovery** | 定義系統目標、非目標、NFR 跟約束條件 |
+| **ec:dominant-ops** | 找出壓力所在（頻率 x 代價 x 失敗影響） |
+| **ec:system-map** | 建立導航地圖：Component Map、Boundary Map、Change Protocol |
+| **ec:align-internals** | 設計或驗證 contracts 與 persistence 的對齊 |
+| **ec:align-surface** | 設計或驗證使用者介面與基礎設施的對齊 |
 
-## 適合什麼情境
+align 系列支援兩種模式：**設計模式**（沒有現成 code，引導設計）和**驗證模式**（有現成 code，審計對齊狀況）。
 
-- Python 後端，有用 pytest-bdd，並且有使用 ruff, pyright 等 CI 常見工具
-- 想讓 TDD 流程穩定下來，不要每次都不一樣
-- 同時讓 TDD 意義最大化，有測試的保護下，可以審視剛剛的設計看需不需要重構
+#### SYSTEM_MAP 的設計目的
 
-## 不適合什麼
+SYSTEM_MAP.md 不只是一份架構文件——它是**多 agent 協作和多視窗開發時的共享地圖**。
 
-- 前端開發
-- 寫個小 script、改 config、快速原型
-- 沒在用 pytest 或 Gherkin 的專案，如果都完全沒接觸過應該會非常痛苦
+在實際開發中，不管是多個 Claude Code agent 同時工作，還是開發者自己開多個 context window 處理不同功能，最常遇到的問題是：「我改了 A，會不會影響 B？」「這個 spec 應該動到哪些檔案？」。如果每次都要重新理解一遍架構，效率會非常低。
+
+SYSTEM_MAP 的 **Change Protocol** 就是為了解決這個問題——它按照影響範圍分成四種 type，讓任何 agent 或開發者在動手前就知道需要碰哪些東西。這讓平行開發時每個人（或 agent）都能獨立判斷自己的改動範圍，而不是靠「問一下別人」或「全部看一遍」。
+
+### spec-to-quality — 實作品質
+
+6 個 skills，強制穩定的 TDD 工作流程從 spec 到完成。
+
+| Skill | 做什麼 |
+|-------|--------|
+| **ec:feature-coverage** | 寫 .feature 前，強制分析 6 類 scenario 覆蓋率 |
+| **ec:gherkin** | 照覆蓋率分析結果寫 .feature |
+| **ec:tdd-workflow** | Verification Ledger + 嚴格 Red-Green-Refactor |
+| **ec:design-review** | 綠燈後的設計品質審查，用提問引導 |
+| **ec:debugging** | 證據先行的 debugging，可在任何階段觸發 |
+| **ec:pre-complete** | 最終關卡：測試 + lint + type check + delta spec 同步 |
+
+## 交接：discovery 到 spec-to-quality
+
+Discovery 產出三份核心文件，加上兩次對齊驗證，形成完整的交接：
+
+### 核心文件
+
+| 文件 | 產出者 | 消費者 |
+|------|--------|--------|
+| `goals.md` | ec:goals-discovery | 所有下游 skill 的可追溯性根源 |
+| `dominant-ops.md` | ec:dominant-ops | ec:tdd-workflow（anti-patterns 影響 mock 邊界）、align skills（Dx 優先序） |
+| `SYSTEM_MAP.md` | ec:system-map | Change Protocol 指導所有實作決策、多 agent 協作的共享地圖 |
+
+### 對齊驗證
+
+| 對齊類型 | 驗證者 | 確認什麼 |
+|----------|--------|----------|
+| 內部對齊 | ec:align-internals | 每個 seam 有 contract、每個 goal 有 persistence、Dx 路徑上的 contract 品質足夠 |
+| 表面對齊 | ec:align-surface | 每個 Dx 的 user journey 有對應介面、endpoint 分類正確、基礎設施容量足以承受壓力 |
+
+**對齊完成後**，才開始用 `ec:feature-coverage` 進行第一個 OpenSpec change。SYSTEM_MAP.md 裡的 Change Protocol 會告訴你這是什麼類型的變動、需要動到哪些地方。
 
 ## 安裝
 
 ```bash
 # 加入 marketplace
-/plugin marketplace add class83108/spec-to-quality
+/plugin marketplace add class83108/insight-to-quality
 
-# 安裝
-/plugin install spec-to-quality@spec-to-quality
+# 安裝兩個 plugin
+/plugin install insight-to-quality@discovery
+/plugin install insight-to-quality@spec-to-quality
 ```
 
 ## 你的專案需要準備什麼
 
-在專案的 `CLAUDE.md` 裡面要有一個 **Commands** 區段，告訴 agent 怎麼跑測試、lint、type check。因為每個專案的工具不同，skills 不會假設你用什麼。
+在專案的 `CLAUDE.md` 裡面要有一個 **Commands** 區段，告訴 agent 怎麼跑測試、lint、type check。Skills 不會假設任何特定工具。
 
 參考 [templates/CLAUDE.md.example](templates/CLAUDE.md.example) 看範例。
 
 ### 建議的工具組合
 
-這套 skills 是圍繞這些工具設計的：
-
-- **OpenSpec** — 需求與變更管理（skills 會讀 spec 內容來輔助覆蓋率分析）
+- **OpenSpec** — 需求與變更管理
 - **uv** — 套件管理
 - **pytest + pytest-bdd** — 測試
 - **ruff** — lint & format
 - **pyright** — 型別檢查
 
-參考 [templates/pyproject.toml.snippet](templates/pyproject.toml.snippet) 看建議設定。
-**如果未來哪個步驟出現更適合我的新工具，那這個 skill 也會跟著進行更新**
-
-## 選用整合
-
-- **Feature Scenario 具體化對應表**：可以在專案 CLAUDE.md 加一個表，把 6 類通用 scenario 類別對應到你專案的概念（例如「Error paths → Celery task timeout」）
-- **OpenSpec**：使用 OpenSpec 管理 spec 的話，tdd-workflow 會從 spec.md 提取 SHALL 語句做 Verification Ledger；若有整合測試缺口，可選擇建立 `verification.md` 追蹤。pre-complete 會檢查 delta spec 是否同步到主規格。新專案記得先跑 `openspec init`
-
 ## 關於迭代
 
-老實說，這本來就是我個人開發流程的產物 — 相當於「如果我手動開發的話，我大概會怎麼想、怎麼檢查」的自動化版本。所以：
+這是我個人開發流程的產物——把「我開發時怎麼想、怎麼檢查」自動化成 skills。會隨著日常使用的感受持續進化。
 
-- **一定有定義更好的工具**。專門做 code review 的、專門驗證 Gherkin 寫法的、專門做 mutation testing 的，這些在各自領域都比我這邊做得更深入
-- **這套的重點是流程串接**。不是每一步都做到最好，而是確保從 spec → .feature → test → code → review → 完成這條路每次都穩定走完，不跳步驟、不漏東西
-- **會持續迭代**。只要我在日常開發中發現哪裡用得不順手，或是軟體開發的工具鏈有什麼新進展，skill 就會跟著更新。eval workspace 也一起放在 repo 裡，方便追蹤每次改動的前後對比
+- 兩個 plugin 可以獨立迭代
+- Eval workspace 放在 repo 裡，方便追蹤每次改動的前後對比
+- 如果某個步驟出現更好的工具，skill 會跟著更新
 
-### v0.2.1 — Verification Ledger 建檔行為修正
-
-- 建檔改為詢問，不預設建立
-- `verification.md` 只記錄缺口（需要整合測試 + 明確不測）；Unit Test 覆蓋不建檔
-- 缺口為空時主動提示通常不需要建檔
-
-Eval：with_skill 10/10。詳見 [PR #2](https://github.com/class83108/spec-to-quality/pull/2)。
-
-### v0.2.0 — Verification Ledger 與整合測試時機
-
-實際用過兩個專案後發現 mock 邊界常畫錯（`MagicMock()` 把 spec 要驗的邏輯整個遮掉），以及跨元件接合處沒人守門。
-
-- tdd-workflow 新增 Phase 0: Verification Ledger（SHALL → mock 邊界規劃，含 Checkpoint A/B）
-- pre-complete 新增整合測試時機判斷與 delta spec 同步檢查
-- gherkin 新增語言規範（關鍵字英文、內容繁體中文）
-
-Eval（with vs without skill）：Verification Ledger +7、整合測試時機判斷 +3。詳見 [PR #1](https://github.com/class83108/spec-to-quality/pull/1)。
+版本歷史見 [CHANGELOG.md](CHANGELOG.md)。

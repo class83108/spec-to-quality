@@ -33,6 +33,16 @@ flowchart LR
 | ec:design-review | ec:pre-complete | review 完成後，如果要 commit/PR，觸發 ec:pre-complete（含 delta spec 同步） |
 | 任何階段 | ec:debugging | 測試失敗或遇到 bug 時自動觸發 |
 
+## 與 discovery 的銜接
+
+如果專案有使用 `discovery` plugin，在開始 ec:feature-coverage 之前確認以下文件存在：
+
+- **goals.md** — ec:feature-coverage 用來確保 scenario 覆蓋所有 goals（Gx traceability）
+- **dominant-ops.md** — ec:tdd-workflow 的 Verification Ledger 用 anti-patterns 校準 mock 邊界
+- **SYSTEM_MAP.md** — Change Protocol 指導每個 change 的影響範圍判斷
+
+如果這些文件不存在，提醒使用者先完成 discovery 流程（或確認不需要 discovery）。
+
 ## 前置要求
 
 此 plugin 假設專案的 CLAUDE.md 包含以下區段：
