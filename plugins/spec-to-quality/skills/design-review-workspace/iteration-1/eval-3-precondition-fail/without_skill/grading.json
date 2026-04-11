@@ -1,9 +1,0 @@
-{
-  "eval": "eval-3-precondition-fail",
-  "variant": "without_skill",
-  "assertions": {
-    "A6_precondition_check": { "pass": true, "note": "也正確拒絕，提到 TDD 流程，還主動問「需要我協助看 failing tests 嗎？」" }
-  },
-  "score": "1/1",
-  "summary": "Baseline 也能拒絕（CLAUDE.md TDD 流程規定），且更主動提供協助"
-}

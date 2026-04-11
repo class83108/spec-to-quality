@@ -1,9 +1,0 @@
-{
-  "eval": "eval-3-precondition-fail",
-  "variant": "with_skill",
-  "assertions": {
-    "A6_precondition_check": { "pass": true, "note": "正確拒絕，列出具體步驟（修 tests → ruff → pyright），簡潔明確" }
-  },
-  "score": "1/1",
-  "summary": "正確拒絕 review，指引明確"
-}
