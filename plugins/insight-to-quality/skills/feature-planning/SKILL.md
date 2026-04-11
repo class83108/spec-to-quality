@@ -1,216 +1,217 @@
 ---
 name: ec:feature-planning
 description: >
-  Discovery 完成後、OpenSpec 建立前的橋接步驟。讀取 SYSTEM_MAP 的 Current State 與 gap，
-  比對已有的 feature plans 和 OpenSpec changes，決定下一個要實作的 feature，引導 error handling
-  策略決定，產出 docs/feature-plans/{name}.md，並更新 SYSTEM_MAP Current State。
-  當 discovery 完成、使用者要決定下一個 feature 要實作什麼、或說「要開始規劃實作」時觸發。
-  Do NOT use for: discovery 尚未完成時（先完成 ec:align-internals 和 ec:align-surface）、
-  或已有 feature plan 要直接進入實作時（直接用 ec:feature-coverage）。
+  The bridge step between discovery completion and OpenSpec creation. Reads the SYSTEM_MAP
+  Current State and gaps, cross-references existing feature plans and OpenSpec changes,
+  decides which feature to implement next, guides error handling strategy decisions, produces
+  docs/feature-plans/{name}.md, and updates SYSTEM_MAP Current State.
+  Trigger when discovery is complete, the user wants to decide what to implement next, or
+  says "ready to start planning implementation".
+  Do NOT use for: when discovery is incomplete (complete ec:align-internals and ec:align-surface
+  first), or when a feature plan already exists and implementation should begin directly
+  (use ec:feature-coverage).
 ---
 
 # Feature Planning
 
-你正在進入 feature planning 階段。這個 skill 的職責是：從 discovery 的 gap 決定要實作什麼，
-並在 OpenSpec 建立之前把關鍵設計決定固定下來。
+You are entering the feature planning stage. This skill's responsibility is to decide what to implement from discovery gaps and lock down key design decisions before OpenSpec is created.
 
-**在開始之前，先讀：**
-- `references/architect-mindset.md`（traceability：確認 feature 有 goal 根基）
-- `references/implementation-mindset.md`（Part 1：引導 Three Decisions 的框架）
+**Before starting, read:**
+- `references/architect-mindset.md` (traceability: confirm the feature has a goal foundation)
+- `references/implementation-mindset.md` (Part 1: the Three Decisions framework)
 
-## 前置條件
+## Prerequisites
 
-以下文件必須全部存在才能進入此 skill：
+All of the following must exist before entering this skill:
 - `goals.md`
 - `dominant-ops.md`
 - `SYSTEM_MAP.md`
-- 至少一份 align report（ec:align-internals 或 ec:align-surface 的產出）
+- At least one align report (output from ec:align-internals or ec:align-surface)
 
-如果任一文件不存在，停止並告知：「feature planning 需要完整的 discovery 產出才能進行。
-沒有 discovery 就進入實作，後續每個 skill 都會缺乏依據。請先完成 [缺少的 skill]。」
+If any are missing, stop and inform: "Feature planning requires complete discovery output. Starting implementation without discovery means every subsequent skill lacks a foundation. Please complete [missing skill] first."
 
-## 流程
+## Workflow
 
-### Step 1: 讀取 Discovery 產出
+### Step 1: Read Discovery Output
 
-讀以下文件，提取關鍵資訊：
+Read the following documents and extract key information:
 
-**goals.md** → 所有 Gx 與其描述
+**goals.md** → all Gx IDs and their descriptions
 
-**dominant-ops.md** → 所有 Dx 與其 anti-patterns，記下每個 anti-pattern 的完整 ID（AP1、AP2...）
+**dominant-ops.md** → all Dx IDs and their anti-patterns; record each anti-pattern's full ID (AP1, AP2...)
 
-**SYSTEM_MAP.md** → 特別關注：
-- `Current State.Gaps`：目前已知的 gap 清單（有哪些已被 feature plan 部分覆蓋）
-- `Current State.In-flight`：目前進行中的工作
-- `Boundary Map`：各 boundary 的 contract 狀態
+**SYSTEM_MAP.md** → focus on:
+- `Current State.Gaps`: the known gap list (which gaps are already partially covered by feature plans)
+- `Current State.In-flight`: work currently in progress
+- `Boundary Map`: contract status for each boundary
 
-**Align reports** → 提取 contract 缺口（align-internals）和介面缺口（align-surface）
+**Align reports** → extract contract gaps (align-internals) and interface gaps (align-surface)
 
-**已有的 feature plans**：掃描 `docs/feature-plans/` 目錄，了解哪些 gap 已被覆蓋或部分覆蓋
+**Existing feature plans**: scan the `docs/feature-plans/` directory to understand which gaps are already covered or partially covered
 
-### Step 2: 比對已覆蓋的 gap，列出候選清單
+### Step 2: Cross-Reference Covered Gaps and Build Candidate List
 
-將 SYSTEM_MAP 的 Gaps 與已有的 feature plans 交叉比對：
+Cross-reference the SYSTEM_MAP Gaps with existing feature plans:
 
 ```
 SYSTEM_MAP Gaps
-    ↓ 比對
-docs/feature-plans/ 的已有文件
-openspec/changes/ 的已有 change
+    ↓ cross-reference
+docs/feature-plans/ existing files
+openspec/changes/ existing changes
     ↓
-未覆蓋 → 直接列為候選
-部分覆蓋 → 列為候選，標注「接續 [已有 feature plan]，第 N 個 feature」
-已完全覆蓋 → 排除
+Not covered     → add directly to candidates
+Partially covered → add to candidates, note "continuing [existing feature plan], feature N of M"
+Fully covered   → exclude
 ```
 
-產出候選清單，每項標注：
-- 對應的 SYSTEM_MAP gap 或 align report 缺口
-- 服務的 Gx
-- 是否為接續既有 feature plan
+Produce a candidate list, each item annotated with:
+- The corresponding SYSTEM_MAP gap or align report deficiency
+- Which Gx it serves
+- Whether it continues an existing feature plan
 
 ```
-候選 Feature：
-1. [feature-name] — 解決 [gap 描述]，服務 G1, G2
-2. [feature-name] — 接續 task-queue.md（第 2/3 個），服務 G1
+Feature Candidates:
+1. [feature-name] — closes [gap description], serves G1, G2
+2. [feature-name] — continues task-queue.md (2 of 3), serves G1
 ...
 ```
 
-詢問使用者：「要先規劃哪一個？」
+Ask the user: "Which one should we plan first?"
 
-### Step 3: 確認 Traceability 與 SYSTEM_MAP 更新必要性
+### Step 3: Confirm Traceability and SYSTEM_MAP Update Need
 
-使用者選定後，確認兩件事：
+After the user selects a feature, confirm two things:
 
-**Traceability：**
-- 這個 feature 服務哪些 Gx？（必須至少對應一個 goal）
-- 與哪些 Dx 相關？（決定後續引用哪些 anti-patterns）
-- 觸碰哪些 SYSTEM_MAP boundary？
+**Traceability:**
+- Which Gx does this feature serve? (must correspond to at least one goal)
+- Which Dx is it related to? (determines which anti-patterns will be referenced)
+- Which SYSTEM_MAP boundaries does it touch?
 
-如果 feature 無法對應任何 Gx → 停止：「這個 feature 目前沒有 goal 根基。建議先確認它服務哪個 goal，或將其加入 goals.md，再繼續規劃。」
+If the feature cannot be mapped to any Gx → stop: "This feature currently has no goal foundation. Confirm which goal it serves, or add it to goals.md before continuing."
 
-**SYSTEM_MAP 是否需要更新：**
+**Whether SYSTEM_MAP needs updating:**
 
-問使用者：「這個 gap 需要多個 feature 是因為：
-A) 對系統結構有新的理解（boundary 需要調整、component 需要拆分）→ 先更新 SYSTEM_MAP 的 Boundary Map 或 Component Map，再繼續
-B) 工程上分批實作（系統結構不變，只是分階段做）→ 不更新結構，在 feature plan 和 SYSTEM_MAP Current State 記錄分批資訊」
+Ask the user: "Does this gap require multiple features because:
+A) There is new understanding of system structure (boundary needs adjustment, component needs splitting) → update the SYSTEM_MAP Boundary Map or Component Map first, then continue
+B) Engineering is staged (system structure is unchanged, just implemented in phases) → don't update structure; record the phased information in the feature plan and SYSTEM_MAP Current State"
 
-如果是 A → 引導使用者更新 SYSTEM_MAP 相關區段後，再繼續 Step 4。
+If A → guide the user to update the relevant SYSTEM_MAP sections, then continue with Step 4.
 
-### Step 4: 引導 Error Handling Strategy
+### Step 4: Guide Error Handling Strategy
 
-讀 `implementation-mindset.md` Part 1，逐一引導 Three Decisions。用 discovery 的上下文驅動引導，不是泛泛詢問。
+Read `implementation-mindset.md` Part 1 and guide through the Three Decisions one by one. Drive the conversation with discovery context — do not ask generic questions.
 
 **Decision 1 — Catch Boundary**
 
-結合 SYSTEM_MAP 的 boundary 資訊：
-「這個 feature 觸碰了 [boundary A]。出錯時，呼叫方需要知道這個層次的錯誤，還是這個元件應該在內部處理後再回應？」
+Using SYSTEM_MAP boundary information:
+"This feature touches [boundary A]. When something goes wrong, does the caller need to know about errors at this level, or should this component handle them internally before responding?"
 
 **Decision 2 — Error Taxonomy**
 
-結合 dominant-ops 的 anti-patterns：
-「根據 [Dx] 的 [APx]，[失敗情況] 是需要防範的。這屬於業務預期的 domain error（例如找不到資料、重複建立），還是外部依賴失敗的 infrastructure error（DB 連不到、API timeout）？除了 anti-patterns 提到的，這個 feature 還有哪些預期失敗情況？」
+Using dominant-ops anti-patterns:
+"Based on [Dx]'s [APx], [failure scenario] is a risk to guard against. Is this a domain error the business expects (e.g., resource not found, duplicate creation), or an infrastructure failure from an external dependency (DB unreachable, API timeout)? Beyond what the anti-patterns mention, what other expected failure scenarios exist for this feature?"
 
 **Decision 3 — Recovery Strategy**
 
-「遇到這些 domain errors 時，回傳結構化錯誤給呼叫方？遇到 infrastructure errors 時，fail fast 讓上層處理，還是有重試或降級策略？」
+"When domain errors occur, return a structured error to the caller? When infrastructure errors occur, fail fast and let the caller handle it, or is there a retry or degradation strategy?"
 
-### Step 5: 提取 Constraints
+### Step 5: Extract Constraints
 
-**Anti-patterns**：從 dominant-ops.md 提取與此 feature 相關的 Dx anti-patterns，帶完整 ID。每條說明「這條限制這個 feature 的什麼行為」。
+**Anti-patterns**: From dominant-ops.md, extract anti-patterns from the relevant Dx that apply to this feature, with full IDs. For each, explain "how this constraint limits this feature's behavior."
 
-**Boundary Rules**：從 SYSTEM_MAP.md 的 Boundary Map 提取這個 feature 觸碰的 boundary 規則。說明「這個 feature 不可以跨越哪個 boundary」或「資料只能從哪個方向流」。
+**Boundary Rules**: From SYSTEM_MAP.md's Boundary Map, extract boundary rules this feature touches. Explain "which boundary this feature must not cross" or "the direction data must flow."
 
-### Step 6: 產出 Feature Plan
+### Step 6: Produce Feature Plan
 
-在 `docs/feature-plans/` 下建立 `{feature-name}.md`，命名用 kebab-case 與後續 OpenSpec change 同名。
+Create `{feature-name}.md` under `docs/feature-plans/`, using kebab-case — the same name as the subsequent OpenSpec change.
 
 ```markdown
 # Feature Plan — {feature-name}
 
 ## Source
 - Serves: G1, G3
-- SYSTEM_MAP gap: [gap 描述]
-- Coverage: 完整覆蓋 / 部分覆蓋（第 N/M 個 feature，接續 [前一個 feature-plan]）
+- SYSTEM_MAP gap: [gap description]
+- Coverage: Full coverage / Partial coverage (feature N of M, continues [previous feature-plan])
 
 ## Error Handling Strategy
-- Catch boundary: [boundary only / per-layer / selective: 哪些 exceptions]
-- Domain errors: [列表，例如 TaskNotFound, DuplicateTask]
+- Catch boundary: [boundary only / per-layer / selective: which exceptions]
+- Domain errors: [list, e.g. TaskNotFound, DuplicateTask]
 - Infrastructure errors: [fail fast / retry N times / degrade to X]
 
 ## Constraints
 
 ### Anti-patterns (from dominant-ops)
-- AP1 (D1): [anti-pattern 描述] — 對此 feature 的影響：[說明]
-- AP2 (D2): [anti-pattern 描述] — 對此 feature 的影響：[說明]
+- AP1 (D1): [anti-pattern description] — impact on this feature: [explanation]
+- AP2 (D2): [anti-pattern description] — impact on this feature: [explanation]
 
 ### Boundary Rules (from SYSTEM_MAP)
-- [這個 feature 不可以跨越 boundary X，原因：...]
-- [資料只能從 A 流向 B，不可反向]
+- [This feature must not cross boundary X, because: ...]
+- [Data may only flow from A to B, not in reverse]
 
 ## Integration Test Gaps
-<!-- 由 ec:tdd-workflow Verification Ledger 完成後填入，初始為空 -->
-<!-- 記錄需要整合測試但暫時不做的缺口，pre-complete 會讀取此區段確認追蹤狀態 -->
+<!-- Filled in after ec:tdd-workflow Verification Ledger is complete; initially empty -->
+<!-- Records gaps that need integration tests but are deferred; ec:pre-complete reads this section -->
 ```
 
-### Step 7: 更新 SYSTEM_MAP Current State
+### Step 7: Update SYSTEM_MAP Current State
 
-將 feature plan 的進度反映到 SYSTEM_MAP：
+Reflect the feature plan's progress in SYSTEM_MAP:
 
 ```markdown
 ## Current State
-- **In-flight**: [feature-name]（docs/feature-plans/{feature-name}.md）
+- **In-flight**: [feature-name] (docs/feature-plans/{feature-name}.md)
 - **Gaps**:
-  - [gap 描述]：部分覆蓋（第 1/3 個 feature，in-flight）/ 已規劃（docs/feature-plans/...）
+  - [gap description]: partially covered (feature 1 of 3, in-flight) / planned (docs/feature-plans/...)
 ```
 
-### Step 8: 確認並交接
+### Step 8: Confirm and Hand Off
 
-展示 feature plan 給使用者確認：
-1. Traceability 正確（Gx 對應、gap 描述）
-2. Error handling strategy 符合意圖
-3. Constraints 沒有遺漏重要的 anti-patterns 或 boundary rules
+Present the feature plan to the user for confirmation:
+1. Traceability is correct (Gx mapping, gap description)
+2. Error handling strategy matches intent
+3. Constraints do not miss any important anti-patterns or boundary rules
 
-確認後告知：
-「Feature plan 已建立於 `docs/feature-plans/{feature-name}.md`，SYSTEM_MAP Current State 已更新。
+After confirmation, inform:
+"Feature plan created at `docs/feature-plans/{feature-name}.md`, SYSTEM_MAP Current State updated.
 
-接下來：
-1. 用 `opsx:apply` 建立 OpenSpec change，在 spec.md body 加上 `**Serves:** G1, G3`
-2. design.md 的 Decisions 區段引用此 feature plan 的 Error Handling Strategy
-3. OpenSpec 建立完成後進入 `ec:feature-coverage`」
+Next steps:
+1. Use `opsx:apply` to create the OpenSpec change; add `**Serves:** G1, G3` to the top of spec.md body
+2. Reference this feature plan's Error Handling Strategy in the Decisions section of design.md
+3. After OpenSpec is created, proceed to `ec:feature-coverage`"
 
 ## Examples
 
-### Example 1: 正常流程
+### Example 1: Normal Flow
 
-使用者說：「discovery 完成了，要開始規劃實作」
+User says: "Discovery is complete, ready to start planning implementation."
 
-1. 讀 discovery 文件，發現 3 個 gap：TaskQueue contract 未實作、Worker boundary 未定義、API surface 缺少狀態查詢
-2. 掃描 `docs/feature-plans/`，目前是空的
-3. 列出 3 個候選 → 使用者選「TaskQueue 實作」
-4. 確認 Serves G1, G3；問是否需要更新 SYSTEM_MAP → 工程分批，不更新結構
-5. 引導 Three Decisions：
+1. Read discovery documents, find 3 gaps: TaskQueue contract not implemented, Worker boundary undefined, API surface missing status query
+2. Scan `docs/feature-plans/` — currently empty
+3. List 3 candidates → user selects "TaskQueue implementation"
+4. Confirm Serves G1, G3; ask if SYSTEM_MAP update needed → staged engineering, no structural update
+5. Guide Three Decisions:
    - Catch boundary: boundary only
    - Domain errors: TaskNotFound, QueueFull
    - Infrastructure errors: fail fast
-6. 提取 AP1（任務未完成不接新任務）、AP2（狀態必須落地）
-7. 產出 `docs/feature-plans/task-queue.md`
-8. 更新 SYSTEM_MAP Current State
-9. 告知下一步
+6. Extract AP1 (do not accept tasks while one is in progress), AP2 (state must be persisted)
+7. Produce `docs/feature-plans/task-queue.md`
+8. Update SYSTEM_MAP Current State
+9. Inform next steps
 
-### Example 2: 接續既有 Feature Plan
+### Example 2: Continuing an Existing Feature Plan
 
-SYSTEM_MAP Gaps 顯示「TaskQueue 實作」已部分覆蓋（第 1/3 個 feature 完成）。
+SYSTEM_MAP Gaps shows "TaskQueue implementation" is partially covered (feature 1 of 3 complete).
 
-正確行為：候選清單列「task-queue-worker（接續 task-queue.md，第 2/3 個）」，feature plan 的 Coverage 欄標注「部分覆蓋（第 2/3 個，接續 task-queue.md）」。
+Correct behavior: The candidate list shows "task-queue-worker (continues task-queue.md, 2 of 3)"; the Coverage field in the feature plan notes "Partial coverage (feature 2 of 3, continues task-queue.md)".
 
-### Example 3: 發現需要更新 SYSTEM_MAP 結構
+### Example 3: SYSTEM_MAP Structure Update Required
 
-選定 feature 後發現，原本 SYSTEM_MAP 把 A 和 B 畫在同一個 boundary，但實作規劃後發現需要拆成兩個獨立 boundary。
+After selecting a feature, the team realizes the original SYSTEM_MAP placed A and B in the same boundary, but implementation planning reveals they need to be split into two independent boundaries.
 
-正確行為：停下來告知「這個發現代表對系統結構有新的理解，建議先更新 SYSTEM_MAP 的 Boundary Map（把 Seam A 拆成 Seam A1 和 Seam A2），再繼續 feature planning。這樣後續的 feature plan 和 OpenSpec 才有正確的 boundary 依據。」
+Correct behavior: Stop and inform — "This finding reflects new understanding of system structure. Recommend updating the SYSTEM_MAP Boundary Map (split Seam A into Seam A1 and Seam A2) before continuing feature planning. This ensures subsequent feature plans and OpenSpec have the correct boundary foundation."
 
-### Example 4: Discovery 不完整
+### Example 4: Incomplete Discovery
 
-只有 goals.md，沒有 SYSTEM_MAP。
+Only goals.md exists, no SYSTEM_MAP.
 
-正確行為：「feature planning 需要完整的 discovery 產出。目前缺少 SYSTEM_MAP.md，請先完成 ec:system-map、ec:align-internals、ec:align-surface，再回來做 feature planning。」
+Correct behavior: "Feature planning requires complete discovery output. SYSTEM_MAP.md is missing — please complete ec:system-map, ec:align-internals, and ec:align-surface before returning to feature planning."

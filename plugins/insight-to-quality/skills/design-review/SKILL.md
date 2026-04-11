@@ -1,150 +1,152 @@
 ---
 name: ec:design-review
 description: >
-  TDD green 之後的設計品質驗證，分兩部分：（1）核實 OpenSpec 宣告的設計決定有沒有在實作中被遵守；
-  （2）結構性檢查——職責分離、依賴方向等 linter 抓不到的問題，以提問方式引導思考。
-  當使用者完成 TDD green 階段、要做 code review、或說「review 一下」、「檢查設計」時觸發。
-  Do NOT use for: 單純看 code 什麼意思、學習語法、尚未完成 TDD green 時（先完成 ec:tdd-workflow）、
-  或 bug 修復時。
+  Design quality verification after TDD green. Two parts: (1) verify that design decisions
+  declared in OpenSpec were followed in implementation; (2) structural checks — separation of
+  concerns, dependency direction, and other issues linters cannot catch, surfaced through
+  questions rather than directives.
+  Trigger when the user has completed TDD green, wants a code review, or says "review this"
+  or "check the design".
+  Do NOT use for: understanding what code does, learning syntax, before TDD green is complete
+  (finish ec:tdd-workflow first), or during bug fixes.
 ---
 
-# Design Review（設計驗證）
+# Design Review
 
-你正在進入 design review 階段。**在開始之前，先讀：**
-- `references/architect-mindset.md`（用 traceability lens 看實作）
-- `references/implementation-mindset.md`（核實標準與結構性檢查要點）
+You are entering the design review stage. **Before starting, read:**
+- `references/architect-mindset.md` (view implementation through the traceability lens)
+- `references/implementation-mindset.md` (verification standards and structural check criteria)
 
-這個 review 分兩部分：
+This review has two parts:
 
-1. **宣告決定核實**：對照 OpenSpec 宣告的錯誤處理策略與 discovery anti-patterns，確認實作有沒有遵守。
-   有違反就直接指出，不用提問。
-2. **結構性檢查**：職責分離、依賴方向等 linter 抓不到的問題，用提問引導思考，不下指令。
+1. **Declared decisions verification**: Check whether the error handling strategy declared in OpenSpec and the discovery anti-patterns were followed in the implementation. If violations are found, point them out directly — no questions needed.
+2. **Structural checks**: Separation of concerns, dependency direction, and other issues linters cannot catch — surface these through questions, not directives.
 
-## 前置條件
+## Prerequisites
 
-- 測試已經是綠燈（所有測試通過）
-- lint + type check 已經通過（參照專案 CLAUDE.md 的 Commands 區段）
-- 如果上述條件未滿足，提醒使用者先完成
+- Tests are green (all tests pass)
+- Lint + type check pass (refer to the Commands section in the project CLAUDE.md)
+- If either condition is not met, remind the user to complete these first
 
-## Phase 0: 收集宣告的設計決定
+## Phase 0: Collect Declared Design Decisions
 
-在 review 任何 code 之前：
+Before reviewing any code:
 
-1. **讀 `docs/feature-plans/{feature-name}.md`**：取得：
-   - Error Handling Strategy（Catch boundary、Domain errors、Recovery strategy）
-   - Anti-patterns（帶 ID）
+1. **Read `docs/feature-plans/{feature-name}.md`** to get:
+   - Error Handling Strategy (Catch boundary, Domain errors, Recovery strategy)
+   - Anti-patterns (with IDs)
    - Boundary Rules
-   - 如果找不到 feature plan → 記錄「未宣告」，在第一部分標注所有決定為未宣告
+   - If no feature plan is found → record as "undeclared"; mark all decisions as undeclared in Part 1
 
-2. **確定 review 範圍**：
+2. **Determine the review scope**:
    ```bash
-   git diff --name-only HEAD~1  # 或根據實際情況調整
+   git diff --name-only HEAD~1  # or adjust to match the actual situation
    ```
 
-## 第一部分：宣告決定核實
+## Part 1: Declared Decisions Verification
 
-### 錯誤處理策略
+### Error Handling Strategy
 
-對照 OpenSpec 宣告的三個決定（見 `implementation-mindset.md` Part 1）：
+Check against the three decisions declared in OpenSpec (see `implementation-mindset.md` Part 1):
 
-| 宣告的決定 | 檢查項目 |
-|-----------|---------|
-| Catch boundary | 是否只在宣告的層有 try/except？有沒有在不該有的地方出現？ |
-| Domain errors | 宣告的 domain error 有沒有被正確 raise？有沒有未宣告的偷偷出現？ |
-| Recovery strategy | 實際的 recovery 行為有沒有跟宣告一致？ |
+| Declared Decision | Check Item |
+|-------------------|-----------|
+| Catch boundary | Is try/except only at the declared layer? Does it appear where it should not? |
+| Domain errors | Are the declared domain errors raised correctly? Are there undeclared ones appearing silently? |
+| Recovery strategy | Does the actual recovery behavior match the declaration? |
 
-如果沒有宣告 → 標記「未宣告」，提示在 OpenSpec 補上後繼續做第二部分。
+If undeclared → mark as "undeclared" and prompt to add the error handling strategy declaration to OpenSpec before continuing with Part 2.
 
-### Discovery 對齊（feature plan 存在時）
+### Discovery Alignment (when feature plan exists)
 
-從 Phase 0 讀取的 feature plan 出發：
-- 實作有沒有違反 feature plan 的 Anti-patterns？
-- 實作有沒有跨越 feature plan 的 Boundary Rules？
-- 如果有 Internals / Surface Alignment Report，標記的缺口在這次實作中有沒有被意外引入？
+Starting from the feature plan read in Phase 0:
+- Does the implementation violate any Anti-patterns from the feature plan?
+- Does the implementation cross any Boundary Rules from the feature plan?
+- If there is an Internals / Surface Alignment Report, were its flagged gaps accidentally introduced in this implementation?
 
-有發現才提，沒有就標 OK。
+Only raise findings if there are issues — mark OK if there are none.
 
-## 第二部分：結構性檢查
+## Part 2: Structural Checks
 
-對以下五個維度逐一檢視，詳細的檢查問題見 `implementation-mindset.md` Part 2。
+Review each of the five dimensions one by one. Detailed check questions are in `implementation-mindset.md` Part 2.
 
-1. **職責分離** — 一個 class/function 只做一件事？
-2. **依賴方向** — 內層是否依賴了外層？
-3. **命名語意** — 名稱是否準確反映行為？
-4. **可測試性** — 補測試容易嗎？有隱藏依賴嗎？
-5. **一致性** — 與專案中類似功能的風格一致？
+1. **Separation of concerns** — does each class/function do exactly one thing?
+2. **Dependency direction** — does any inner layer depend on an outer layer?
+3. **Naming semantics** — does the name accurately reflect the behavior?
+4. **Testability** — is it easy to add tests? Are there hidden dependencies?
+5. **Consistency** — is the style consistent with similar features in the project?
 
-## 輸出格式
+## Output Format
 
-### 第一部分：宣告決定核實
+### Part 1: Declared Decisions Verification
 
-| 宣告的決定 | 宣告內容 | 核實狀態 | 備註 |
-|-----------|---------|---------|------|
-| Catch boundary | [從 OpenSpec 讀取] | 符合 / 違反 / 未宣告 | |
-| Domain errors | [從 OpenSpec 讀取] | 符合 / 違反 / 未宣告 | |
-| Recovery strategy | [從 OpenSpec 讀取] | 符合 / 違反 / 未宣告 | |
-| Discovery 對齊 | anti-patterns + boundary | 符合 / 有違反 / 不適用 | |
+| Declared Decision | Declared Content | Verification Status | Notes |
+|-------------------|-----------------|---------------------|-------|
+| Catch boundary | [from OpenSpec] | Complies / Violates / Undeclared | |
+| Domain errors | [from OpenSpec] | Complies / Violates / Undeclared | |
+| Recovery strategy | [from OpenSpec] | Complies / Violates / Undeclared | |
+| Discovery alignment | anti-patterns + boundary | Complies / Violations found / N/A | |
 
-如有違反，在表格下方直接列出：
+If violations are found, list them below the table:
 
-**違反** `檔案:行號` — 說明（宣告 X，但實作是 Y）
+**Violation** `file:line` — description (declared X, but implementation does Y)
 
-### 第二部分：結構性問題（如果有的話）
+### Part 2: Structural Issues (if any)
 
-**[維度] `檔案:行號` — 簡述**
+**[Dimension] `file:line` — brief description**
 
-> 目前的寫法：（簡要描述現狀）
+> Current approach: (brief description of what exists)
 >
-> 考慮的方向：（提問，不是指令）
+> Direction to consider: (question, not directive)
 >
-> 為什麼值得思考：（解釋這個設計原則）
+> Why it's worth thinking about: (explanation of the design principle)
 
-### 總結
+### Summary
 
-| 維度 | 狀態 | 備註 |
-|------|------|------|
-| 錯誤處理策略 | 符合 / 違反 / 未宣告 | |
-| Discovery 對齊 | 符合 / 有違反 / 不適用 | |
-| 職責分離 | OK / 有發現 | |
-| 依賴方向 | OK / 有發現 | |
-| 命名語意 | OK / 有發現 | |
-| 可測試性 | OK / 有發現 | |
-| 一致性 | OK / 有發現 | |
+| Dimension | Status | Notes |
+|-----------|--------|-------|
+| Error handling strategy | Complies / Violates / Undeclared | |
+| Discovery alignment | Complies / Violations found / N/A | |
+| Separation of concerns | OK / Issues found | |
+| Dependency direction | OK / Issues found | |
+| Naming semantics | OK / Issues found | |
+| Testability | OK / Issues found | |
+| Consistency | OK / Issues found | |
 
 ## Examples
 
-### Example 1: 有宣告，發現違反
+### Example 1: Declaration Exists, Violation Found
 
-OpenSpec 宣告：catch boundary = boundary only；infrastructure errors = fail fast
+OpenSpec declares: catch boundary = boundary only; infrastructure errors = fail fast
 
-Review 發現：service layer 裡有 `try/except Exception: logger.error(...)` 沒有 re-raise。
+Review finds: `service.py:42` has `try/except Exception: logger.error(...)` without re-raise.
 
-正確行為：第一部分表格標記「Catch boundary：違反」，表格下方列出：
-「**違反** `service.py:42` — 非 boundary 層 catch 了 Exception 且未 re-raise，違反宣告的 boundary only 策略。」
+Correct behavior: Mark "Catch boundary: Violates" in the Part 1 table, then list below:
+"**Violation** `service.py:42` — non-boundary layer catches Exception without re-raising, violating the declared boundary-only strategy."
 
-### Example 2: 沒有宣告
+### Example 2: No Declaration
 
-Phase 0 讀 OpenSpec 找不到錯誤處理策略宣告。
+Phase 0 reads OpenSpec but finds no error handling strategy declaration.
 
-正確行為：第一部分三個決定全部標記「未宣告」，提示：「建議在 OpenSpec design decisions 補上錯誤處理策略宣告（見 `implementation-mindset.md` Declaration Format）。」繼續做第二部分。
+Correct behavior: Mark all three decisions as "Undeclared" in Part 1, and prompt: "Recommend adding an error handling strategy declaration to OpenSpec design decisions (see `implementation-mindset.md` Declaration Format)." Continue with Part 2.
 
-### Example 3: 全部 OK
+### Example 3: Everything OK
 
-第一部分全部符合；第二部分 5 個維度都 OK。
+Part 1 fully complies; Part 2 all five dimensions are OK.
 
-正確行為：直接呈現兩個表格。可以說「宣告決定全部符合，結構性設計乾淨。」
+Correct behavior: Present both tables directly. You may say "All declared decisions comply; design structure is clean."
 
-### Example 4: 前置條件未滿足
+### Example 4: Prerequisites Not Met
 
-使用者說「review 一下」但測試還沒跑過。
+User says "review this" but tests have not been run yet.
 
-正確行為：提醒「design review 的前提是測試綠燈 + lint/type check 通過，建議先完成這些再 review」。
+Correct behavior: Remind the user — "Design review requires green tests + lint/type check passing. Recommend completing these first."
 
-## 重要原則
+## Key Principles
 
-- **宣告決定違反 → 直接指出**：不用提問，直接說「宣告 X，但實作是 Y」
-- **結構性問題 → 提問優於指令**：「這個 function 同時讀 DB 和做轉換，你覺得拆開會不會更好？」
-- **沒有宣告不等於設計錯誤**：標注「未宣告」，讓使用者知道這是需要補上的決定
-- **不要吹毛求疵**：只提有實質影響的問題
-- **承認取捨**：有意識選擇的 trade-off，即使你不認同，也不是 review 的目標
-- **尊重上下文**：原型 / spike 標準可以放寬；核心模組標準要高
+- **Declaration violations → point out directly**: No question needed — just say "declared X, but implementation is Y"
+- **Structural issues → questions over directives**: "This function both reads from DB and does transformation — do you think splitting it would help?"
+- **Undeclared is not the same as wrong design**: Mark as "undeclared" to let the user know this decision needs to be captured
+- **Don't nitpick**: Only raise issues with meaningful impact
+- **Acknowledge trade-offs**: A deliberate trade-off the user consciously chose is not a review target, even if you disagree
+- **Respect context**: Prototypes / spikes can be held to a lower standard; core modules should be held to a higher standard

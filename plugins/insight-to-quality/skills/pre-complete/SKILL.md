@@ -1,160 +1,162 @@
 ---
 name: ec:pre-complete
 description: >
-  完成宣告前的強制驗證 checklist。在說「完成」、commit、或建立 PR 之前，
-  必須跑過所有驗證命令並確認輸出。防止「說完成但其實沒跑過驗證」的情況。
-  當即將完成一個 feature、要 commit、要建立 PR、或使用者說「差不多了」時觸發。
-  Do NOT use for: 開發過程中的中間測試（那是 ec:tdd-workflow 的一部分）、或單純想跑一下測試看狀態。
+  Mandatory verification checklist before declaring completion. All verification commands
+  must be run and outputs confirmed before saying "done", committing, or creating a PR.
+  Prevents declaring completion without actually running verification.
+  Trigger when a feature is nearly complete, the user wants to commit, create a PR, or
+  says "we're about done".
+  Do NOT use for: intermediate testing during development (that is part of ec:tdd-workflow),
+  or simply wanting to check current test status.
 ---
 
-# Pre-Complete Verification（完成前驗證）
+# Pre-Complete Verification
 
-你即將宣告工作完成。在說出「完成」、建議 commit、或建立 PR 之前，你必須完成以下驗證。
+You are about to declare work complete. Before saying "done", suggesting a commit, or creating a PR, you must complete the following verification.
 
-## 核心原則
+## Core Principle
 
-**證據先於結論。** 不要說「應該沒問題」——跑過驗證、看到輸出、然後才能宣告。
+**Evidence before conclusions.** Do not say "should be fine" — run verification, see the output, then declare.
 
-## 驗證命令
+## Verification Commands
 
-參照專案 CLAUDE.md 的 Commands 區段取得正確的測試、lint、type check 命令。
-不要假設任何特定的套件管理工具或命令格式。
+Refer to the Commands section of the project CLAUDE.md for the correct test, lint, and type check commands. Do not assume any specific package manager or command format.
 
 ## Checklist
 
-按順序執行，每一步都要展示實際輸出：
+Execute in order. Show actual output for every step.
 
-### 1. 測試
+### 1. Tests
 
-使用專案 CLAUDE.md 中定義的測試命令。
+Use the test command defined in the project CLAUDE.md.
 
-- 必須全部 PASS
-- 如果有 FAIL → 停止，進入 ec:debugging skill
+- Must all PASS
+- If any FAIL → stop; investigate and fix the failure
 
 ### 2. Lint & Format
 
-使用專案 CLAUDE.md 中定義的 lint/format 命令。
+Use the lint/format command defined in the project CLAUDE.md.
 
-- 必須零 error
-- 如果有 error → 修正後重跑測試確認還是綠的
+- Must produce zero errors
+- If errors exist → fix them, then re-run tests to confirm still green
 
 ### 3. Type Check
 
-使用專案 CLAUDE.md 中定義的 type check 命令。
+Use the type check command defined in the project CLAUDE.md.
 
-- 必須零 error（warning 可接受）
-- 如果有 error → 修正後重跑測試確認還是綠的
+- Must produce zero errors (warnings are acceptable)
+- If errors exist → fix them, then re-run tests to confirm still green
 
-### 4. 變更確認
+### 4. Change Confirmation
 
 ```bash
 git diff --stat
 git status
 ```
 
-- 列出所有變更的檔案
-- 確認沒有不該 commit 的檔案（.env, credentials, 暫存檔）
-- 確認沒有遺漏該 commit 的檔案
+- List all changed files
+- Confirm no files that should not be committed (.env, credentials, temp files)
+- Confirm no files that should be committed are missing
 
-### 5. OpenSpec 狀態（如果有使用）
+### 5. OpenSpec Status (if used)
 
-- 當前 change 的 tasks 是否都標記完成？
-- 如果有未完成的 task，是故意留的還是遺漏？
-- **Delta Spec 同步**：當前 change 的 delta specs 是否已同步到 `openspec/specs/` 主規格？
-  - 如果 change 的 specs 目錄有修改過的 spec.md，應同步更新到 `openspec/specs/[spec-name]/spec.md`
-  - 主規格應反映最新的實作決策，而不是停留在初始設計
-  - 同步後確認主規格內容與實作一致
+- Are all tasks in the current change marked complete?
+- If there are incomplete tasks, are they intentionally left or an oversight?
+- **Delta Spec Sync**: Have the current change's delta specs been synced to the `openspec/specs/` main spec?
+  - If the change's specs directory has a modified spec.md, sync it to `openspec/specs/[spec-name]/spec.md`
+  - The main spec should reflect the latest implementation decisions, not stay at the initial design
+  - After syncing, confirm that the main spec content matches the implementation
 
-### 5b. Discovery 文件同步（如果有使用 discovery plugin）
+### 5b. Discovery Document Sync (if using discovery skills)
 
-實作過程中是否發現以下任一情況：
+Did implementation reveal any of the following:
 
-- **SYSTEM_MAP 需要更新**：發現了新元件、舊 boundary 畫錯、或 component 的描述與實作不符
-- **dominant-ops 需要補充**：踩到了 anti-pattern 但文件中沒有記錄
-- **goals.md 需要修正**：實作後發現 goal 描述不準確，或 non-goal 需要調整
+- **SYSTEM_MAP needs updating**: discovered new components, incorrectly drawn boundaries, or component descriptions that no longer match implementation
+- **dominant-ops needs supplementing**: hit an anti-pattern that is not documented
+- **goals.md needs correction**: a goal description turned out to be inaccurate, or a non-goal needs adjustment
 
-如果有 → 更新對應的 discovery 文件，作為此次 commit 的一部分。同步後在 checklist 中標注「已更新」。
+If yes → update the corresponding discovery document as part of this commit; mark as "updated" in the checklist.
 
-如果沒有 → 填「無變動」直接跳過。
+If no → fill "no changes" and skip.
 
-**原則**：discovery 文件是「對系統的理解」，實作是「理解的驗證」。實作過程中學到的東西應該回寫到文件，不能讓理解停留在實作前的狀態。
+**Principle**: Discovery documents represent the team's understanding of the system; implementation validates that understanding. Lessons learned during implementation must be written back to the documents — understanding must not remain frozen at its pre-implementation state.
 
 ### 6. Integration Test Gaps
 
-讀取 `docs/feature-plans/{feature-name}.md` 的 `## Integration Test Gaps` 區段（由 ec:tdd-workflow Verification Ledger 完成後填入）。
+Read the `## Integration Test Gaps` section of `docs/feature-plans/{feature-name}.md` (filled in after ec:tdd-workflow Verification Ledger is complete).
 
-#### 6a. 判斷是否為整合測試時機
+#### 6a. Determine Whether Integration Tests Are Now Due
 
-以下任一條件成立時，**主動建議使用者現在補寫整合測試**：
+**Proactively recommend writing integration tests now** if any of the following is true:
 
-- Integration Test Gaps 有「需要整合測試」項目，且本次是該功能的最後一個 spec（所有相關 spec 都已完成）
-- 本次 change 涉及多個元件的接合處（例如：A 的 output 傳給 B 消費），且這個資料流在 Gaps 中標記為未驗證
-- 本次 PR 要 merge 到 main
+- Integration Test Gaps has "Needs Integration Test" items, and this is the last spec for this feature (all related specs are complete)
+- This change touches a junction between multiple components (e.g., A's output is consumed by B) and this data flow is marked as unverified in the Gaps
+- This PR is about to be merged to main
 
-如果條件不成立，跳到 6b。
+If none of these conditions apply, proceed to 6b.
 
-#### 6b. 確認缺口可追蹤
+#### 6b. Confirm Gaps Are Trackable
 
-- 列出 Integration Test Gaps 中所有「需要整合測試」但尚未補齊的項目
-- 確認每個項目有以下之一：
-  - 已建立對應的整合測試
-  - 已記錄在 issue tracker、TODO、或 openspec 的下一個 change 中
-  - 有明確的手動測試 checklist（至少跑過一次）
-- 如果有項目既沒整合測試也沒追蹤記錄 → 提醒使用者，但不阻擋 commit
-- 如果 `## Integration Test Gaps` 為空 → 標記「無缺口」，直接完成
+- List all "Needs Integration Test" items in Integration Test Gaps that are not yet addressed
+- Confirm each item has one of the following:
+  - A corresponding integration test has been written
+  - It is recorded in an issue tracker, TODO, or a future OpenSpec change
+  - A manual testing checklist exists and has been run at least once
+- If any item has neither integration test nor tracking record → remind the user, but do not block the commit
+- If `## Integration Test Gaps` is empty → mark as "no gaps" and complete
 
-## 輸出
+## Output
 
-全部通過後，以表格呈現：
+After all checks pass, present results in a table:
 
-| 驗證項目 | 狀態 | 備註 |
-|---------|------|------|
-| 測試 | PASS (N tests) | |
+| Verification Item | Status | Notes |
+|-------------------|--------|-------|
+| Tests | PASS (N tests) | |
 | Lint | PASS | |
 | Format | PASS | |
-| Type check | PASS | N warnings (如果有) |
-| 變更檔案 | N files | 已確認無敏感檔案 |
-| OpenSpec | 全部完成 / N 項未完成 | |
-| Delta Spec 同步 | 已同步 / 不適用 | |
-| Discovery 文件 | 已更新 / 無變動 / 不適用 | |
-| 整合測試缺口 | N 項已追蹤 / 無缺口 | |
+| Type check | PASS | N warnings (if any) |
+| Changed files | N files | Confirmed no sensitive files |
+| OpenSpec | All complete / N incomplete | |
+| Delta spec sync | Synced / N/A | |
+| Discovery documents | Updated / No changes / N/A | |
+| Integration test gaps | N items tracked / No gaps | |
 
-然後才可以建議 commit 或建立 PR。
+Only then may you suggest a commit or creating a PR.
 
 ## Examples
 
-### Example 1: 正常完成流程
+### Example 1: Normal Completion Flow
 
-使用者說：「應該差不多了，可以 commit 了」
+User says: "Should be about done, ready to commit."
 
-1. 跑測試 → 25 tests passed → 展示輸出
-2. 跑 lint → 0 errors → 展示輸出
-3. 跑 type check → 0 errors, 2 warnings → 展示輸出
-4. git diff --stat → 列出 5 個檔案 → 確認無敏感檔案
-5. OpenSpec → 3/3 tasks 完成，delta spec 已同步
-6. Verification Ledger → 1 個等級 3 項目（WebRTC signaling），已記錄在 issue #42 → 可追蹤
-7. 呈現總結表格 → 「全部通過，可以 commit」
+1. Run tests → 25 tests passed → show output
+2. Run lint → 0 errors → show output
+3. Run type check → 0 errors, 2 warnings → show output
+4. git diff --stat → list 5 files → confirm no sensitive files
+5. OpenSpec → 3/3 tasks complete, delta spec synced
+6. Verification Ledger → 1 tier 3 item (WebRTC signaling), tracked in issue #42 → trackable
+7. Present summary table → "All checks pass, ready to commit"
 
-### Example 4: 整合測試時機觸發
+### Example 2: Integration Test Due
 
-使用者完成了 conversation 模組的最後一個 spec，ledger 中有 2 個等級 2 項目（Gemini session 建立、transcript 跨元件傳遞）。
+User completes the last spec for the conversation module; the ledger has 2 tier 2 items (Gemini session setup, transcript cross-component transfer).
 
-正確行為：「這是 conversation 模組的最後一個 spec，ledger 中有 2 個跨元件項目尚未驗證。建議現在補寫整合測試：1) FakeGeminiSession smoke test 2) Manager → Handler transcript 資料流 contract test。要現在補還是先記錄到 issue？」
+Correct behavior: "This is the last spec for the conversation module, and the ledger has 2 cross-component items that remain unverified. Recommend writing integration tests now: 1) FakeGeminiSession smoke test 2) Manager → Handler transcript data flow contract test. Write them now or record to an issue?"
 
-### Example 2: 驗證過程中發現問題
+### Example 3: Failure Found During Verification
 
-跑 lint 時發現 2 個 error。
+Lint finds 2 errors.
 
-正確行為：修正 → 重跑測試（不是只重跑 lint）→ 重跑 lint → 重跑 type check → 全部從頭走一次。因為修正可能引入新問題。
+Correct behavior: Fix → re-run tests (not just lint) → re-run lint → re-run type check → run the full checklist from the top. A fix may introduce new issues.
 
-### Example 3: 使用者想跳過驗證
+### Example 4: User Wants to Skip Verification
 
-使用者說：「不用跑了，直接 commit」
+User says: "Skip it, just commit."
 
-正確行為：提醒使用者跳過驗證的風險，但尊重使用者的決定。如果使用者堅持，執行 commit 但在 commit message 中不宣稱「所有測試通過」。
+Correct behavior: Remind the user of the risks of skipping verification, but respect the decision. If the user insists, execute the commit but do not claim "all tests pass" in the commit message.
 
-## 如果驗證失敗
+## If Verification Fails
 
-- 修正問題
-- **從頭重跑整個 checklist**（不是只跑失敗的那項）
-- 因為修正可能引入新問題
+- Fix the issue
+- **Re-run the entire checklist from the top** (not just the failed item)
+- Because a fix may introduce new issues

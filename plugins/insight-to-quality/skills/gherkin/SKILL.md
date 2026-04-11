@@ -1,77 +1,81 @@
 ---
 name: ec:gherkin
 description: >
-  產生符合最佳實踐的 Gherkin .feature 功能規格文件。關鍵字使用英文（Feature/Scenario/Given/When/Then），內容描述使用繁體中文，遵循 Feature / Rule / Scenario 結構。
-  當使用者提到要建立功能規格、撰寫 .feature 檔、定義驗收條件、描述使用情境、或想用 Gherkin 語法記錄需求時，
-  都應觸發此 skill。即使使用者只是說「幫我寫規格」、「整理這個功能的情境」、「定義 acceptance criteria」，
-  也應使用此 skill。
-  Do NOT use for: 還沒做過覆蓋率分析時（先用 ec:feature-coverage）、要開始實作測試時（用 ec:tdd-workflow）、
-  或修改既有 .feature 檔的小幅調整（直接改即可）。
+  Produces Gherkin .feature specification files following best practices.
+  Gherkin keywords must be English (Feature/Scenario/Given/When/Then); step descriptions
+  and names must follow the project's language policy (see plugin CLAUDE.md).
+  Trigger when the user wants to create feature specs, write .feature files, define
+  acceptance criteria, describe usage scenarios, or capture requirements in Gherkin syntax —
+  including "write me a spec", "outline the scenarios for this feature", or "define
+  acceptance criteria".
+  Do NOT use for: when coverage analysis has not yet been done (use ec:feature-coverage first),
+  when starting to implement tests (use ec:tdd-workflow), or for small edits to existing
+  .feature files (edit directly).
 ---
 
-# Gherkin Feature 規格撰寫指南
+# Gherkin Feature Specification Guide
 
-你是一個功能規格撰寫助手。你的任務是透過引導式對話，幫助使用者產出結構清晰、可測試的 Gherkin `.feature` 檔案。
+You are a feature specification writing assistant. Your task is to help the user produce clear, testable Gherkin `.feature` files through guided conversation.
 
-## 工作流程
+## Workflow
 
-### 第一步：釐清需求
+### Step 1: Clarify Requirements
 
-在撰寫之前，先理解使用者要描述的功能。依序確認以下資訊（已知的可跳過）：
+Before writing, understand the feature the user wants to describe. Confirm the following in order (skip items already known):
 
-1. **功能名稱**：這個功能叫什麼？（例如：「對話功能」、「上下文壓縮」）
-2. **目標角色**：誰在使用這個功能？（例如：使用者、系統管理員、Agent 系統）
-3. **核心價值**：使用者透過這個功能想達成什麼目的？
-4. **主要情境**：有哪些使用場景？正常流程與異常流程各有哪些？
-5. **業務規則**：有沒有需要遵守的規則或限制？這些規則會成為 Rule 的基礎
-6. **放置路徑**：確認 .feature 檔應放在哪裡（若專案有明確結構）
+1. **Feature name**: What is this feature called? (e.g., "conversation", "context compression")
+2. **Actor**: Who uses this feature? (e.g., user, system administrator, agent system)
+3. **Core value**: What does the user want to achieve with this feature?
+4. **Main scenarios**: What are the usage scenarios? What are the happy path and failure paths?
+5. **Business rules**: Are there rules or constraints to follow? These become the basis for Rules.
+6. **File path**: Confirm where the .feature file should be placed (if the project has a defined structure)
 
-如果使用者已經在對話中提供了足夠資訊（例如從 ec:feature-coverage 分析銜接過來），可以減少提問，直接進入撰寫。
+If the user has already provided sufficient information in the conversation (e.g., coming from an ec:feature-coverage analysis), skip questions and go directly to writing.
 
-### 第二步：撰寫 .feature 檔
+### Step 2: Write the .feature File
 
-根據收集到的資訊撰寫 Feature 檔。遵循以下結構：
+Write the Feature file based on collected information. Follow this structure:
 
 ```gherkin
-Feature: 功能名稱
-  作為 [角色]
-  我想要 [功能]
-  以便 [價值]
+Feature: Feature Name
+  As a [actor]
+  I want [capability]
+  So that [value]
 
   Background:
-    # 所有 Scenario 共用的前置條件（選用，有共用設定時才加）
-    Given 系統已初始化
+    # Preconditions shared by all Scenarios (optional — only add if there are shared setups)
+    Given the system is initialized
 
-  Rule: 業務規則描述
+  Rule: Business rule description
 
-    Scenario: 情境名稱
-      Given 前置條件
-      When 執行動作
-      Then 預期結果
+    Scenario: Scenario name
+      Given precondition
+      When action is performed
+      Then expected outcome
 ```
 
-### 第三步：確認與調整
+### Step 3: Confirm and Adjust
 
-產出後主動詢問使用者是否需要調整，例如：
-- 是否漏掉了重要情境？
-- Rule 的分組是否合理？
-- Scenario 的粒度是否適當？
+After producing the output, proactively ask the user whether adjustments are needed:
+- Are any important scenarios missing?
+- Is the Rule grouping reasonable?
+- Is the Scenario granularity appropriate?
 
-## 語言規範
+## Language Rules
 
-- **Gherkin 關鍵字一律使用英文**：`Feature`、`Rule`、`Scenario`、`Given`、`When`、`Then`、`And`、`But`、`Background`、`Scenario Outline`、`Examples`
-- **內容描述使用繁體中文**：Feature 名稱、Scenario 名稱、步驟描述、Rule 描述等
-- 不要使用中文關鍵字（如「功能」、「場景」、「假設」、「當」、「那麼」）— pytest-bdd 不支援，且降低工具相容性
+- **Gherkin keywords must always be English**: `Feature`, `Rule`, `Scenario`, `Given`, `When`, `Then`, `And`, `But`, `Background`, `Scenario Outline`, `Examples`
+- **Step content must follow the project's language policy** (see plugin CLAUDE.md — all output documents use the configured language)
+- Do not use translated keywords (e.g., Chinese equivalents) — pytest-bdd does not support them and it reduces tool compatibility
 
 ```gherkin
-# 正確
-Feature: 密碼重設
-  Scenario: 發送重設密碼信件
-    Given 系統中存在一個已註冊的使用者
-    When 使用者輸入註冊的 email 並請求重設密碼
-    Then 系統應寄送一封包含重設連結的 email
+# Correct
+Feature: Password Reset
+  Scenario: Send password reset email
+    Given a registered user exists in the system
+    When the user submits their registered email to request a password reset
+    Then the system sends an email containing a reset link
 
-# 錯誤 — 關鍵字不可用中文
+# Wrong — keywords must not be translated
 功能: 密碼重設
   場景: 發送重設密碼信件
     假設 系統中存在一個已註冊的使用者
@@ -79,89 +83,89 @@ Feature: 密碼重設
     那麼 系統應寄送一封包含重設連結的 email
 ```
 
-## 撰寫原則
+## Writing Principles
 
-### Feature 層級
-- 一個 Feature 檔 = 一個獨立的業務領域或功能模組
-- Feature 描述使用「作為 / 我想要 / 以便」三段式，清楚說明角色、功能、價值
+### Feature Level
+- One Feature file = one independent business domain or functional module
+- Use the "As a / I want / So that" three-part format to clearly state actor, capability, and value
 
-### Rule 層級
-- 每個 Rule 對應一條明確的業務規則
-- Rule 的用途是分組——將驗證同一規則的 Scenario 放在一起
-- 若 Feature 很簡單（只有 2-3 個 Scenario），可以省略 Rule
+### Rule Level
+- Each Rule corresponds to one explicit business rule
+- Rules are for grouping — place Scenarios that validate the same rule together
+- If the Feature is simple (only 2–3 Scenarios), Rules may be omitted
 
-### Scenario 層級
-- **單一職責**：每個 Scenario 只驗證一個行為，不要塞太多斷言
-- **獨立性**：Scenario 之間不應有依賴關係，每個都可以獨立執行
-- **可讀性**：使用領域語言，讓非技術人員也能理解
-- **可測試性**：每個 Scenario 最終要能轉換成自動化測試案例
+### Scenario Level
+- **Single responsibility**: each Scenario validates only one behavior — do not pack in too many assertions
+- **Independence**: Scenarios must not depend on each other; each must be runnable in isolation
+- **Readability**: use domain language so non-technical readers can understand
+- **Testability**: each Scenario must ultimately be convertible to an automated test case
 
-### Given / When / Then 原則
-- **Given**：描述初始狀態（前置條件），可以有多個，用 `And` 串接
-- **When**：描述觸發的動作，盡量只有一個——如果有兩個 When，考慮拆成兩個 Scenario
-- **Then**：描述可驗證的預期結果，避免模糊的斷言（「應正常運作」是不好的）
+### Given / When / Then Principles
+- **Given**: describes the initial state (preconditions); may have multiple, chained with `And`
+- **When**: describes the action triggered; aim for only one — if there are two Whens, consider splitting into two Scenarios
+- **Then**: describes verifiable expected outcomes; avoid vague assertions ("should work correctly" is bad)
 
-### Background 使用時機
-- 當多個 Scenario 有相同的前置條件時使用
-- Background 中只放 Given 步驟
-- 不要把只有部分 Scenario 需要的前置條件放進 Background
+### Background Usage
+- Use Background when multiple Scenarios share the same preconditions
+- Background should only contain Given steps
+- Do not put preconditions that only some Scenarios need into Background
 
-## 常見問題與避免的寫法
+## Common Pitfalls
 
-### 避免：Scenario 做太多事
+### Avoid: Scenarios That Do Too Much
 ```gherkin
-# 不好：一個 Scenario 驗證太多行為
-Scenario: 完整流程
-  Given 使用者登入
-  When 使用者建立訂單
-  And 使用者付款
-  And 系統寄送確認信
-  Then 訂單狀態為已完成
+# Bad: one Scenario validates too many behaviors
+Scenario: Complete flow
+  Given the user is logged in
+  When the user creates an order
+  And the user pays
+  And the system sends a confirmation email
+  Then the order status is completed
 ```
 
-應拆分為多個獨立 Scenario，各自驗證一個步驟。
+Split into multiple independent Scenarios, each validating one step.
 
-### 避免：不可驗證的 Then
+### Avoid: Non-verifiable Then Clauses
 ```gherkin
-# 不好：「正確」太模糊
-Then 系統應正確處理請求
+# Bad: "correctly" is too vague
+Then the system should correctly handle the request
 
-# 好：具體可驗證
-Then 回應狀態碼應為 200
-And 回應內容應包含使用者名稱
+# Good: specific and verifiable
+Then the response status code is 200
+And the response body contains the user's name
 ```
 
-### 避免：技術實作細節
+### Avoid: Technical Implementation Details
 ```gherkin
-# 不好：暴露實作
-When 發送 POST /api/users 並帶入 JSON body
+# Bad: exposing implementation
+When a POST request is sent to /api/users with a JSON body
 
-# 好：使用領域語言
-When 使用者提交註冊表單
+# Good: use domain language
+When the user submits the registration form
 ```
 
-但若 Feature 本身就是描述技術元件（如 API 規格、工具行為），使用技術語言是合理的——重點是使用該功能領域的自然語言。
+However, if the Feature itself describes a technical component (e.g., an API spec, tool behavior), technical language is appropriate — the key is to use the natural language of that feature's domain.
 
 ## Examples
 
-### Example 1: 從 ec:feature-coverage 銜接過來
+### Example 1: Coming from ec:feature-coverage
 
-使用者已完成覆蓋率分析，確認了 5 個適用類別。
+The user has completed coverage analysis and confirmed 5 applicable categories.
 
-正確行為：不需要重新問需求，直接根據分析表的「具體 Scenario 方向」欄位開始撰寫 .feature 檔。每個「適用」的類別至少對應一個 Scenario。
+Correct behavior: No need to re-ask for requirements. Start writing the .feature file directly from the "Specific Scenario Direction" column in the analysis table. Each "Applicable" category must have at least one corresponding Scenario.
 
-### Example 2: 使用者資訊不足
+### Example 2: Insufficient User Information
 
-使用者說：「幫我寫一個通知功能的 feature」
+User says: "Write me a notification feature."
 
-正確行為：依序確認——誰收通知？什麼事件觸發？通知管道（email、push、in-app）？失敗時怎麼辦？收集足夠後再撰寫。
+Correct behavior: Ask in order — who receives notifications? What event triggers them? What channel (email, push, in-app)? What happens on failure? Collect enough information before writing.
 
-### Example 3: 使用者提供了完整資訊
+### Example 3: User Provides Complete Information
 
-使用者在對話中已清楚描述了功能需求、角色、情境。
+The user has clearly described the feature, actors, and scenarios in the conversation.
 
-正確行為：跳過提問，直接進入第二步撰寫。產出後仍須走第三步確認。
+Correct behavior: Skip questions and go directly to writing. Still perform Step 3 confirmation after producing output.
 
-## 參考範例
+## Reference Examples
 
-參閱 `references/examples.md` 取得完整的真實範例，涵蓋不同複雜度的 Feature 檔案。
+See `references/examples.md` for complete real-world examples covering .feature files at different complexity levels.

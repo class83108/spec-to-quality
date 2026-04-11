@@ -1,141 +1,144 @@
 ---
 name: ec:feature-coverage
 description: >
-  寫 .feature 檔之前的覆蓋率分析流程。強制在撰寫 Gherkin scenario 前，先對 6 類 scenario 類別
-  逐一判斷「適用 / 不適用（附原因）」並等使用者確認。
-  當使用者要開始寫 .feature 檔、定義測試情境、規劃 scenario、或說「覆蓋率分析」時觸發。
-  Do NOT use for: 已經有 .feature 檔要開始實作時（用 ec:tdd-workflow）、修 bug 時、或單純討論需求時。
+  Coverage analysis before writing .feature files. Enforces analysis of all 6 scenario
+  categories (Applicable / Not applicable with reason) and waits for user confirmation
+  before any Gherkin scenario is written.
+  Trigger when the user wants to start writing .feature files, define test scenarios,
+  plan scenarios, or says "coverage analysis".
+  Do NOT use for: when .feature files already exist and implementation should begin
+  (use ec:tdd-workflow), during bug fixes, or when simply discussing requirements.
 ---
 
-# Feature 覆蓋率分析
+# Feature Coverage Analysis
 
-你正在進入 .feature 檔撰寫的前置步驟。在寫任何 Gherkin scenario 之前，你必須完成覆蓋率分析並取得使用者確認。
+You are entering the pre-writing step before any .feature file is created. You must complete coverage analysis and get user confirmation before writing any Gherkin scenario.
 
-**在開始之前，先讀 `references/implementation-mindset.md` Part 3**，取得 6 類 scenario 的定義、分析起點映射、和 overlap 判斷規則。
+**Before starting, read `references/implementation-mindset.md` Part 3** — it contains definitions for all 6 scenario categories, analysis entry points, and overlap rules.
 
-## 流程（嚴格遵守）
+## Workflow (follow strictly)
 
-### Step 0: 讀取 Feature Plan
+### Step 0: Read the Feature Plan
 
-讀 `docs/feature-plans/{feature-name}.md`（命名與此 OpenSpec change 相同）。
+Read `docs/feature-plans/{feature-name}.md` (same name as the OpenSpec change).
 
-如果找不到對應的 feature plan：
-→ 停下來告知：「這個 change 沒有對應的 feature plan。請先執行 ec:feature-planning 建立 feature plan，再進行覆蓋率分析。」
+If no matching feature plan is found:
+→ Stop and inform: "There is no feature plan for this change. Run ec:feature-planning to create one before proceeding with coverage analysis."
 
-從 feature plan 提取並記錄以下資訊——這是類別 1、2、3 的分析起點：
+Extract and record the following — these are the analysis entry points for categories 1, 2, and 3:
 
-- **Serves**：Gx 清單與對應的 goal 描述
-- **Error Handling Strategy**：Catch boundary、Domain errors、Recovery strategy
-- **Anti-patterns**：帶 ID 的清單（AP1、AP2...）與說明
-- **Boundary Rules**：觸碰的 boundary 與限制
+- **Serves**: List of Gx IDs and their goal descriptions
+- **Error Handling Strategy**: Catch boundary, Domain errors, Recovery strategy
+- **Anti-patterns**: List with IDs (AP1, AP2...) and descriptions
+- **Boundary Rules**: Which boundaries are touched and their constraints
 
-完成 Step 0 後，才進入 Step 1。
+Only proceed to Step 1 after completing Step 0.
 
-### Step 1: 讀取 OpenSpec 實作細節
+### Step 1: Read OpenSpec Implementation Details
 
-讀取相關 OpenSpec change 的具體行為規格——這是類別 4、5、6 的分析起點：
+Read the specific behavioral specifications from the relevant OpenSpec change — these are the analysis entry points for categories 4, 5, and 6:
 
-- spec.md 的 SHALL / MUST 語句（類別 5 State mutation 的來源）
-- Requirements 的條件邏輯（類別 4 Business rules 的來源）
-- schema 定義（類別 6 Output contract 的來源）
+- SHALL / MUST statements from spec.md (source for category 5 State mutation)
+- Conditional logic in Requirements (source for category 4 Business rules)
+- Schema definitions (source for category 6 Output contract)
 
-同時讀取：
-- 專案 CLAUDE.md 中的「Feature Scenario 具體化對應表」（如果有的話）
-- 如果專案中已有同類型的 .feature 檔，讀取 1-2 個作為覆蓋率參考基準
+Also read:
+- The "Feature Scenario Mapping Table" in the project CLAUDE.md (if present)
+- 1–2 existing .feature files of the same type as a coverage reference baseline
 
-### Step 2: 產出覆蓋率分析表
+### Step 2: Produce Coverage Analysis Table
 
-對以下 6 類 scenario 類別逐一判斷，輸出固定格式表格。每類的分析起點和定義見 `implementation-mindset.md` Part 3。
+For each of the 6 scenario categories, make a judgment and output in this fixed table format. See `implementation-mindset.md` Part 3 for category definitions and entry points.
 
-| # | 類別 | 適用 | 具體 Scenario 方向 | Gx | 不適用原因 |
-|---|------|------|-------------------|----|-----------|
-| 1 | Happy path — 正常流程端到端 | | | | |
-| 2 | Error / Failure paths — anti-patterns 觸發、domain error 回傳、外部依賴失敗 | | | | |
-| 3 | Boundary & Edge cases — theory limits、空值、超大值、最小輸入 | | | | |
-| 4 | Business rules — 條件邏輯、多條件組合、規則例外 | | | | |
-| 5 | State mutation — DB/檔案寫入正確性、冪等性、re-run 清理 | | | | |
-| 6 | Output contract — 回傳格式符合 schema、boundary 跨越處的 shape match | | | | |
+| # | Category | Applicable | Specific Scenario Direction | Gx | Reason if Not Applicable |
+|---|----------|-----------|-----------------------------|----|--------------------------|
+| 1 | Happy path — normal end-to-end flow | | | | |
+| 2 | Error / Failure paths — anti-pattern triggers, domain error returns, external dependency failures | | | | |
+| 3 | Boundary & Edge cases — theory limits, null values, oversized inputs, minimum input | | | | |
+| 4 | Business rules — conditional logic, multi-condition combinations, rule exceptions | | | | |
+| 5 | State mutation — DB/file write correctness, idempotency, re-run cleanup | | | | |
+| 6 | Output contract — return format matches schema, shape match at boundary crossings | | | | |
 
-**適用欄**：填「是」或「否」。否必須填不適用原因，不得空白。
+**Applicable column**: fill "Yes" or "No". "No" must include a reason — never leave it blank.
 
-完成分析表後，**接著做 Step 3**，不要跳過。
+After completing the table, **proceed immediately to Step 3** — do not skip.
 
-### Step 3: Gx 完整性確認
+### Step 3: Gx Completeness Check
 
-確認 feature plan 的 Serves 中每個 Gx，在分析表的 Gx 欄中都至少出現一次。
+Confirm that every Gx from the feature plan's Serves field appears at least once in the Gx column of the analysis table.
 
-如果某個 Gx 完全沒有出現 → 標記出來，詢問使用者是否遺漏了覆蓋，或這個 goal 在此 change 中確實不需要驗證（附理由）。
+If a Gx does not appear anywhere → flag it and ask the user: is this an oversight in coverage, or does this goal genuinely require no verification in this change (with reason)?
 
-### Step 4: 與既有 feature 交叉比對
+### Step 4: Cross-Reference with Existing Features
 
-如果專案中有結構類似的 .feature 檔（例如同一層級的其他模組），列出：
-- 那些 feature 覆蓋了哪些類別
-- 本次分析結果與它們的差異
-- 差異是否合理（有意的差異 vs. 遺漏）
+If the project has structurally similar .feature files (e.g., other modules at the same level), list:
+- Which categories those features cover
+- Differences from this analysis
+- Whether the differences are intentional or gaps
 
-### Step 5: 等待確認
+### Step 5: Wait for Confirmation
 
-將分析結果呈現給使用者，明確詢問：
+Present the analysis to the user and explicitly ask:
 
-1. 是否有遺漏的類別或 scenario？
-2. 不適用的判斷是否合理？
-3. Gx 的對應是否完整？
-4. 與既有 feature 的差異是否可接受？
+1. Are there any missing categories or scenarios?
+2. Are the "Not applicable" judgments reasonable?
+3. Is the Gx mapping complete?
+4. Are differences from existing features acceptable?
 
-**在使用者明確確認前，不得開始撰寫 .feature 檔。**
+**Do not start writing any .feature file before the user explicitly confirms.**
 
-回應的最後一句必須明確說：「確認後，我會使用 `ec:gherkin` 開始撰寫 .feature 檔。撰寫完成後會進入 Verification Ledger（Mock 邊界審查）再開始寫測試。」
+The final sentence of your response must clearly state: "Once confirmed, I will use `ec:gherkin` to write the .feature file. After writing, we will proceed to the Verification Ledger (Mock Boundary Review) before writing any tests."
 
-### Step 6: 進入 Gherkin 撰寫
+### Step 6: Enter Gherkin Writing
 
-確認後，使用 ec:gherkin skill 開始撰寫 .feature 檔。確保分析表中每個「適用」的類別都有對應的 Scenario。
+After confirmation, use the ec:gherkin skill to write the .feature file. Ensure every "Applicable" category in the analysis table has at least one corresponding Scenario.
 
 ## Examples
 
-### Example 1: 正常流程
+### Example 1: Normal Flow
 
-使用者說：「開始做覆蓋率分析」
+User says: "Start coverage analysis"
 
-**Step 0**：讀 `docs/feature-plans/task-queue.md`，提取：
-- Serves: G2（系統必須支援並行處理最多 5 個任務）
-- Error Handling Strategy: catch boundary = boundary only；domain errors = TaskNotFound, QueueFull；infrastructure errors = fail fast
-- AP1 (D1): 任務未完成不接新任務、AP2 (D2): 狀態必須落地 DB
-- Boundary Rules: 資料只能從 TaskQueue 流向 Worker，不可反向
+**Step 0**: Read `docs/feature-plans/task-queue.md`, extract:
+- Serves: G2 (system must support up to 5 concurrent tasks)
+- Error Handling Strategy: catch boundary = boundary only; domain errors = TaskNotFound, QueueFull; infrastructure errors = fail fast
+- AP1 (D1): do not accept new tasks while one is incomplete; AP2 (D2): state must be persisted to DB
+- Boundary Rules: data may only flow from TaskQueue to Worker, not in reverse
 
-**Step 1**：讀 OpenSpec spec.md，取得 SHALL 語句（任務狀態必須寫入 DB）和條件邏輯（若 queue 已滿則拒絕）
+**Step 1**: Read OpenSpec spec.md, extract SHALL statements (task state must be written to DB) and conditional logic (reject if queue is full)
 
-**Step 2** 分析表：
+**Step 2** analysis table:
 
-| # | 類別 | 適用 | 具體 Scenario 方向 | Gx | 不適用原因 |
-|---|------|------|-------------------|----|-----------|
-| 1 | Happy path | 是 | 5 個任務並行，全部成功完成 | G2 | |
-| 2 | Error / Failure paths | 是 | AP1 觸發（QueueFull，回傳結構化 domain error）；AP2 驗證（Worker crash 後狀態已落地）；DB 連線失敗時 fail fast | G2 | |
-| 3 | Boundary & Edge cases | 是 | 恰好 5 個並行（theory limit 上限）；只有 1 個任務（最小值） | G2 | |
-| 4 | Business rules | 否 | | | spec.md Requirements 無條件分支邏輯 |
-| 5 | State mutation | 是 | 任務狀態寫入 DB 後可查詢；重複觸發不產生重複任務 | G2 | |
-| 6 | Output contract | 是 | TaskQueue ↔ Worker boundary 的 schema match | G2 | |
+| # | Category | Applicable | Specific Scenario Direction | Gx | Reason if Not Applicable |
+|---|----------|-----------|-----------------------------|----|--------------------------|
+| 1 | Happy path | Yes | 5 tasks run in parallel, all succeed | G2 | |
+| 2 | Error / Failure paths | Yes | AP1 triggered (QueueFull, returns structured domain error); AP2 validated (state persisted after worker crash); fail fast on DB connection failure | G2 | |
+| 3 | Boundary & Edge cases | Yes | Exactly 5 concurrent (theory limit upper bound); only 1 task (minimum value) | G2 | |
+| 4 | Business rules | No | | | spec.md Requirements has no conditional branch logic |
+| 5 | State mutation | Yes | Task state written to DB and queryable; re-triggering does not create duplicate tasks | G2 | |
+| 6 | Output contract | Yes | Schema match at TaskQueue ↔ Worker boundary | G2 | |
 
-**Step 3**：G2 在所有適用類別都有出現，完整。
+**Step 3**: G2 appears in all applicable categories — complete.
 
-### Example 2: 找不到 feature plan
+### Example 2: Feature Plan Not Found
 
-Step 0 找不到 `docs/feature-plans/task-queue.md`。
+Step 0 cannot find `docs/feature-plans/task-queue.md`.
 
-正確行為：「這個 change 沒有對應的 feature plan。請先執行 ec:feature-planning 建立 feature plan，再進行覆蓋率分析。」不要繼續往下做。
+Correct behavior: "There is no feature plan for this change. Run ec:feature-planning to create one before proceeding with coverage analysis." Do not continue.
 
-### Example 3: 使用者跳過分析直接要求寫 feature
+### Example 3: User Wants to Skip Analysis and Write Feature Directly
 
-使用者說：「直接幫我寫 .feature 檔，不用分析了」
+User says: "Just write the .feature for me, skip the analysis."
 
-正確行為：提醒使用者覆蓋率分析的價值，然後讓使用者決定：
+Correct behavior: Explain the value of coverage analysis, then let the user decide:
 
-1. 使用者堅持跳過 → 尊重決定，直接交給 `ec:gherkin` 撰寫 .feature
-2. 使用者接受建議 → 開始 Step 0，走完整流程
+1. User insists on skipping → respect the decision, hand off directly to `ec:gherkin`
+2. User accepts the suggestion → begin Step 0, follow the full workflow
 
-## 注意事項
+## Notes
 
-- 「不適用」需要有理由，不能空白
-- 如果某個類別不確定是否適用，標記為「待討論」而非直接標否
-- 覆蓋率分析是為了確保一致性，不是追求 100% 覆蓋——有意識地跳過比無意識地遺漏好
-- Gx 欄可以填多個 ID（一個 scenario 服務多個 goal），用逗號分隔
-- Overlap 判斷規則見 `implementation-mindset.md` Part 3
+- "Not applicable" must include a reason — never leave it blank
+- If unsure whether a category applies, mark as "Needs discussion" rather than No
+- Coverage analysis ensures consistency, not 100% coverage — a deliberate skip is better than an unconscious gap
+- The Gx column may contain multiple IDs (one scenario serves multiple goals), separated by commas
+- Overlap rules are in `implementation-mindset.md` Part 3
