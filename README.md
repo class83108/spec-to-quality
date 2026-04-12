@@ -181,8 +181,6 @@ Feature plan 完成後，才進入 `feature-coverage` 開始寫測試規格。SY
 
 在專案的 `CLAUDE.md` 裡面要有一個 **Commands** 區段，告訴 agent 怎麼跑測試、lint、type check。Skills 不會假設任何特定工具。
 
-參考 [templates/CLAUDE.md.example](templates/CLAUDE.md.example) 看範例。
-
 ### 建議的工具組合
 
 - **OpenSpec** — 需求與變更管理
@@ -197,5 +195,3 @@ Feature plan 完成後，才進入 `feature-coverage` 開始寫測試規格。SY
 
 - Eval workspace 放在 repo 裡，方便追蹤每次改動的前後對比
 - 如果某個步驟出現更好的工具，skill 會跟著更新
-
-版本歷史見 [CHANGELOG.md](CHANGELOG.md)。
