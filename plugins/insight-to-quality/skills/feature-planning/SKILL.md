@@ -46,7 +46,9 @@ Read the following documents and extract key information:
 - `Boundary Map`: contract status for each boundary
 - `Lessons`: pitfalls from completed features that may affect the candidates being planned — extract entries related to the boundaries or components this feature will touch and present them to the user during Step 2
 
-**Align reports** → extract contract gaps (align-internals) and interface gaps (align-surface)
+**Align reports** → check whether `docs/alignment/internals-report.md` and `docs/alignment/surface-report.md` exist (active, unprocessed findings):
+- Both exist → read both, merge their Gaps and Recommendations, deduplicate items that describe the same underlying problem. These findings supplement the SYSTEM_MAP Gaps.
+- One or neither exists → proceed using SYSTEM_MAP Gaps only. SYSTEM_MAP is the single source of truth once reports have been processed and archived.
 
 **Existing feature plans**: scan the `docs/feature-plans/` directory to understand which gaps are already covered or partially covered
 
@@ -161,16 +163,26 @@ Create `{feature-name}.md` under `docs/feature-plans/`, using kebab-case — the
 <!-- Records gaps that need integration tests but are deferred; pre-complete reads this section -->
 ```
 
-### Step 7: Update SYSTEM_MAP Current State
+### Step 7: Update SYSTEM_MAP Current State and Archive Reports
 
-Reflect the feature plan's progress in SYSTEM_MAP:
+**First — write all curated findings to SYSTEM_MAP Gaps** (not only the selected feature). For every finding from the alignment reports that was judged worth tracking, add it to `Current State.Gaps`. Findings not worth tracking (quick fixes, doc corrections) are handled inline and do not appear here. This makes SYSTEM_MAP the complete source of truth going forward.
 
 ```markdown
 ## Current State
 - **In-flight**: [feature-name] (docs/feature-plans/{feature-name}.md)
 - **Gaps**:
-  - [gap description]: partially covered (feature 1 of 3, in-flight) / planned (docs/feature-plans/...)
+  - [gap from alignment or prior SYSTEM_MAP]: not started / planned (docs/feature-plans/...) / partially covered (feature N of M, in-flight)
+  - [additional curated findings from alignment reports, if any]
 ```
+
+**Then — archive the alignment reports** (if they were read in Step 1). Move each active report to `docs/alignment/archive/` with a date prefix so they are no longer on the active read path:
+
+```
+docs/alignment/internals-report.md  →  docs/alignment/archive/YYYY-MM-DD-internals-report.md
+docs/alignment/surface-report.md    →  docs/alignment/archive/YYYY-MM-DD-surface-report.md
+```
+
+After archiving, the active `docs/alignment/` directory contains no reports. The next `feature-planning` session will read SYSTEM_MAP only. Re-run `align-internals` or `align-surface` whenever a fresh audit is needed.
 
 ### Step 8: Confirm and Hand Off
 

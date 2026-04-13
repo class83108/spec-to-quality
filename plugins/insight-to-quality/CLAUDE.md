@@ -10,25 +10,39 @@ Bad research produces bad plans; bad plans produce bad code. Discovery ensures r
 
 ```mermaid
 flowchart TD
-    subgraph refs[References]
-        AM[architect-mindset.md]
-        IM[implementation-mindset.md]
+    subgraph discovery["discovery（理解階段）"]
+        G[goals-discovery] --> D[dominant-ops]
+        D --> S[system-map]
+        S --> AI[align-internals]
+        S --> AS[align-surface]
     end
 
-    G[goals-discovery] --> D[dominant-ops]
-    D --> S[system-map]
-    S --> AI[align-internals]
-    S --> AS[align-surface]
-    AI & AS --> FP[feature-planning]
-    FP --> FC[feature-coverage]
-    FC --> GH[gherkin]
-    GH --> TDD[tdd-workflow<br/>with Verification Ledger]
-    TDD --> DR[design-review]
-    DR --> PC[pre-complete<br/>with Delta Spec sync]
+    AI & AS --> FP
 
-    AM -.-> G & D & S & AI & AS & FP & DR
-    IM -.-> FP & FC & TDD & DR
+    subgraph impl["spec-to-quality（實作階段）"]
+        FP[feature-planning] --> FC[feature-coverage]
+        FC --> GH[gherkin]
+        GH --> TDD[tdd-workflow<br/>with Verification Ledger]
+        TDD --> DR[design-review]
+        DR --> PC[pre-complete<br/>with Delta Spec sync]
+    end
+
+    NEW([新專案]) --> G
+    SF([start-feature<br/>有具體功能想法]) -.->|缺 discovery 或 alignment| G
+    SF -.->|一切就緒| FP
+
+    classDef am fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef im fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef both fill:#ede9fe,stroke:#7c3aed,color:#3b0764
+    classDef entry fill:#f0fdf4,stroke:#22c55e,color:#14532d
+
+    class G,D,S,AI,AS am
+    class FC,TDD im
+    class FP,DR both
+    class NEW,SF entry
 ```
+
+> 🔵 藍：參考 architect-mindset.md　🟡 黃：參考 implementation-mindset.md　🟣 紫：兩者皆參考　🟢 綠：功能入口
 
 ## Rules
 
@@ -52,6 +66,7 @@ flowchart TD
 | system-map | align-internals | SYSTEM_MAP's Boundary Map drives contract alignment |
 | system-map | align-surface | SYSTEM_MAP's Component Map + Dx user journeys drive interface alignment |
 | align-internals/surface | feature-planning | After alignment, read SYSTEM_MAP gaps to decide the next feature |
+| start-feature | goals-discovery / dominant-ops / system-map / align-internals / align-surface / feature-planning | Routes to the earliest layer that needs work; use when you have a feature idea but don't know the scope |
 | feature-planning | feature-coverage | After the feature plan is established, proceed to coverage analysis |
 | feature-coverage | gherkin | After coverage analysis is confirmed, trigger gherkin to write the .feature file |
 | gherkin | tdd-workflow | After the .feature file is written, create the Verification Ledger first, then proceed to Red |
