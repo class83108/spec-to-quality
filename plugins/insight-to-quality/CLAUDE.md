@@ -26,11 +26,7 @@ flowchart TD
     TDD --> DR[design-review]
     DR --> PC[pre-complete<br/>with Delta Spec sync]
 
-    SF[start-feature<br/>有具體想法但不確定範圍] -.->|缺 goal| G
-    SF -.->|缺 dominant-op| D
-    SF -.->|缺 boundary| S
-    SF -.->|缺 alignment| AI
-    SF -.->|缺 alignment| AS
+    SF[start-feature] -.->|缺 discovery 或 alignment| G
     SF -.->|一切就緒| FP
 
     AM -.-> G & D & S & AI & AS & FP & DR
