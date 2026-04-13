@@ -26,6 +26,13 @@ flowchart TD
     TDD --> DR[design-review]
     DR --> PC[pre-complete<br/>with Delta Spec sync]
 
+    SF[start-feature<br/>有具體想法但不確定範圍] -.->|缺 goal| G
+    SF -.->|缺 dominant-op| D
+    SF -.->|缺 boundary| S
+    SF -.->|缺 alignment| AI
+    SF -.->|缺 alignment| AS
+    SF -.->|一切就緒| FP
+
     AM -.-> G & D & S & AI & AS & FP & DR
     IM -.-> FP & FC & TDD & DR
 ```
@@ -52,6 +59,7 @@ flowchart TD
 | system-map | align-internals | SYSTEM_MAP's Boundary Map drives contract alignment |
 | system-map | align-surface | SYSTEM_MAP's Component Map + Dx user journeys drive interface alignment |
 | align-internals/surface | feature-planning | After alignment, read SYSTEM_MAP gaps to decide the next feature |
+| start-feature | goals-discovery / dominant-ops / system-map / align-internals / align-surface / feature-planning | Routes to the earliest layer that needs work; use when you have a feature idea but don't know the scope |
 | feature-planning | feature-coverage | After the feature plan is established, proceed to coverage analysis |
 | feature-coverage | gherkin | After coverage analysis is confirmed, trigger gherkin to write the .feature file |
 | gherkin | tdd-workflow | After the .feature file is written, create the Verification Ledger first, then proceed to Red |

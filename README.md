@@ -76,6 +76,13 @@ flowchart TD
         DR --> PC[pre-complete]
     end
 
+    SF[start-feature<br/>有具體想法但不確定範圍] -.->|缺 goal| G
+    SF -.->|缺 dominant-op| D
+    SF -.->|缺 boundary| S
+    SF -.->|缺 alignment| AI
+    SF -.->|缺 alignment| AS
+    SF -.->|一切就緒| FP
+
     AM -.-> G & D & S & AI & AS & FP & DR
     IM -.-> FP & FC & TDD & DR
 ```
@@ -93,6 +100,22 @@ flowchart TD
 | **align-surface** | 設計或驗證使用者介面與基礎設施的對齊 |
 
 align 系列支援兩種模式：**設計模式**（沒有現成 code，引導設計）和**驗證模式**（有現成 code，審計對齊狀況）。
+
+align 完成後，報告存於 `docs/alignment/`。`feature-planning` 讀取後會將 findings 匯入 SYSTEM_MAP，並將報告 archive 至 `docs/alignment/archive/`。**SYSTEM_MAP 是 alignment 之後的唯一真相**；需要重新稽核時，再跑 align 系列即可。
+
+### start-feature — 功能入口
+
+discovery 完成後，如果你有**具體的功能想法但不確定它的範圍**，用 `start-feature`。它會從 goals 往下逐層檢查，路由到最早需要更新的那層：
+
+| 缺少什麼 | 路由到 |
+|----------|--------|
+| 沒有對應的 Gx | goals-discovery |
+| 改變系統壓力分佈 | dominant-ops |
+| 需要新的 boundary | system-map |
+| 特定邊界缺 alignment 資料 | align-internals / align-surface |
+| 一切就緒 | feature-planning 直接 |
+
+如果你想從 SYSTEM_MAP 已有的 gaps 裡挑下一個做，直接用 `feature-planning`——它本來就是為這個情境設計的。
 
 #### SYSTEM_MAP 的設計目的
 
@@ -151,7 +174,8 @@ Feature plan 完成後，才進入 `feature-coverage` 開始寫測試規格。SY
 |------|------|------|
 | **全新專案** | 沒有任何 discovery 文件 | 完整 discovery（goals → dominant-ops → system-map → align）→ feature-planning → 完整實作流程 |
 | **舊專案接手** | 有 code 但沒有文件 | 考古（掃描 codebase）→ 安全網（characterization tests）→ discovery（用驗證模式）→ 漸進重構 |
-| **正常開發** | Discovery 完成，開始下一個 feature | feature-planning → feature-coverage → gherkin → tdd-workflow → design-review → pre-complete |
+| **有具體功能想法，不確定範圍** | Discovery 完成，有想法但不知道碰哪層 | **start-feature** → 路由到最早需要更新的層級 |
+| **從已知 gaps 挑下一個做** | Discovery 完成，SYSTEM_MAP 有 gaps 紀錄 | **feature-planning** 直接 → 完整實作流程 |
 | **小改動（不影響契約）** | 內部實作調整，boundary 不變 | OpenSpec → tdd-workflow → pre-complete |
 | **Bug fix** | 測試失敗或非預期行為 | 系統化除錯：收集證據 → 建立假說 → 驗證，不猜測性修改 |
 | **實作中發現問題** | 實作到一半撞牆 | 用 Discovery Conflict Triage（implementation-mindset.md）判斷影響層級，從對應層級往下修 |

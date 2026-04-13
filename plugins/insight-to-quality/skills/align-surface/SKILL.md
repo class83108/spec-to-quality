@@ -165,6 +165,8 @@ For each existing endpoint:
 
 ### Phase 5: Gap Report
 
+Produce a structured report and save it to `docs/alignment/surface-report.md` (create the directory if it does not exist). Do not skip the save step — `feature-planning` reads this file by path.
+
 ```markdown
 # Surface Alignment Report — [System Name]
 
@@ -188,6 +190,8 @@ For each existing endpoint:
 ## Recommendations
 [prioritized list, Dx-aligned items first]
 ```
+
+After saving, inform the user: "`docs/alignment/surface-report.md` 已儲存。若 `align-internals` 尚未執行，建議先執行（contract 層的 gaps 可能影響 surface 層的判斷），再進入 `feature-planning`。"
 
 ## Design Checks
 

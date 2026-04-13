@@ -141,7 +141,7 @@ Check whether the discovery documents match the code:
 
 ### Phase 5: Gap Report
 
-Produce a structured report:
+Produce a structured report and save it to `docs/alignment/internals-report.md` (create the directory if it does not exist). Do not skip the save step — `feature-planning` reads this file by path.
 
 ```markdown
 # Internals Alignment Report — [System Name]
@@ -161,6 +161,8 @@ Produce a structured report:
 ## Recommendations
 - [prioritized list, Dx-aligned items first]
 ```
+
+After saving, inform the user: "`docs/alignment/internals-report.md` 已儲存。若 `align-surface` 尚未執行，建議接著執行以取得完整的 alignment 視角，再進入 `feature-planning`。"
 
 ## Design Checks
 
