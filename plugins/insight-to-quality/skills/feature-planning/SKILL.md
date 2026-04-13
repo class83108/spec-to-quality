@@ -175,14 +175,18 @@ Create `{feature-name}.md` under `docs/feature-plans/`, using kebab-case — the
   - [additional curated findings from alignment reports, if any]
 ```
 
-**Then — archive the alignment reports** (if they were read in Step 1). Move each active report to `docs/alignment/archive/` with a date prefix so they are no longer on the active read path:
+**Then — conditionally archive the alignment reports** (only if fully covered). Check the Coverage Status table in each report:
+
+- If **all scopes show `audited`**: move the report to `docs/alignment/archive/` with a date prefix — it is complete and no more appending is needed.
+- If **any scope is still `pending`**: leave the report in place. The next align session will append to it; `feature-planning` will re-read and incorporate the new findings next time.
 
 ```
+# Only move when fully audited:
 docs/alignment/internals-report.md  →  docs/alignment/archive/YYYY-MM-DD-internals-report.md
 docs/alignment/surface-report.md    →  docs/alignment/archive/YYYY-MM-DD-surface-report.md
 ```
 
-After archiving, the active `docs/alignment/` directory contains no reports. The next `feature-planning` session will read SYSTEM_MAP only. Re-run `align-internals` or `align-surface` whenever a fresh audit is needed.
+After a fully-covered report is archived, the active `docs/alignment/` directory contains no report for that layer. Re-run `align-internals` or `align-surface` whenever a fresh audit is needed.
 
 ### Step 8: Confirm and Hand Off
 

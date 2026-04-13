@@ -36,29 +36,34 @@ Read `references/architect-mindset.md` before proceeding, especially Traceabilit
 Before declaring this skill complete, you MUST produce ALL of the following. Do not write contracts or end the session until every item is checked:
 
 - [ ] Mode declared at the start (design mode or verify mode)
-- [ ] Every seam from SYSTEM_MAP's Boundary Map explicitly assessed — do not skip or summarize
-- [ ] Contract status stated for each seam: `exists / defined / gap`
+- [ ] **[Verify mode]** Scope declared — which seam is being audited this session
+- [ ] The selected seam explicitly assessed: contract status (`exists / defined / gap`), alignment, drift
 - [ ] Storage seam contract assessed — what does the Domain layer expect from storage?
 - [ ] **Open Questions link**: If goals.md has Open Questions (OQ1, OQ2...) that affect contract design, explicitly discuss how each OQ constrains or defers the contract decision — do not leave OQs disconnected from the contracts
 - [ ] User confirmation of contract designs or gap report
-- [ ] **[Verify mode only]** Gap report saved to `docs/alignment/internals-report.md` with the following structure — do not declare complete until the file exists:
+- [ ] **[Verify mode only]** Findings appended to `docs/alignment/internals-report.md` — do not declare complete until the file is saved. File structure:
 
   ```markdown
   # Internals Alignment Report — [System Name]
 
-  ## Summary
-  [one paragraph: overall alignment status]
+  ## Coverage Status
+  | Seam | Status | Date |
+  |---|---|---|
+  | [Seam A] | audited | YYYY-MM-DD |
+  | [Seam B] | pending | — |
 
-  ## Aligned
+  ## [Seam A Name]
+
+  ### 對齊項目
   - [list of elements that match]
 
-  ## Gaps (code is missing)
+  ### 缺口（程式碼缺失）
   - [seam/goal] — [what is missing] — [recommended action]
 
-  ## Drift (docs vs code mismatch)
+  ### Drift（文件與程式碼不一致）
   - [element] — [what differs] — [which is correct?]
 
-  ## Recommendations
+  ### 建議
   - [prioritized list, Dx-aligned items first]
   ```
 
@@ -129,6 +134,19 @@ Produce contract definitions and schema designs. The exact format depends on the
 
 Use this workflow when code exists and you are auditing alignment.
 
+### Phase 0: Scope Declaration
+
+Before reading any code:
+
+1. Read `SYSTEM_MAP.md` Boundary Map — list all seams
+2. Check if `docs/alignment/internals-report.md` exists:
+   - **Exists**: read the Coverage Status table and show the user which seams are audited vs pending
+   - **Does not exist**: this is the first session
+3. Ask the user: "這次要審查哪個 seam？選項：[list pending seams]"
+4. Wait for confirmation before continuing. Only read files relevant to the selected seam.
+
+**Do not attempt to audit all seams in a single session.**
+
 ### Phase 1: Read Discovery Documents
 
 Read goals.md, dominant-ops.md, and SYSTEM_MAP.md. Build a mental checklist:
@@ -163,28 +181,40 @@ Check whether the discovery documents match the code:
 
 ### Phase 5: Gap Report
 
-Produce a structured report and save it to `docs/alignment/internals-report.md` (create the directory if it does not exist). Do not skip the save step — `feature-planning` reads this file by path.
+Save findings to `docs/alignment/internals-report.md` (create `docs/alignment/` if it does not exist). Do not skip — `feature-planning` reads this file by path.
+
+**If the file does not exist** (first session): create it with a Coverage Status table and a section for this session's seam.
+
+**If the file already exists** (subsequent session):
+- Update the Coverage Status table: mark this seam as `audited` with today's date
+- Append a new `## [Seam Name]` section with this session's findings
+- Do not remove or overwrite findings from previous sessions
 
 ```markdown
 # Internals Alignment Report — [System Name]
 
-## Summary
-[one paragraph: overall alignment status]
+## Coverage Status
+| Seam | Status | Date |
+|---|---|---|
+| [Seam A] | audited | YYYY-MM-DD |
+| [Seam B] | pending | — |
 
-## Aligned
+## [Seam A Name]
+
+### 對齊項目
 - [list of elements that match]
 
-## Gaps (code is missing)
+### 缺口（程式碼缺失）
 - [seam/goal] — [what is missing] — [recommended action]
 
-## Drift (docs vs code mismatch)
+### Drift（文件與程式碼不一致）
 - [element] — [what differs] — [which is correct?]
 
-## Recommendations
+### 建議
 - [prioritized list, Dx-aligned items first]
 ```
 
-After saving, inform the user: "`docs/alignment/internals-report.md` 已儲存。若 `align-surface` 尚未執行，建議接著執行以取得完整的 alignment 視角，再進入 `feature-planning`。"
+After saving, inform the user: "`docs/alignment/internals-report.md` 已更新（[Seam 名稱] 審查完成）。Coverage Status：[X/Y seams 已審查]。可繼續審查下一個 seam，或直接進入 `feature-planning`。"
 
 ## Design Checks
 

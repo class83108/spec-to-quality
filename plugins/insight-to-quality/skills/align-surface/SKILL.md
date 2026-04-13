@@ -69,34 +69,40 @@ Every user-facing endpoint belongs to exactly one of these categories:
 Before declaring this skill complete, you MUST produce ALL of the following. Do not end the session until every item is checked:
 
 - [ ] Mode declared at the start (design mode or verify mode)
-- [ ] Every D1/D2/D3 user journey assessed for interface coverage
-- [ ] Every existing endpoint classified as Trigger, Query, or Push
-- [ ] Infrastructure capacity assessed against dominant-ops pressure
+- [ ] **[Verify mode]** Scope declared — which Dx journey or Infrastructure is being audited this session
+- [ ] The selected scope assessed: journey coverage, endpoint classification, gaps
 - [ ] User confirmation of design decisions or gap report
-- [ ] **[Verify mode only]** Gap report saved to `docs/alignment/surface-report.md` with the following structure — do not declare complete until the file exists:
+- [ ] **[Verify mode only]** Findings appended to `docs/alignment/surface-report.md` — do not declare complete until the file is saved. File structure:
 
   ```markdown
   # Surface Alignment Report — [System Name]
 
-  ## Journey Coverage
-  | Journey (Dx) | Status | Gaps |
+  ## Coverage Status
+  | Scope | Status | Date |
   |---|---|---|
-  | D1: [name] | covered / partial / missing | [what is missing] |
-  | D2: [name] | ... | ... |
-  | D3: [name] | ... | ... |
+  | D1: [name] | audited | YYYY-MM-DD |
+  | D2: [name] | pending | — |
+  | Infrastructure | pending | — |
 
-  ## Endpoint Classification
+  ## D1: [Journey Name]
+
+  ### Journey Coverage
+  - 使用者能否完成此 journey？[能 / 部分 / 不能]
+  - 缺少步驟：[...]
+
+  ### Endpoint Classification
   | Endpoint | Category | Issues |
   |---|---|---|
   | [path] | Trigger/Query/Push | [missing idempotency / no reconnect / etc.] |
 
+  ### 建議
+  - [prioritized list]
+
   ## Infrastructure
+
   - Worker capacity: [sufficient / insufficient] — [details]
   - Connection handling: [sufficient / insufficient] — [details]
   - Monitoring: [present / missing] — [what to add]
-
-  ## Recommendations
-  [prioritized list, Dx-aligned items first]
   ```
 
 ## Prerequisites
@@ -169,6 +175,20 @@ Cross-check the design against goals.md constraints and NFRs:
 
 ## Workflow — Verify Mode
 
+### Phase 0: Scope Declaration
+
+Before reading any code:
+
+1. Read `dominant-ops.md` — list all Dx journeys
+2. Determine if Infrastructure needs auditing (system has background workers, long-lived connections, or scaling concerns)
+3. Check if `docs/alignment/surface-report.md` exists:
+   - **Exists**: read the Coverage Status table and show the user which scopes are audited vs pending
+   - **Does not exist**: this is the first session
+4. Ask the user: "這次要審查哪個範圍？選項：[list pending Dx journeys + Infrastructure if applicable]"
+5. Wait for confirmation before continuing. Only read interface code relevant to the selected scope.
+
+**Do not attempt to audit all journeys in a single session.**
+
 ### Phase 1: Inventory Existing Interfaces
 
 Read the codebase to catalog all user-facing interfaces:
@@ -202,33 +222,47 @@ For each existing endpoint:
 
 ### Phase 5: Gap Report
 
-Produce a structured report and save it to `docs/alignment/surface-report.md` (create the directory if it does not exist). Do not skip the save step — `feature-planning` reads this file by path.
+Save findings to `docs/alignment/surface-report.md` (create `docs/alignment/` if it does not exist). Do not skip — `feature-planning` reads this file by path.
+
+**If the file does not exist** (first session): create it with a Coverage Status table and a section for this session's scope.
+
+**If the file already exists** (subsequent session):
+- Update the Coverage Status table: mark this scope as `audited` with today's date
+- Append a new section (`## D1: ...` or `## Infrastructure`) with this session's findings
+- Do not remove or overwrite findings from previous sessions
 
 ```markdown
 # Surface Alignment Report — [System Name]
 
-## Journey Coverage
-| Journey (Dx) | Status | Gaps |
+## Coverage Status
+| Scope | Status | Date |
 |---|---|---|
-| D1: [name] | covered / partial / missing | [what is missing] |
-| D2: [name] | ... | ... |
-| D3: [name] | ... | ... |
+| D1: [name] | audited | YYYY-MM-DD |
+| D2: [name] | pending | — |
+| Infrastructure | pending | — |
 
-## Endpoint Classification
+## D1: [Journey Name]
+
+### Journey Coverage
+- 使用者能否完成此 journey？[能 / 部分 / 不能]
+- 缺少步驟：[...]
+
+### Endpoint Classification
 | Endpoint | Category | Issues |
 |---|---|---|
 | [path] | Trigger/Query/Push | [missing idempotency / no reconnect / etc.] |
 
+### 建議
+- [prioritized list]
+
 ## Infrastructure
+
 - Worker capacity: [sufficient / insufficient] — [details]
 - Connection handling: [sufficient / insufficient] — [details]
 - Monitoring: [present / missing] — [what to add]
-
-## Recommendations
-[prioritized list, Dx-aligned items first]
 ```
 
-After saving, inform the user: "`docs/alignment/surface-report.md` 已儲存。若 `align-internals` 尚未執行，建議先執行（contract 層的 gaps 可能影響 surface 層的判斷），再進入 `feature-planning`。"
+After saving, inform the user: "`docs/alignment/surface-report.md` 已更新（[範圍] 審查完成）。Coverage Status：[X/Y 範圍已審查]。可繼續審查下一個範圍，或直接進入 `feature-planning`。"
 
 ## Design Checks
 
