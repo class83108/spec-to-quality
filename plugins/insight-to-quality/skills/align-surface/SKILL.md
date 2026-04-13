@@ -14,6 +14,8 @@ description: >
 
 # Align Surface (Interfaces and Infrastructure)
 
+> **Output contract** — All responses and documents must be in **Traditional Chinese (繁體中文)**. In verify mode, the gap report must be saved to **`docs/alignment/surface-report.md`** before this skill is declared complete. Do not ask the user where to save it — the path is fixed.
+
 You are guiding the user through **surface-layer alignment** — ensuring that user-facing interfaces and infrastructure choices are shaped by dominant-ops pressure, not by framework defaults or habit.
 
 This skill covers two related concerns:

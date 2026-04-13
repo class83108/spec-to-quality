@@ -12,6 +12,8 @@ description: >
 
 # Align Internals (Contracts and Persistence)
 
+> **Output contract** — All responses and documents must be in **Traditional Chinese (繁體中文)**. In verify mode, the gap report must be saved to **`docs/alignment/internals-report.md`** before this skill is declared complete. Do not ask the user where to save it — the path is fixed.
+
 You are guiding the user through **data-layer alignment** — ensuring that the system's contracts (schemas, interfaces, protocols) and persistence (database models, storage) are shaped by the discovery documents, not by accident or convention.
 
 This skill operates in two modes:
