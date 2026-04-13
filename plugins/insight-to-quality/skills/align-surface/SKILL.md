@@ -62,6 +62,41 @@ Every user-facing endpoint belongs to exactly one of these categories:
 
 **Guide the user to classify every endpoint.** Once classified, the error handling pattern follows naturally. Mixing categories (e.g., a trigger that also streams results) creates complexity — split it into two endpoints instead.
 
+## Required Outputs
+
+Before declaring this skill complete, you MUST produce ALL of the following. Do not end the session until every item is checked:
+
+- [ ] Mode declared at the start (design mode or verify mode)
+- [ ] Every D1/D2/D3 user journey assessed for interface coverage
+- [ ] Every existing endpoint classified as Trigger, Query, or Push
+- [ ] Infrastructure capacity assessed against dominant-ops pressure
+- [ ] User confirmation of design decisions or gap report
+- [ ] **[Verify mode only]** Gap report saved to `docs/alignment/surface-report.md` with the following structure — do not declare complete until the file exists:
+
+  ```markdown
+  # Surface Alignment Report — [System Name]
+
+  ## Journey Coverage
+  | Journey (Dx) | Status | Gaps |
+  |---|---|---|
+  | D1: [name] | covered / partial / missing | [what is missing] |
+  | D2: [name] | ... | ... |
+  | D3: [name] | ... | ... |
+
+  ## Endpoint Classification
+  | Endpoint | Category | Issues |
+  |---|---|---|
+  | [path] | Trigger/Query/Push | [missing idempotency / no reconnect / etc.] |
+
+  ## Infrastructure
+  - Worker capacity: [sufficient / insufficient] — [details]
+  - Connection handling: [sufficient / insufficient] — [details]
+  - Monitoring: [present / missing] — [what to add]
+
+  ## Recommendations
+  [prioritized list, Dx-aligned items first]
+  ```
+
 ## Prerequisites
 
 - **goals.md** — for non-goals (design space constraints) and NFRs (quality requirements)

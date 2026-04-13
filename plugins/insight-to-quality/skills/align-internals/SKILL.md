@@ -39,6 +39,26 @@ Before declaring this skill complete, you MUST produce ALL of the following. Do 
 - [ ] Storage seam contract assessed — what does the Domain layer expect from storage?
 - [ ] **Open Questions link**: If goals.md has Open Questions (OQ1, OQ2...) that affect contract design, explicitly discuss how each OQ constrains or defers the contract decision — do not leave OQs disconnected from the contracts
 - [ ] User confirmation of contract designs or gap report
+- [ ] **[Verify mode only]** Gap report saved to `docs/alignment/internals-report.md` with the following structure — do not declare complete until the file exists:
+
+  ```markdown
+  # Internals Alignment Report — [System Name]
+
+  ## Summary
+  [one paragraph: overall alignment status]
+
+  ## Aligned
+  - [list of elements that match]
+
+  ## Gaps (code is missing)
+  - [seam/goal] — [what is missing] — [recommended action]
+
+  ## Drift (docs vs code mismatch)
+  - [element] — [what differs] — [which is correct?]
+
+  ## Recommendations
+  - [prioritized list, Dx-aligned items first]
+  ```
 
 **N/A Policy**: If a seam has no contract yet (e.g., early design phase), write `gap — [reason why contract is deferred]`. Never silently omit a seam from the assessment.
 
