@@ -1,24 +1,51 @@
 ---
 name: feature-planning
 description: >
-  The bridge step between discovery completion and OpenSpec creation. Reads the SYSTEM_MAP
-  Current State and gaps, cross-references existing feature plans and OpenSpec changes,
-  decides which feature to implement next, guides error handling strategy decisions, produces
-  docs/feature-plans/{name}.md, and updates SYSTEM_MAP Current State.
-  Trigger when discovery is complete, the user wants to decide what to implement next, or
-  says "ready to start planning implementation".
-  Do NOT use for: when discovery is incomplete (complete align-internals and align-surface
+  Alignment gap triage — reads internals-report and surface-report, prioritizes findings,
+  routes each finding to OpenSpec pathway (large changes requiring TDD) or Fix pathway
+  (small direct corrections), tracks progress in a 處理進度 section, updates SYSTEM_MAP
+  when structure changes, and archives reports when all findings are resolved.
+  Trigger when at least one alignment report exists and the user wants to start addressing
+  gaps, or says "ready to start fixing alignment gaps".
+  Do NOT use for: when no alignment reports exist (run align-internals or align-surface
   first), or when a feature plan already exists and implementation should begin directly
   (use feature-coverage).
 ---
 
-# Feature Planning
+# Feature Planning (Alignment Gap Triage)
 
-You are entering the feature planning stage. This skill's responsibility is to decide what to implement from discovery gaps and lock down key design decisions before OpenSpec is created.
+You are entering the alignment gap triage stage. This skill reads alignment reports produced by `align-internals` and `align-surface`, decides which gap to address first, routes it to the correct fix pathway, and tracks progress until all findings are resolved.
 
 **Before starting, read:**
-- `references/architect-mindset.md` (traceability: confirm the feature has a goal foundation)
-- `references/implementation-mindset.md` (Part 1: the Three Decisions framework)
+- `references/architect-mindset.md` — traceability: every OpenSpec change must serve a Gx
+- `references/implementation-mindset.md` Part 1 — Three Decisions framework (used in OpenSpec pathway only)
+
+## Core Concept
+
+**SYSTEM_MAP.md is the single source of truth for system structure.** Alignment reports are temporary — they record the gap between current code/docs and what the system should be. Each finding is a work item. This skill's job is to triage those work items, route each to the right fix pathway, update the ground truth after each fix, and eventually retire the reports.
+
+```
+alignment reports (findings)
+        ↓
+  feature-planning (triage)
+        ↓
+  ┌──────────────────────┬──────────────────────┐
+  │     OpenSpec 路徑     │       Fix 路徑        │
+  │                      │                      │
+  │  新增行為 / 大結構改動  │  更正現有行為 / 小修正  │
+  │                      │                      │
+  │  開新 worktree        │  開 fix worktree      │
+  │  → openspec change   │  → 直接修正            │
+  │  → feature-coverage  │  → verify             │
+  │  → gherkin → TDD     │  → 刪除 worktree      │
+  │  → design-review     │                      │
+  │  → pre-complete      │                      │
+  └──────────────────────┴──────────────────────┘
+           ↓ 每個 finding 完成後
+  更新 alignment report 處理進度區塊
+  必要時更新 SYSTEM_MAP
+  所有 findings 都完成 → archive reports
+```
 
 ## Prerequisites
 
@@ -26,122 +53,106 @@ All of the following must exist before entering this skill:
 - `goals.md`
 - `dominant-ops.md`
 - `SYSTEM_MAP.md`
-- At least one align report (output from align-internals or align-surface)
+- At least one alignment report: `docs/alignment/internals-report.md` or `docs/alignment/surface-report.md`
 
-If any are missing, stop and inform: "Feature planning requires complete discovery output. Starting implementation without discovery means every subsequent skill lacks a foundation. Please complete [missing skill] first."
+If any are missing, stop and inform which prerequisite is missing and which skill produces it.
+
+## Pathway Decision Criteria
+
+**Check OpenSpec criteria first. Fix is the fallback when none of the OpenSpec criteria apply.**
+
+**OpenSpec pathway — any one criterion is sufficient:**
+- An entire seam is missing its contract implementation
+- A complete endpoint or user journey is missing
+- A new model or schema needs to be created
+- System boundary or component structure needs adjustment
+- The fix introduces new behavior (as opposed to correcting existing behavior to match original intent)
+- Multiple components are affected by the same finding
+
+**Fix pathway — all OpenSpec criteria must be absent:**
+- Field or variable naming mismatch (Drift) — code does the right thing, just named wrong
+- Documentation describes something that code already does correctly — update the doc
+- A single validation rule is missing or wrong
+- Import path or configuration reference is incorrect
+
+**Drift special rule**: A doc/code mismatch defaults to Fix pathway, **unless** the mismatch reveals that the code is missing something that should exist — in that case, OpenSpec takes priority.
 
 ## Workflow
 
-### Step 1: Read Discovery Output
+### Step 1: Read Current State
 
-Read the following documents and extract key information:
+Read in order:
 
-**goals.md** → all Gx IDs and their descriptions
+1. **SYSTEM_MAP.md** — understand system structure, boundaries, current state
+2. **`docs/alignment/internals-report.md`** (if exists) — all sections including 處理進度
+3. **`docs/alignment/surface-report.md`** (if exists) — all sections including 處理進度
+4. **Current git branch** — run `git branch --show-current`; this is the base for all new worktrees
+5. **`docs/feature-plans/`** (if exists) — understand what is already in-flight via OpenSpec
 
-**dominant-ops.md** → all Dx IDs and their anti-patterns; record each anti-pattern's full ID (AP1, AP2...)
+### Step 2: Build Prioritized Finding List
 
-**SYSTEM_MAP.md** → focus on:
-- `Current State.Gaps`: the known gap list (which gaps are already partially covered by feature plans)
-- `Current State.In-flight`: work currently in progress
-- `Boundary Map`: contract status for each boundary
-- `Lessons`: pitfalls from completed features that may affect the candidates being planned — extract entries related to the boundaries or components this feature will touch and present them to the user during Step 2
+Extract all unresolved findings from both reports — findings not marked ✅ 已完成 in 處理進度.
 
-**Align reports** → check whether `docs/alignment/internals-report.md` and `docs/alignment/surface-report.md` exist (active, unprocessed findings):
-- Both exist → read both, merge their Gaps and Recommendations, deduplicate items that describe the same underlying problem. These findings supplement the SYSTEM_MAP Gaps.
-- One or neither exists → proceed using SYSTEM_MAP Gaps only. SYSTEM_MAP is the single source of truth once reports have been processed and archived.
+For each finding:
+1. Apply the pathway decision criteria → assign OpenSpec or Fix
+2. Identify which Gx it serves and which Dx it relates to
+3. Identify which SYSTEM_MAP boundary or component it touches
 
-**Existing feature plans**: scan the `docs/feature-plans/` directory to understand which gaps are already covered or partially covered
-
-### Step 2: Cross-Reference Covered Gaps and Build Candidate List
-
-Cross-reference the SYSTEM_MAP Gaps with existing feature plans:
+Display a prioritized list, ordered by Dx priority (D1 > D2 > D3 > others). Group by pathway:
 
 ```
-SYSTEM_MAP Gaps
-    ↓ cross-reference
-docs/feature-plans/ existing files
-openspec/changes/ existing changes
-    ↓
-Not covered     → add directly to candidates
-Partially covered → add to candidates, note "continuing [existing feature plan], feature N of M"
-Fully covered   → exclude
+未處理的 findings（共 N 項）：
+
+OpenSpec 路徑：
+1. [finding 摘要] — 來源: internals/surface [Seam/Scope 名稱], 影響: [SYSTEM_MAP 邊界], 服務: G1
+
+Fix 路徑：
+2. [finding 摘要] — 來源: internals/surface [Seam/Scope 名稱], 性質: Drift/缺口
 ```
 
-Produce a candidate list, each item annotated with:
-- The corresponding SYSTEM_MAP gap or align report deficiency
-- Which Gx it serves
-- Whether it continues an existing feature plan
+Ask the user: "這次要先處理哪一項？"
 
-```
-Feature Candidates:
-1. [feature-name] — closes [gap description], serves G1, G2
-2. [feature-name] — continues task-queue.md (2 of 3), serves G1
-...
-```
+### Step 3: Route to Pathway
 
-If the SYSTEM_MAP Lessons section contains entries related to any candidate's boundaries or components, surface them:
+After the user selects a finding, route to the appropriate pathway.
 
-```
-Related lessons from previous features:
-- Candidate 1 touches Seam A: [one-line summary from Lessons] (link to details)
-```
+---
 
-Ask the user: "Which one should we plan first?"
+#### OpenSpec Pathway
 
-### Step 3: Confirm Traceability and SYSTEM_MAP Update Need
+**3a. Confirm traceability**
 
-After the user selects a feature, confirm two things:
+- Which Gx does this change serve? (must map to at least one goal)
+- Which SYSTEM_MAP boundary does it touch?
 
-**Traceability:**
-- Which Gx does this feature serve? (must correspond to at least one goal)
-- Which Dx is it related to? (determines which anti-patterns will be referenced)
-- Which SYSTEM_MAP boundaries does it touch?
+If no Gx mapping → stop: "This finding currently has no goal foundation. Confirm which goal it serves, or add it to goals.md before continuing."
 
-If the feature cannot be mapped to any Gx → stop: "This feature currently has no goal foundation. Confirm which goal it serves, or add it to goals.md before continuing."
+**3b. Guide Error Handling Strategy (Three Decisions)**
 
-**Whether SYSTEM_MAP needs updating:**
+Using SYSTEM_MAP boundary information and dominant-ops anti-patterns, drive the conversation — do not ask generic questions:
 
-Ask the user: "Does this gap require multiple features because:
-A) There is new understanding of system structure (boundary needs adjustment, component needs splitting) → update the SYSTEM_MAP Boundary Map or Component Map first, then continue
-B) Engineering is staged (system structure is unchanged, just implemented in phases) → don't update structure; record the phased information in the feature plan and SYSTEM_MAP Current State"
+*Decision 1 — Catch Boundary*: "This change touches [boundary]. When something goes wrong, does the caller need to know, or should this component handle errors internally?"
 
-If A → guide the user to update the relevant SYSTEM_MAP sections, then continue with Step 4.
+*Decision 2 — Error Taxonomy*: "Based on [Dx]'s [APx], [failure scenario] is a risk. Is this a domain error (e.g., resource not found, duplicate) or an infrastructure failure (e.g., DB unreachable, timeout)?"
 
-### Step 4: Guide Error Handling Strategy
+*Decision 3 — Recovery Strategy*: "When domain errors occur, return structured error to caller? When infrastructure errors occur, fail fast or retry/degrade?"
 
-Read `implementation-mindset.md` Part 1 and guide through the Three Decisions one by one. Drive the conversation with discovery context — do not ask generic questions.
+**3c. Extract Constraints**
 
-**Decision 1 — Catch Boundary**
+- **Anti-patterns**: From dominant-ops.md, extract relevant APx entries and explain how each limits this change's behavior
+- **Boundary rules**: From SYSTEM_MAP.md Boundary Map, extract rules this change must respect
 
-Using SYSTEM_MAP boundary information:
-"This feature touches [boundary A]. When something goes wrong, does the caller need to know about errors at this level, or should this component handle them internally before responding?"
+**3d. Produce Feature Plan**
 
-**Decision 2 — Error Taxonomy**
-
-Using dominant-ops anti-patterns:
-"Based on [Dx]'s [APx], [failure scenario] is a risk to guard against. Is this a domain error the business expects (e.g., resource not found, duplicate creation), or an infrastructure failure from an external dependency (DB unreachable, API timeout)? Beyond what the anti-patterns mention, what other expected failure scenarios exist for this feature?"
-
-**Decision 3 — Recovery Strategy**
-
-"When domain errors occur, return a structured error to the caller? When infrastructure errors occur, fail fast and let the caller handle it, or is there a retry or degradation strategy?"
-
-### Step 5: Extract Constraints
-
-**Anti-patterns**: From dominant-ops.md, extract anti-patterns from the relevant Dx that apply to this feature, with full IDs. For each, explain "how this constraint limits this feature's behavior."
-
-**Boundary Rules**: From SYSTEM_MAP.md's Boundary Map, extract boundary rules this feature touches. Explain "which boundary this feature must not cross" or "the direction data must flow."
-
-### Step 6: Produce Feature Plan
-
-Create `{feature-name}.md` under `docs/feature-plans/`, using kebab-case — the same name as the subsequent OpenSpec change.
+Create `docs/feature-plans/{feature-name}.md` (kebab-case, same name as the subsequent OpenSpec change):
 
 ```markdown
 # Feature Plan — {feature-name}
 
 ## Source
 - Serves: G1, G3
-- SYSTEM_MAP gap: [gap description]
-- Coverage: Full coverage / Partial coverage (feature N of M, continues [previous feature-plan])
+- Alignment finding: [brief description]
+- Report: internals-report / surface-report — [Seam/Scope name]
 
 ## Error Handling Strategy
 - Catch boundary: [boundary only / per-layer / selective: which exceptions]
@@ -151,91 +162,183 @@ Create `{feature-name}.md` under `docs/feature-plans/`, using kebab-case — the
 ## Constraints
 
 ### Anti-patterns (from dominant-ops)
-- AP1 (D1): [anti-pattern description] — impact on this feature: [explanation]
-- AP2 (D2): [anti-pattern description] — impact on this feature: [explanation]
+- AP1 (D1): [description] — impact on this change: [explanation]
 
 ### Boundary Rules (from SYSTEM_MAP)
-- [This feature must not cross boundary X, because: ...]
-- [Data may only flow from A to B, not in reverse]
+- [rule]
 
 ## Integration Test Gaps
 <!-- Filled in after tdd-workflow Verification Ledger is complete; initially empty -->
-<!-- Records gaps that need integration tests but are deferred; pre-complete reads this section -->
 ```
 
-### Step 7: Update SYSTEM_MAP Current State and Archive Reports
+**3e. Create Worktree and Hand Off**
 
-**First — write all curated findings to SYSTEM_MAP Gaps** (not only the selected feature). For every finding from the alignment reports that was judged worth tracking, add it to `Current State.Gaps`. Findings not worth tracking (quick fixes, doc corrections) are handled inline and do not appear here. This makes SYSTEM_MAP the complete source of truth going forward.
+Using the current branch from Step 1, create a new worktree:
+
+```bash
+git worktree add -b {current-branch}-{feature-name} ../{project-dir}-{feature-name} {current-branch}
+```
+
+Then update 處理進度 in the source alignment report (status: 🔄 進行中).
+
+Inform the user:
+"Worktree 已建立：`../{project-dir}-{feature-name}`（從 `{current-branch}` 開出）。
+
+接下來：
+1. 在新 worktree 中執行 `opsx apply` 建立 OpenSpec change；在 spec.md body 最上方加入 `**Serves:** Gx`
+2. 參考 feature plan 的 Error Handling Strategy 填寫 design.md 的 Decisions 區段
+3. 建立後進入 `feature-coverage`"
+
+After OpenSpec pre-complete is done → proceed to **Step 4**.
+
+---
+
+#### Fix Pathway
+
+**3f. Describe the fix**
+
+Confirm with the user:
+- What exactly needs to change — code, doc, or both?
+- Which file(s) are involved?
+- Is the fix purely corrective (the original intent was already correct, the implementation drifted)?
+
+**3g. Create Fix Worktree**
+
+Using the current branch from Step 1:
+
+```bash
+git worktree add -b fix/{fix-name} ../{project-dir}-fix-{fix-name} {current-branch}
+```
+
+Update 處理進度 in the source alignment report (status: 🔄 進行中).
+
+**3h. Apply the Fix**
+
+Make the change in the worktree:
+- Code fix: update the code
+- Doc fix: update the document to match what code actually does
+- Both: update both
+
+**3i. Verify**
+
+Run the project's test, lint, and type-check commands (from the project's CLAUDE.md Commands section). All checks must pass before continuing.
+
+**3j. Commit, Delete Worktree**
+
+```bash
+# in the fix worktree:
+git add {relevant files}
+git commit -m "fix: {description}"
+
+# back in the main worktree:
+git worktree remove ../{project-dir}-fix-{fix-name}
+# then merge or open PR as appropriate
+```
+
+Proceed to **Step 4**.
+
+---
+
+### Step 4: Update Reports and SYSTEM_MAP
+
+After each finding is resolved (via either pathway):
+
+**Update 處理進度 in the source alignment report** — mark the finding as ✅ 已完成 with the branch or PR reference.
+
+**Update SYSTEM_MAP if the fix changed system structure:**
+
+Ask: "這個修正是否改變了系統結構（邊界定義、元件職責、合約狀態）？"
+- Yes → update the relevant SYSTEM_MAP section (Boundary Map, Component Map, or Current State)
+- No → no SYSTEM_MAP update needed
+
+**Check archive condition** for each alignment report:
+- If all findings in the report are ✅ 已完成 → archive it:
+
+```bash
+mv docs/alignment/internals-report.md docs/alignment/archive/$(date +%Y-%m-%d)-internals-report.md
+mv docs/alignment/surface-report.md docs/alignment/archive/$(date +%Y-%m-%d)-surface-report.md
+```
+
+### Step 5: Continue or Done
+
+**If unresolved findings remain** → return to Step 2. Re-display the updated prioritized list and ask which to handle next.
+
+**If all findings are resolved and reports are archived** → inform:
+"所有 alignment findings 已處理完成，報告已 archive。SYSTEM_MAP 是目前的最新 ground truth。如需再次審查，重新執行 `align-internals` 或 `align-surface`。"
+
+## 處理進度 Section Format
+
+This section is **appended to the bottom of each alignment report** the first time feature-planning processes a finding from that report. If the section already exists, update it in place.
 
 ```markdown
-## Current State
-- **In-flight**: [feature-name] (docs/feature-plans/{feature-name}.md)
-- **Gaps**:
-  - [gap from alignment or prior SYSTEM_MAP]: not started / planned (docs/feature-plans/...) / partially covered (feature N of M, in-flight)
-  - [additional curated findings from alignment reports, if any]
+## 處理進度
+| Finding | 來源 | 路徑 | 狀態 | Branch / PR |
+|---|---|---|---|---|
+| [finding 摘要] | internals — Seam A | OpenSpec | ✅ 已完成 | feature/seam-a-contract |
+| [finding 摘要] | surface — D1 | Fix | 🔄 進行中 | fix/d1-query-endpoint |
+| [finding 摘要] | internals — Seam B | Fix | ⬜ 待處理 | — |
 ```
 
-**Then — conditionally archive the alignment reports** (only if fully covered). Check the Coverage Status table in each report:
-
-- If **all scopes show `audited`**: move the report to `docs/alignment/archive/` with a date prefix — it is complete and no more appending is needed.
-- If **any scope is still `pending`**: leave the report in place. The next align session will append to it; `feature-planning` will re-read and incorporate the new findings next time.
-
-```
-# Only move when fully audited:
-docs/alignment/internals-report.md  →  docs/alignment/archive/YYYY-MM-DD-internals-report.md
-docs/alignment/surface-report.md    →  docs/alignment/archive/YYYY-MM-DD-surface-report.md
-```
-
-After a fully-covered report is archived, the active `docs/alignment/` directory contains no report for that layer. Re-run `align-internals` or `align-surface` whenever a fresh audit is needed.
-
-### Step 8: Confirm and Hand Off
-
-Present the feature plan to the user for confirmation:
-1. Traceability is correct (Gx mapping, gap description)
-2. Error handling strategy matches intent
-3. Constraints do not miss any important anti-patterns or boundary rules
-
-After confirmation, inform:
-"Feature plan created at `docs/feature-plans/{feature-name}.md`, SYSTEM_MAP Current State updated.
-
-Next steps:
-1. Use `opsx:apply` to create the OpenSpec change; add `**Serves:** G1, G3` to the top of spec.md body
-2. Reference this feature plan's Error Handling Strategy in the Decisions section of design.md
-3. After OpenSpec is created, proceed to `feature-coverage`"
+Status values:
+- ⬜ 待處理 — identified, not yet started
+- 🔄 進行中 — worktree created, work in progress
+- ✅ 已完成 — fix merged or OpenSpec pre-complete done
 
 ## Examples
 
-### Example 1: Normal Flow
+### Example 1: OpenSpec Pathway — Missing Contract
 
-User says: "Discovery is complete, ready to start planning implementation."
+internals-report shows: "Seam A — 缺口: TaskQueue contract 未實作 — 建議: 實作合約介面"
 
-1. Read discovery documents, find 3 gaps: TaskQueue contract not implemented, Worker boundary undefined, API surface missing status query
-2. Scan `docs/feature-plans/` — currently empty
-3. List 3 candidates → user selects "TaskQueue implementation"
-4. Confirm Serves G1, G3; ask if SYSTEM_MAP update needed → staged engineering, no structural update
-5. Guide Three Decisions:
-   - Catch boundary: boundary only
-   - Domain errors: TaskNotFound, QueueFull
-   - Infrastructure errors: fail fast
-6. Extract AP1 (do not accept tasks while one is in progress), AP2 (state must be persisted)
-7. Produce `docs/feature-plans/task-queue.md`
-8. Update SYSTEM_MAP Current State
-9. Inform next steps
+→ Pathway: OpenSpec (entire seam missing contract — new behavior must be added)
+→ Confirm Serves G1, G3; touches SYSTEM_MAP Seam A
+→ Guide Three Decisions; extract AP1, AP2 constraints
+→ Produce `docs/feature-plans/task-queue-contract.md`
+→ Current branch: `main` → `git worktree add -b main-task-queue-contract ../project-task-queue-contract main`
+→ Update 處理進度: 🔄 進行中
+→ After pre-complete: update 處理進度 ✅, update SYSTEM_MAP Seam A contract status → "defined"
 
-### Example 2: Continuing an Existing Feature Plan
+### Example 2: Fix Pathway — Naming Drift
 
-SYSTEM_MAP Gaps shows "TaskQueue implementation" is partially covered (feature 1 of 3 complete).
+internals-report shows: "Seam B — Drift: Task model 欄位 `created_at` 在 code 中是 `createdAt`"
 
-Correct behavior: The candidate list shows "task-queue-worker (continues task-queue.md, 2 of 3)"; the Coverage field in the feature plan notes "Partial coverage (feature 2 of 3, continues task-queue.md)".
+→ Pathway: Fix (naming mismatch; behavior is correct)
+→ Current branch: `main` → `git worktree add -b fix/task-created-at-naming ../project-fix-task-created-at main`
+→ Rename field in model and all references; verify tests pass
+→ Commit, delete worktree, update 處理進度 ✅
+→ No SYSTEM_MAP update needed (structure unchanged)
 
-### Example 3: SYSTEM_MAP Structure Update Required
+### Example 3: Drift Upgraded to OpenSpec
 
-After selecting a feature, the team realizes the original SYSTEM_MAP placed A and B in the same boundary, but implementation planning reveals they need to be split into two independent boundaries.
+surface-report shows: "D1 — Drift: doc 描述有 Query endpoint 供進度查詢，但 code 中不存在"
 
-Correct behavior: Stop and inform — "This finding reflects new understanding of system structure. Recommend updating the SYSTEM_MAP Boundary Map (split Seam A into Seam A1 and Seam A2) before continuing feature planning. This ensures subsequent feature plans and OpenSpec have the correct boundary foundation."
+→ Check OpenSpec criteria: endpoint is entirely missing → matches OpenSpec criterion
+→ Pathway: OpenSpec (not Fix — the code is missing something that should exist)
 
-### Example 4: Incomplete Discovery
+### Example 4: Multiple Findings, Prioritized
 
-Only goals.md exists, no SYSTEM_MAP.
+internals-report has 3 findings, surface-report has 2 findings.
 
-Correct behavior: "Feature planning requires complete discovery output. SYSTEM_MAP.md is missing — please complete system-map, align-internals, and align-surface before returning to feature planning."
+Displayed list:
+```
+OpenSpec 路徑：
+1. Seam A contract 未實作 — 來源: internals — Seam A, 服務: G1 (D1 路徑，最高壓力)
+2. D1 Query endpoint 缺失 — 來源: surface — D1, 服務: G1 (使用者無法完成 journey)
+
+Fix 路徑：
+3. Seam B 欄位命名 drift — 來源: internals — Seam B (低影響)
+4. infrastructure doc 過時 — 來源: surface — Infrastructure (低影響)
+5. D2 endpoint doc 不符 — 來源: surface — D2 (低壓力)
+```
+
+User picks item 1 → route to OpenSpec pathway. After completion, re-display (4 remaining items).
+
+## Key Rules
+
+- **OpenSpec criteria are checked first.** Fix is the fallback — never default to Fix when any OpenSpec criterion applies.
+- **One finding at a time.** Do not start the next finding until the current one is resolved, 處理進度 is updated, and the worktree is deleted (Fix) or pre-complete is done (OpenSpec).
+- **SYSTEM_MAP is the source of truth.** Update it when structure changes after a fix. Reports are temporary; SYSTEM_MAP is permanent.
+- **Archive only when all findings are resolved.** Do not archive a report with ⬜ or 🔄 items remaining.
+- **Worktrees branch from current branch, not from main.** Always check `git branch --show-current` first.
+- **Fix worktrees are ephemeral.** Delete after merge. Each fix gets a fresh worktree.
+- **Traceability is mandatory for OpenSpec pathway.** Every OpenSpec change must serve at least one Gx.

@@ -20,7 +20,8 @@ flowchart TD
     AI & AS --> FP
 
     subgraph impl["spec-to-quality（實作階段）"]
-        FP[feature-planning] --> FC[feature-coverage]
+        FP[feature-planning] -->|OpenSpec 路徑| FC[feature-coverage]
+        FP -->|Fix 路徑| FIX[直接修正 + verify]
         FC --> GH[gherkin]
         GH --> TDD[tdd-workflow<br/>with Verification Ledger]
         TDD --> DR[design-review]
@@ -50,6 +51,7 @@ flowchart TD
 - **Discovery is a prerequisite**: Proceeding to implementation without goals.md, dominant-ops.md, and SYSTEM_MAP.md will cause feature-planning to block and require discovery first
 - **Guide, don't write for the user**: The discovery phase guides the user's thinking; all documents require user confirmation
 - **Align skills have dual modes**: First ask the user whether this is design mode (no existing code) or verification mode (code already exists) — design mode may produce contracts, schemas, interface specs, or infrastructure decisions rather than .md files; verification mode produces an alignment report that flags gaps
+- **One finding at a time**: feature-planning resolves one alignment finding completely (worktree deleted or pre-complete done) before moving to the next
 - **Complete one spec before starting the next**: Walk through feature-planning → pre-complete fully before starting another spec
 - **Test/lint/type check commands**: Always refer to the project's CLAUDE.md Commands section; do not assume any specific tooling
 - **Wait for user confirmation**: feature-coverage analysis, tdd-workflow Verification Ledger sign-off, and red-light confirmation all require explicit user approval before proceeding
@@ -65,9 +67,10 @@ flowchart TD
 | dominant-ops | system-map | After dominant-ops.md is confirmed, Dx + Anti-Patterns drive boundary design |
 | system-map | align-internals | SYSTEM_MAP's Boundary Map drives contract alignment |
 | system-map | align-surface | SYSTEM_MAP's Component Map + Dx user journeys drive interface alignment |
-| align-internals/surface | feature-planning | After alignment, read SYSTEM_MAP gaps to decide the next feature |
+| align-internals/surface | feature-planning | After alignment reports are produced, triage findings into OpenSpec or Fix pathways |
 | start-feature | goals-discovery / dominant-ops / system-map / align-internals / align-surface / feature-planning | Routes to the earliest layer that needs work; use when you have a feature idea but don't know the scope |
-| feature-planning | feature-coverage | After the feature plan is established, proceed to coverage analysis |
+| feature-planning (OpenSpec pathway) | feature-coverage | After feature plan is established and worktree is created, proceed to coverage analysis |
+| feature-planning (Fix pathway) | — | Apply fix directly in fix worktree, verify, delete worktree, update alignment report |
 | feature-coverage | gherkin | After coverage analysis is confirmed, trigger gherkin to write the .feature file |
 | gherkin | tdd-workflow | After the .feature file is written, create the Verification Ledger first, then proceed to Red |
 | tdd-workflow | design-review | After green + refactor, remind the user to trigger design-review |
