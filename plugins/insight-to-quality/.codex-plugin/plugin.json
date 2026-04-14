@@ -1,0 +1,29 @@
+{
+  "name": "insight-to-quality",
+  "version": "0.6.0",
+  "description": "Structured software development skills — from architectural discovery through TDD implementation to design review and quality verification.",
+  "author": {
+    "name": "class83108"
+  },
+  "homepage": "https://github.com/class83108/insight-to-quality",
+  "repository": "https://github.com/class83108/insight-to-quality",
+  "license": "MIT",
+  "keywords": [
+    "software-engineering",
+    "tdd",
+    "architecture",
+    "quality"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Insight to Quality",
+    "shortDescription": "Structured development skills from architecture discovery to quality verification",
+    "longDescription": "A complete skill workflow covering discovery, feature planning, TDD execution, design review, and completion checks.",
+    "category": "Coding",
+    "capabilities": [],
+    "defaultPrompt": [
+      "Use insight-to-quality skills to drive discovery, planning, and TDD delivery with quality gates"
+    ],
+    "screenshots": []
+  }
+}
