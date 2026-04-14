@@ -7,7 +7,7 @@ description: >
   Trigger when the user starts a new project discovery, says "let's define goals", or needs to
   clarify what the system is for.
   Do NOT use for: dominant operations analysis (use dominant-ops), system mapping (use system-map),
-  or implementation planning (use OpenSpec).
+  or implementation planning (use spec-backlog execution).
 ---
 
 # Goals Discovery

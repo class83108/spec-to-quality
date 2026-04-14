@@ -1,5 +1,5 @@
 ---
-description: Alignment gap triage — read internals-report and surface-report, prioritize findings, route each to OpenSpec pathway (large changes) or Fix pathway (small direct fixes), track progress, and archive reports when all findings are resolved.
+description: 可選的 backlog 整合器：合併 internals/surface findings、排序優先級與依賴
 ---
 
-Trigger the feature-planning skill. Read SYSTEM_MAP.md and alignment reports (internals-report.md, surface-report.md), triage each finding into OpenSpec pathway or Fix pathway, create worktrees, guide error handling strategy for OpenSpec changes, track progress in a 處理進度 section, update SYSTEM_MAP when structure changes, and archive reports when all findings are resolved.
+觸發 feature-planning skill。讀取 internals/surface alignment report 與 `docs/spec-backlog/index.md`，在需要時將互相影響的 findings 合併成單一 execution unit，並維護 `draft/ready/in-progress/done` 狀態與 `WIP=1` 規則。

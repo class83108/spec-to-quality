@@ -1,22 +1,70 @@
 # Implementation Mindset
 
-This is the shared thinking framework for implementation-phase skills. Skills that make or verify
-code-level decisions should reference this document: **tdd-workflow** (when declaring design decisions
-in the Verification Ledger) and **design-review** (when verifying those decisions were honored).
+Shared thinking framework for implementation-phase skills.
+Primary consumers: `feature-coverage`, `tdd-workflow`, `design-review`.
 
-*Scope: code-level decisions within component boundaries already defined by discovery.
-If component boundaries are not yet established, complete discovery first.*
+Scope: code-level decisions within boundaries already defined by discovery docs.
 
 ## Core Principle
 
-**Implicit decisions are the source of most design debt.** When an implementation choice is never
-stated, it cannot be reviewed, questioned, or consciously changed later. This mindset covers two
-layers of design quality:
+Implicit decisions create long-term design debt. Every important choice must be:
+1. declared
+2. traceable
+3. verifiable
 
-- **Part 1 — Declared Decisions**: choices that must be stated explicitly before writing code.
-  These are verified at design-review time by comparing implementation to declaration.
-- **Part 2 — Structural Checks**: properties that should hold regardless of declared choices.
-  These are evaluated by questioning, not by checking against a declaration.
+---
+
+## Part 0: Derivation Rules (Spec Backlog)
+
+This part defines how to convert discovery/alignment information into executable implementation specs.
+
+### 0.1 Index Row Field Derivation
+
+For `docs/spec-backlog/index.md` fields:
+
+- `serves`:
+  - source: `goals.md`
+  - method: map finding outcome to concrete Gx objective
+  - no direct mapping => keep `draft` and mark `needs-goal-clarification`
+
+- `related`:
+  - source: `dominant-ops.md`
+  - method: map finding impact chain to Dx/APx
+  - order by criticality `D1 > D2 > D3`
+
+- `boundary`:
+  - source: `SYSTEM_MAP.md` boundary/component names
+  - missing name => update SYSTEM_MAP first; do not invent
+
+- `priority`:
+  - score = failure impact x frequency x cost
+  - convert to dominant-op bucket (`D1/D2/D3`) for queue ordering
+
+- `status`:
+  - `draft` default
+  - `ready` only if `serves/related/boundary/done-criteria-seed` all present
+  - `in-progress` only when WIP=1 condition passes
+
+### 0.2 Finding Card Field Derivation
+
+For `docs/spec-backlog/{finding-id}.md`:
+
+- `Behavior (SHALL/MUST)`:
+  - source priority: alignment finding statement -> boundary constraints -> discovered implementation gaps
+  - must be observable and testable
+
+- `Done Criteria`:
+  - every item must map to at least one scenario and one Then assertion
+  - ban vague wording ("better", "optimized", "properly handled")
+
+- `Error Handling Strategy`:
+  - must declare catch boundary, domain errors, infrastructure recovery before test writing
+
+### 0.3 WIP Discipline
+
+- multiple `draft/ready` allowed
+- at most one `in-progress`
+- newly discovered gaps during execution go to `draft`; do not interrupt active item unless user cancels it
 
 ---
 
@@ -24,271 +72,108 @@ layers of design quality:
 
 ### Error Handling Strategy
 
-The most consequential implementation decision that discovery does not prescribe. Declare this
-in OpenSpec design decisions before writing Gherkin scenarios or step definitions, because it
-directly shapes both error scenarios and Verification Ledger mock boundaries.
+Declare before writing test steps.
 
-#### Why it must be declared early
+#### Three Decisions
 
-- Error scenarios in `.feature` files should reflect the declared strategy, not the implementer's instinct
-- Mock boundaries in the Verification Ledger are placed differently depending on where errors are caught
-- design-review cannot verify a strategy that was never stated
+1. Catch Boundary
+- boundary only / per-layer wrapping / selective catch
 
-#### The Three Decisions
+2. Error Taxonomy
+- domain errors
+- infrastructure errors
+- programming errors
 
-Answer all three before writing tests. Record them in OpenSpec design decisions.
+3. Recovery Strategy
+- domain: structured return
+- infrastructure: fail fast / retry with backoff / degrade
+- programming: fail fast
 
-**Decision 1 — Catch Boundary**
+#### Declaration Format (in finding card)
 
-Where do exceptions stop propagating within this component?
-
-| Option | When appropriate |
-|--------|-----------------|
-| Boundary only | Simple components; errors are the caller's concern |
-| Per-layer with re-wrapping | When each layer has a distinct error vocabulary (e.g., `DBError` → `RepositoryError` → `ServiceError`) |
-| Selective | Catch only specific expected exceptions; let all others propagate |
-
-**Decision 2 — Error Taxonomy**
-
-Classify the errors this feature can encounter:
-
-- *Domain errors*: expected business failures that are part of the API contract (not found,
-  validation failed, duplicate, quota exceeded). Callers are expected to handle these.
-- *Infrastructure errors*: failures of external dependencies (DB connection lost, API timeout,
-  disk full). These indicate the system cannot fulfill the request right now.
-- *Programming errors*: conditions that should never occur in correct code (assertion failures,
-  unexpected `None`, type mismatches). These indicate bugs.
-
-**Decision 3 — Recovery Strategy**
-
-What happens when each error type is encountered?
-
-| Error type | Typical strategy | Never do |
-|------------|-----------------|----------|
-| Domain error | Return structured error to caller | Retry — the result won't change |
-| Infrastructure error | Fail fast / retry with backoff / degrade gracefully | Silently swallow |
-| Programming error | Fail fast always, surface loudly | Catch and continue |
-
-#### Declaration Format
-
-In OpenSpec design decisions (spec.md body), add one block per component this change touches:
-
-```
-**Error handling — [component name]:**
-- Catch boundary: [boundary only / per-layer / selective: which exceptions]
-- Domain errors: [list, e.g. "TaskNotFound, DuplicateTask"]
-- Infrastructure errors: [fail fast / retry N times / degrade to X]
+```markdown
+## Error Handling Strategy
+- Catch boundary: ...
+- Domain errors: ...
+- Infrastructure recovery: ...
 ```
 
 #### Anti-Patterns
 
-**Silent swallow** — `except Exception: pass`
-Hides all failures. The system appears to work while silently corrupting state or dropping data.
-
-**Over-catching** — catching `Exception` when only `ValueError` is expected
-Masks unexpected failures that should surface as bugs.
-
-**Wrong-layer catch** — catching infrastructure errors inside domain logic
-Couples domain to infrastructure. Domain logic should not know about DB connection errors.
-
-**Exception as control flow** — using `KeyError` to check dict membership in non-iterator contexts
-Makes code harder to read and can interfere with unrelated error handling up the call stack.
-
-**Undeclared strategy** — writing error handling without a stated strategy
-Each layer ends up with its own ad-hoc approach, producing inconsistent behavior.
+- Silent swallow (`except Exception: pass`)
+- Over-catching (`except Exception` for expected narrow failures)
+- Wrong-layer catch (domain layer handling infra exceptions directly)
+- Exception-driven control flow without intent
+- Undeclared strategy
 
 #### Relationship to Discovery
 
-Discovery defines error handling at the *system* level via `dominant-ops.md` anti-patterns
-(e.g., "state must persist across restarts"). This document covers the *implementation* of that
-intent within a single component. When they conflict, the dominant-ops anti-pattern takes precedence.
+System-level anti-patterns in `dominant-ops.md` override local implementation convenience.
 
 ---
 
 ## Discovery Conflict Triage
 
-During implementation, you may encounter situations where the code fights the plan — a boundary
-feels wrong, a contract shape does not work, or a failure mode was not anticipated. Before
-escalating or going back to discovery, **triage by impact level** to determine where to start fixing.
-
-### The Four Levels
+When code conflicts with plan, classify impact level first.
 
 | Level | Signal | Fix starting point | Example |
-|-------|--------|-------------------|---------|
-| **0 — Code only** | No test changes needed | Fix directly in code, commit | Rename, typo, formatting, internal refactor with identical behavior |
-| **1 — Spec implementation** | Tests or spec implementation details change, but contracts and boundaries are unaffected | Start from OpenSpec, adjust implementation approach, re-run TDD from Red | Algorithm change, different internal data structure, retry strategy tweak |
-| **2 — Contract or boundary** | The shape of data crossing a boundary needs to change, or a seam is in the wrong place | Start from SYSTEM_MAP — update Boundary Map, then cascade: feature plan → OpenSpec → TDD | Discovered that Component A needs data Component B does not provide; boundary splits or merges |
-| **3 — Goal or dominant-op** | The system's purpose or pressure ranking is wrong | Start from discovery source (goals.md or dominant-ops.md), then cascade through all downstream documents | Realized D2 is actually more critical than D1; discovered a missing goal |
-
-### How to Determine the Level
-
-Ask these questions in order — stop at the first "yes":
-
-1. **Does this change affect what the system must do or where the pressure lies?** → Level 3
-2. **Does this change affect the shape of data crossing a boundary, or move a boundary?** → Level 2
-3. **Does this change affect test expectations or spec requirements, but not contracts?** → Level 1
-4. **None of the above?** → Level 0
+|---|---|---|---|
+| 0 — Code only | No test expectation changes | code only | rename/refactor with same behavior |
+| 1 — Finding spec implementation | Behavior/details change, boundaries unchanged | finding card -> TDD from Red | algorithm change, internal data structure change |
+| 2 — Contract or boundary | Data crossing shape/boundary changes | SYSTEM_MAP -> index/card -> TDD | seam split/merge, producer-consumer mismatch |
+| 3 — Goal or dominant-op | Purpose/pressure ranking changes | goals/dominant-ops -> downstream cascade | missing goal, dominant-op reprioritization |
 
 ### Cascade Rule
 
-Each level implies updating everything downstream:
-- Level 3: goals.md / dominant-ops.md → SYSTEM_MAP → feature plan → OpenSpec → TDD
-- Level 2: SYSTEM_MAP → feature plan → OpenSpec → TDD
-- Level 1: OpenSpec → TDD
+- Level 3: goals/dominant-ops -> SYSTEM_MAP -> spec-backlog -> TDD
+- Level 2: SYSTEM_MAP -> spec-backlog -> TDD
+- Level 1: finding card -> TDD
 - Level 0: code only
 
-**Do not skip intermediate documents.** A Level 2 fix that updates SYSTEM_MAP but not the
-feature plan leaves the feature plan out of sync — the next person reading it will make
-decisions based on stale information.
-
-### When to Pause and Discuss
-
-Not every implementation difficulty is a discovery error. Before escalating to Level 2 or 3,
-verify that the friction is not caused by:
-- An implementation approach that can be adjusted (Level 1)
-- A misunderstanding of the existing contract (re-read before concluding it is wrong)
-- Complexity that a dominant-op justifies (check architect-mindset.md: "Respect earned complexity")
-
-If uncertain, surface the conflict to the user with the evidence and let them decide the level.
-
-### How Skills Use This Section
-
-**tdd-workflow**: When implementation hits a wall during Green phase, reference this triage
-to determine whether to adjust the approach (Level 0-1) or stop and escalate (Level 2-3).
-
-**design-review**: When Part 1 finds a violation, determine whether the violation indicates
-an implementation bug (fix the code) or a declaration that was wrong (triage the declaration
-fix using these levels).
+Do not skip intermediate documents.
 
 ---
 
 ## Part 2: Structural Checks
 
-These properties do not require a prior declaration — they are evaluated during design-review
-by questioning, not by checking against a stated intent. Use the questioning approach: surface
-the issue and let the user decide, rather than issuing directives.
+Used by design-review.
 
-### Single Responsibility
+1. Single responsibility
+2. Dependency direction
+3. Naming semantics
+4. Testability
+5. Consistency
 
-A class or function should have one reason to change.
-
-- Does this function do both IO (DB/API call) and business logic in the same body?
-- If a requirement changes, how many places need to be updated?
-- Could you describe what this does in one sentence without using "and"?
-
-### Dependency Direction
-
-Inner layers (domain/business logic) must not depend on outer layers (framework/infrastructure).
-
-- Does any domain-layer code import from infrastructure or framework layers?
-- Is the Protocol or interface defined in the layer that owns the abstraction?
-- Would swapping the DB or HTTP framework require changes inside domain logic?
-
-### Naming
-
-Names should accurately reflect behavior — neither too vague nor too implementation-specific.
-
-- Does the name describe *what* it does, or *how* it does it?
-- Are there over-generalised names (`process_data`, `handle_request`, `utils`) that hide intent?
-- Is this name consistent with the vocabulary already established in the codebase?
-
-### Testability
-
-Code should be easy to test without extensive setup or wide mock surfaces.
-
-- Are there hidden dependencies (`datetime.now()`, `random`, global state) that make tests fragile?
-- Does testing this unit require mocking more than one or two collaborators?
-- Could you add a new test scenario without changing the production code structure?
-
-### Consistency
-
-New code should follow the patterns already established in the project.
-
-- Is there a similar feature elsewhere that handles the same concern differently?
-- Does this introduce a new pattern where an existing one would have served?
-- Would a new team member reading this alongside the rest of the codebase find it consistent?
-
----
+Use questions to surface tradeoffs; use direct findings only for clear violations.
 
 ---
 
 ## Part 3: Feature Coverage Analysis
 
-The mapping from discovery and spec artifacts to the 6 scenario categories. Use this framework
-in **feature-coverage** to determine what each category should contain and where to look for
-the analysis starting point.
-
-### The 6 Categories
+Mapping from finding card to the 6 scenario categories.
 
 | # | Category | Analysis starting point |
-|---|----------|------------------------|
-| 1 | Happy path | feature plan → Gx goal description: what does "success" look like for this goal? |
-| 2 | Error / Failure paths | feature plan → Anti-patterns (each AP maps to ≥1 scenario) + Domain errors list |
-| 3 | Boundary & Edge cases | feature plan → Dx theory limits (e.g. max N concurrent) + Domain errors for invalid input |
-| 4 | Business rules | spec.md → Requirements with conditional logic ("if A then B, else C"), use Scenario Outline |
-| 5 | State mutation | spec.md → SHALL statements about writes + feature plan Boundary Rules for what to verify |
-| 6 | Output contract | spec.md + feature plan → Boundary Rules, verify shape match at boundary crossings |
-
-### Category Definitions
-
-**1. Happy path**
-The end-to-end flow when everything works. Driven by the Gx goal description — the scenario
-should demonstrate that the goal is achieved. One scenario per distinct success path.
-
-**2. Error / Failure paths**
-Failures that the system must handle explicitly. Every anti-pattern in the feature plan maps
-to at least one scenario. Domain errors from the Error Handling Strategy map to scenarios
-verifying the structured error response. Infrastructure errors map to scenarios verifying
-fail fast or recovery behavior.
-
-**3. Boundary & Edge cases**
-Inputs or states at the limits of what the system accepts. Sources:
-- Dx theory limits (e.g. "D1: max 5 concurrent tasks" → test at exactly 5 and at 6)
-- Domain errors for invalid input (e.g. "empty list", "oversized payload")
-- Minimum viable input (e.g. single element, empty collection)
-Do not duplicate scenarios already covered by Error / Failure paths.
-
-**4. Business rules**
-Conditional logic within the feature — "if A and B then C, if A but not B then D." Source is
-spec.md Requirements. Each distinct condition branch is a candidate scenario. Use
-`Scenario Outline + Examples` when the same rule applies to multiple input combinations.
-This category is N/A when the spec has no conditional branching.
-
-**5. State mutation**
-Correctness of writes to DB, files, or external state. Source is spec.md SHALL statements
-about persistence. Key questions: is the write idempotent? what is the state after a re-run?
-does a failed write leave the system in a consistent state?
-
-**6. Output contract**
-The shape of what this feature returns or emits, verified at boundary crossings. Source is
-feature plan Boundary Rules + spec.md schema definitions. Verify: does the output match what
-the downstream consumer expects? This is especially important when the Verification Ledger
-marks a cross-component data flow as unverified.
+|---|---|---|
+| 1 | Happy path | finding card `Serves` + success behavior |
+| 2 | Error / Failure paths | finding card `Error Handling Strategy` + `Related` APx |
+| 3 | Boundary & Edge cases | finding card limits/constraints + dominant-op theory limits (if linked) |
+| 4 | Business rules | finding card `Behavior` conditional clauses |
+| 5 | State mutation | finding card write-related Behavior + Done Criteria |
+| 6 | Output contract | finding card boundary/output expectations |
 
 ### Overlap Rules
 
-- A scenario that tests both an error condition AND a boundary value → classify as **Error / Failure paths**
-- A scenario that tests a limit from theory limits → **Boundary & Edge cases**, not **Business rules**
-- A scenario that tests conditional logic with no boundary concern → **Business rules**
-- When in doubt between two categories, pick the one that better describes the *intent* of the test
+- error + boundary => classify as Error/Failure
+- theory limit cases => Boundary/Edge
+- pure branch logic => Business rules
+- when ambiguous, classify by primary test intent
 
 ---
 
 ## How Skills Use This Document
 
-**tdd-workflow (Verification Ledger)**
-
-Before planning mock boundaries, check: has the error handling strategy been declared in
-OpenSpec design decisions? If not, prompt the user to declare it. The declared strategy determines:
-- Which error paths need explicit mock scenarios (domain errors → yes; programming errors → no)
-- Where mock boundaries are placed (catch boundary = where the mock cuts)
-
-**design-review**
-
-Part 1 — Error Handling: read the declaration from OpenSpec, then verify the implementation matches.
-A strategy that was consciously chosen and consistently applied is correct even if it is not the
-approach you would have chosen. A strategy that was never stated cannot be verified — mark as
-"undeclared" and prompt for a declaration, then continue to Part 2.
-
-Part 2 — Structural Checks: use the questions above to surface concerns. Do not issue directives.
-Explain the principle, ask the question, let the user decide.
+- `align-internals` / `align-surface`: Part 0 field derivation and WIP discipline
+- `feature-planning`: Part 0 priority/dependency derivation
+- `feature-coverage`: Part 0 + Part 3 for criteria-to-scenario mapping
+- `tdd-workflow`: Part 1 declarations + triage levels
+- `design-review`: Part 1 compliance + Part 2 structure + release gate evidence

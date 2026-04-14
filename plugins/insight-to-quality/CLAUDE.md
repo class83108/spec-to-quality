@@ -1,6 +1,7 @@
 # insight-to-quality — Agent Guide
 
-This set of skills implements a complete "from insight to quality" development workflow: structured discovery → feature planning → TDD implementation → design verification.
+This set of skills implements a complete "from insight to quality" workflow:
+structured discovery -> alignment -> spec backlog -> TDD implementation -> design verification.
 
 ## Core Belief
 
@@ -10,107 +11,116 @@ Bad research produces bad plans; bad plans produce bad code. Discovery ensures r
 
 ```mermaid
 flowchart TD
-    subgraph discovery["discovery（理解階段）"]
-        G[goals-discovery] --> D[dominant-ops]
-        D --> S[system-map]
-        S --> AI[align-internals]
-        S --> AS[align-surface]
-    end
+    NEW([新專案 / 新需求]) --> G[goals-discovery]
+    G --> D[dominant-ops]
+    D --> S[system-map]
 
-    AI & AS --> FP
+    S --> AI[align-internals<br/>one seam/session]
+    S --> AS[align-surface<br/>one scope/session]
 
-    subgraph impl["spec-to-quality（實作階段）"]
-        FP[feature-planning] -->|OpenSpec 路徑| FC[feature-coverage]
-        FP -->|Fix 路徑| FIX[直接修正 + verify]
-        FC --> GH[gherkin]
-        GH --> TDD[tdd-workflow<br/>with Verification Ledger]
-        TDD --> DR[design-review]
-        DR --> PC[pre-complete<br/>with Delta Spec sync]
-    end
+    AI --> IDX[docs/spec-backlog/index.md<br/>partial index allowed]
+    AS --> IDX
+    FP[feature-planning<br/>optional integrator] --> IDX
 
-    NEW([新專案]) --> G
-    SF([start-feature<br/>有具體功能想法]) -.->|缺 discovery 或 alignment| G
-    SF -.->|一切就緒| FP
+    IDX --> SEL{Select next item}
+    SEL -->|status=ready| IP[set status -> in-progress<br/>WIP=1]
+    SEL -->|no ready item| AI
 
-    classDef am fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
-    classDef im fill:#fef3c7,stroke:#f59e0b,color:#78350f
-    classDef both fill:#ede9fe,stroke:#7c3aed,color:#3b0764
-    classDef entry fill:#f0fdf4,stroke:#22c55e,color:#14532d
+    IP --> CARD["docs/spec-backlog/{finding-id}.md"]
+    CARD --> FC[feature-coverage<br/>coverage gate + gherkin writing]
+    FC --> TDD[tdd-workflow<br/>Red -> Green -> Refactor]
+    TDD --> DR[design-review<br/>+ release-gate]
 
-    class G,D,S,AI,AS am
-    class FC,TDD im
-    class FP,DR both
-    class NEW,SF entry
+    DR --> DONE{Gate pass?}
+    DONE -->|Yes| IDXDONE[update index -> done]
+    DONE -->|No| CARD
+
+    IDXDONE --> NEXT{More findings?}
+    NEXT -->|Yes| SEL
+    NEXT -->|No| END([完成一輪 gap 關閉])
 ```
-
-> 🔵 藍：參考 architect-mindset.md　🟡 黃：參考 implementation-mindset.md　🟣 紫：兩者皆參考　🟢 綠：功能入口
 
 ## Rules
 
 - **Execute in order**: Each skill has prerequisites that must be satisfied before proceeding to the next
-- **Discovery is a prerequisite**: Proceeding to implementation without goals.md, dominant-ops.md, and SYSTEM_MAP.md will cause feature-planning to block and require discovery first
-- **Guide, don't write for the user**: The discovery phase guides the user's thinking; all documents require user confirmation
-- **Align skills have dual modes**: First ask the user whether this is design mode (no existing code) or verification mode (code already exists) — design mode may produce contracts, schemas, interface specs, or infrastructure decisions rather than .md files; verification mode produces an alignment report that flags gaps
-- **One finding at a time**: feature-planning resolves one alignment finding completely (worktree deleted or pre-complete done) before moving to the next
-- **Complete one spec before starting the next**: Walk through feature-planning → pre-complete fully before starting another spec
-- **Test/lint/type check commands**: Always refer to the project's CLAUDE.md Commands section; do not assume any specific tooling
-- **Wait for user confirmation**: feature-coverage analysis, tdd-workflow Verification Ledger sign-off, and red-light confirmation all require explicit user approval before proceeding
-- **Gherkin keywords in English, content in Traditional Chinese**: Feature/Scenario/Given/When/Then and other keywords are always English; step descriptions and names use Traditional Chinese
-- **Branch strategy**: Before starting implementation, ask the user whether to create a new branch. Do not develop features directly on the main branch
-- **Multi-agent parallel development**: Each agent owns an independent spec and follows the "complete one spec fully" rule. Specs that touch the same boundary should be serialized rather than parallelized to avoid contract conflicts
+- **Discovery is a prerequisite**: Proceeding to implementation without goals.md, dominant-ops.md, and SYSTEM_MAP.md will block and require discovery first
+- **Guide, don't write for the user**: The discovery phase guides the user's thinking; all key decisions require user confirmation
+- **Align skills have dual modes**: First ask design mode (no existing code) or verify mode (code exists)
+- **Spec backlog is execution source**: `docs/spec-backlog/index.md` is the queue; `docs/spec-backlog/{finding-id}.md` is the single implementation spec
+- **WIP=1**: Only one finding may be `in-progress` at a time; multiple `draft/ready` items are allowed
+- **Partial index is allowed**: First pass can be one boundary/journey slice; do not block execution waiting for full inventory
+- **Test/lint/type check commands**: Always refer to project's CLAUDE.md Commands section
+- **Wait for user confirmation**: spec-to-gherkin coverage confirmation and tdd-workflow red confirmation require explicit approval
+- **Gherkin keywords in English, content in Traditional Chinese**
+- **Branch strategy**: Before implementation, ask whether to create a new branch; do not develop directly on main
 
 ## Skill Handoff Reference
 
 | From | To | Handoff |
 |------|----|---------|
-| goals-discovery | dominant-ops | After goals.md is confirmed, use Gx IDs as the traceability anchor |
+| goals-discovery | dominant-ops | After goals.md is confirmed, use Gx IDs as traceability anchors |
 | dominant-ops | system-map | After dominant-ops.md is confirmed, Dx + Anti-Patterns drive boundary design |
-| system-map | align-internals | SYSTEM_MAP's Boundary Map drives contract alignment |
-| system-map | align-surface | SYSTEM_MAP's Component Map + Dx user journeys drive interface alignment |
-| align-internals/surface | feature-planning | After alignment reports are produced, triage findings into OpenSpec or Fix pathways |
-| start-feature | goals-discovery / dominant-ops / system-map / align-internals / align-surface / feature-planning | Routes to the earliest layer that needs work; use when you have a feature idea but don't know the scope |
-| feature-planning (OpenSpec pathway) | feature-coverage | After feature plan is established and worktree is created, proceed to coverage analysis |
-| feature-planning (Fix pathway) | — | Apply fix directly in fix worktree, verify, delete worktree, update alignment report |
-| feature-coverage | gherkin | After coverage analysis is confirmed, trigger gherkin to write the .feature file |
-| gherkin | tdd-workflow | After the .feature file is written, create the Verification Ledger first, then proceed to Red |
-| tdd-workflow | design-review | After green + refactor, remind the user to trigger design-review |
-| design-review | pre-complete | After review, trigger pre-complete (with delta spec sync) before commit/PR |
+| system-map | align-internals | SYSTEM_MAP Boundary Map drives contract alignment |
+| system-map | align-surface | SYSTEM_MAP Component Map + Dx journeys drive interface alignment |
+| align-internals/surface | spec-backlog | Produce/refresh index rows and finding cards from verified gaps |
+| start-feature | goals-discovery / dominant-ops / system-map / align-internals / align-surface / spec-backlog | Route to earliest missing layer; if ready, enter spec-backlog execution |
+| spec-backlog card | feature-coverage | Convert one finding card into coverage table and .feature scenarios |
+| feature-coverage | tdd-workflow | After coverage confirmed and .feature written, create Verification Ledger and enter Red |
+| tdd-workflow | design-review | After green + refactor, run design review and release-gate checks |
+
+## Spec Backlog Conventions
+
+### 1) Index file
+
+Path: `docs/spec-backlog/index.md`
+
+| finding-id | slice | source | serves | related | boundary | priority | status | deps |
+|---|---|---|---|---|---|---|---|---|
+
+- `source`: internals / surface / both
+- `status`: draft / ready / in-progress / done
+- `serves`: Gx IDs (`G1,G3`)
+- `related`: Dx/APx IDs (`D1,AP2`)
+
+### 2) Finding card
+
+Path: `docs/spec-backlog/{finding-id}.md`
+
+Required fields:
+- Source finding and report link
+- Serves (Gx)
+- Related pressure (Dx/APx)
+- Boundary
+- Behavior (SHALL/MUST)
+- Error Handling Strategy (catch boundary, domain errors, infrastructure recovery)
+- Done Criteria (testable)
+- Out of Scope
+- Integration Test Gaps (optional, updated after ledger)
+
+### 3) State transition
+
+- `draft -> ready`: scoped and reviewable
+- `ready -> in-progress`: execution starts; create finding card if missing
+- `in-progress -> done`: after TDD green + design-review/release-gate pass
 
 ## References
 
-All skills share the `references/` directory — no customization needed:
+All skills share `references/`:
 
-- **`references/architect-mindset.md`** — Used by discovery and design verification: Abstract Boundary Three Tests, Dominant Operations thinking, Traceability
-- **`references/implementation-mindset.md`** — Used by feature planning and implementation: Error Handling Strategy (Three Decisions), Structural Checks, Feature Coverage Category definitions
-
-## OpenSpec Handoff Convention
-
-After discovery is complete, the **top of the body** of each OpenSpec change's spec.md must include a line:
-
-```
-**Serves:** G1, G3
-```
-
-mapping to the Goal IDs in goals.md. A change without a `Serves:` field has no goal foundation — feature-planning and feature-coverage will block it and require the field to be added.
-
-**Whose responsibility**: At the moment `opsx:apply` is run to create a change, the agent should proactively ask "Which goal does this change serve?" and add `**Serves:** Gx` to the spec.md body.
+- `references/architect-mindset.md` — discovery and design verification
+- `references/implementation-mindset.md` — error strategy, structure checks, coverage categories
 
 ## Language Policy
 
-All output documents (goals.md, dominant-ops.md, SYSTEM_MAP.md, feature plans, alignment
-reports, Verification Ledgers, etc.) and user-facing communication must be in Traditional
-Chinese (繁體中文), regardless of the language of these skill instructions.
+All output documents (goals.md, dominant-ops.md, SYSTEM_MAP.md, alignment reports,
+spec backlog files, verification ledgers, etc.) and user-facing communication must be in
+Traditional Chinese (繁體中文).
 
-Gherkin keywords remain English (Feature/Scenario/Given/When/Then/And/But/Background/
-Scenario Outline/Examples) — step content and names follow the Traditional Chinese policy.
+Gherkin keywords remain English (Feature/Scenario/Given/When/Then/And/But/Background/Scenario Outline/Examples).
 
 ## Prerequisites
 
-This plugin assumes the project's CLAUDE.md contains the following sections:
+This plugin assumes project's CLAUDE.md contains:
 
-- **Commands**: Defines the specific commands for testing, lint, format, and type checking
-- **Feature Scenario Concrete Mapping Table** (optional): Maps the 6 generic scenario categories to project-specific concepts
-
-## New Project Reminder
-
-If the project uses OpenSpec but has not yet been initialized, remind the user to run `openspec init` before starting any spec work. Detection: the `openspec/` directory does not exist in the project.
+- **Commands**: test/lint/format/type-check commands
+- **Feature Scenario Concrete Mapping Table** (optional)

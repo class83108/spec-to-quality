@@ -1,5 +1,5 @@
 ---
-description: 結構化撰寫 Gherkin .feature 規格文件
+description: 直接撰寫或微調 Gherkin .feature（非新流程預設入口）
 ---
 
-觸發 gherkin skill。透過引導式對話產出結構清晰、可測試的 .feature 檔，遵循 Feature / Rule / Scenario 結構。
+觸發 gherkin skill。用於使用者明確要求直接寫/改 `.feature`，或只做局部調整。新 finding 的預設流程請先走 feature-coverage。

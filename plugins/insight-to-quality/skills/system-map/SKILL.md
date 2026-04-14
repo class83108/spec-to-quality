@@ -150,11 +150,11 @@ This section is updated frequently — keep it scannable.
 
 A lightweight section that captures implementation pitfalls relevant to future work touching the same boundary or component. This section is **not written during initial SYSTEM_MAP creation** — it is populated incrementally by design-review's Lessons Capture step as features are completed.
 
-Each entry is a one-line summary with a link to the detailed record in the OpenSpec change's decisions. SYSTEM_MAP is the navigator; the OpenSpec change is the source of truth.
+Each entry is a one-line summary with a link to the detailed record in the spec-backlog finding card. SYSTEM_MAP is the navigator; the spec-backlog finding is the source of truth.
 
 **What belongs here**: Mid-size pitfalls that would affect someone working on the same boundary or component in the future. Examples: a contract needing unexpected nullable handling, an anti-pattern that was harder to obey than expected, a technical limitation that forced a design compromise.
 
-**What does NOT belong here**: Small pitfalls local to a single change (stay in OpenSpec decisions), or large discoveries that trigger a discovery revision (handled by the Discovery Conflict Triage in implementation-mindset.md).
+**What does NOT belong here**: Small pitfalls local to a single change (stay in the finding card), or large discoveries that trigger a discovery revision (handled by the Discovery Conflict Triage in implementation-mindset.md).
 
 ### Phase 6: Change Protocol
 
@@ -165,7 +165,7 @@ This is the section developers and AI agents consult most. Define what to do whe
 When a goal in goals.md changes or a new goal is added:
 1. Review dominant-ops.md — does the pressure ranking change?
 2. Review SYSTEM_MAP boundaries — do any seams need to move?
-3. Create an OpenSpec change for the implementation work
+3. Create a spec-backlog finding for the implementation work
 4. Update SYSTEM_MAP after implementation
 
 #### Type 2: Contract/Boundary Change (medium impact)
@@ -239,7 +239,7 @@ If any check reveals a problem → fix it first. Do not write SYSTEM_MAP.md unti
 
 ## Lessons
 <!-- Populated by design-review Lessons Capture; empty at initial creation -->
-- [Seam/Component]: [one-line summary] ([openspec/changes/xxx/decisions.md])
+- [Seam/Component]: [one-line summary] ([docs/spec-backlog/FINDING-ID.md])
 
 ## Change Protocol
 [Type 1-4 as described above]

@@ -7,7 +7,7 @@ description: >
   Requires goals.md to exist. Trigger when goals are defined and the user is ready to analyze
   operational pressure.
   Do NOT use for: defining what the system does (use goals-discovery), mapping system structure
-  (use system-map), or implementation planning (use OpenSpec).
+  (use system-map), or implementation planning (use spec-backlog execution).
 ---
 
 # Dominant Operations Analysis

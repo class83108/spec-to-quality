@@ -1,5 +1,5 @@
 ---
-description: Scope a new feature idea and route to the right skills — works top-down from goals through alignment to feature-planning.
+description: Scope 新功能並路由到最早缺口，完成後進入 spec-backlog 執行
 ---
 
-Trigger the start-feature skill. Takes a feature description from the user, maps it to goals (Gx), dominant operations (Dx), and SYSTEM_MAP boundaries, then routes to the earliest skill that needs to run — which may be goals-discovery, dominant-ops, system-map, align-internals/surface, or feature-planning directly. Use this when you have a specific feature idea but are unsure of its scope. Use feature-planning directly if you want to pick from known SYSTEM_MAP gaps.
+觸發 start-feature skill。將使用者功能想法映射到 Gx / Dx / SYSTEM_MAP 邊界，路由到最早需要補齊的技能（goals, dominant-ops, system-map, align-*）。若前置齊備，直接進入 `docs/spec-backlog/index.md` 選擇 `ready` 項目。
