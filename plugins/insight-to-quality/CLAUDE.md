@@ -1,11 +1,19 @@
 # insight-to-quality — Agent Guide
 
-This set of skills implements a complete "from insight to quality" workflow:
-structured discovery -> alignment -> spec backlog -> TDD implementation -> design verification.
+Structured discovery → spec-xxx alignment (contract/surface/behavior) → finding execution → TDD → design verification.
 
 ## Core Belief
 
-Bad research produces bad plans; bad plans produce bad code. Discovery ensures research quality; implementation skills ensure implementation quality. Starting implementation without discovery is equivalent to vibe coding — when discovery documents are missing, guide the user to complete discovery first.
+Bad research produces bad plans; bad plans produce bad code. When discovery documents are missing, guide the user to complete discovery first — no exceptions.
+
+## Skeleton vs. Feature
+
+| Layer | Definition | Produced by |
+|-------|-----------|-------------|
+| **Skeleton** | Data contracts, schemas, boundary guards | spec-contract / spec-surface |
+| **Feature** | Functional logic, user journeys, business behavior | spec-behavior |
+
+Skeleton first — it defines the growth boundary for features. In existing systems alignment mostly finds missing skeleton; in greenfield systems spec-behavior fills the gap for Gx functional implementation.
 
 ## Full Workflow
 
@@ -15,112 +23,88 @@ flowchart TD
     G --> D[dominant-ops]
     D --> S[system-map]
 
-    S --> AI[align-internals<br/>one seam/session]
-    S --> AS[align-surface<br/>one scope/session]
+    S --> SC[spec-contract<br/>internal handoff schemas]
+    S --> SS[spec-surface<br/>external interface shapes]
 
-    AI --> IDX[docs/spec-backlog/index.md<br/>partial index allowed]
-    AS --> IDX
-    FP[feature-planning<br/>optional integrator] --> IDX
+    S --> SB[spec-behavior<br/>Design: inventory Gx flows]
+    SB -->|Verify: skeleton_deps done| RPT
 
-    IDX --> SEL{Select next item}
-    SEL -->|status=ready| IP[set status -> in-progress<br/>WIP=1]
-    SEL -->|no ready item| AI
+    SC --> RPT[spec-xxx reports<br/>contracts/surface/behaviors]
+    SS --> RPT
+
+    RPT --> SEL{Select next ready row}
+    SEL -->|ready + deps met| IP[in-progress · WIP=1]
 
     IP --> CARD["docs/spec-backlog/{finding-id}.md"]
-    CARD --> FC[feature-coverage<br/>coverage gate + gherkin writing]
-    FC --> TDD[tdd-workflow<br/>Red -> Green -> Refactor]
-    TDD --> DR[design-review<br/>+ release-gate]
+    CARD --> STG[spec-to-gherkin<br/>type-routed]
+    STG --> TDD[tdd-workflow<br/>Red → Green → Refactor]
+    TDD --> DR[design-review + release-gate]
 
-    DR --> DONE{Gate pass?}
-    DONE -->|Yes| IDXDONE[update index -> done]
-    DONE -->|No| CARD
+    DR -->|pass| DONE[report row → done]
+    DR -->|fail| CARD
+    DONE --> SEL
 
-    IDXDONE --> NEXT{More findings?}
-    NEXT -->|Yes| SEL
-    NEXT -->|No| END([完成一輪 gap 關閉])
+    SF([start-feature]) --> RT{earliest gap?}
+    RT -->|no goals| G
+    RT -->|no dominant-ops| D
+    RT -->|no system-map| S
+    RT -->|缺內部契約| SC
+    RT -->|缺外部介面| SS
+    RT -->|骨架就緒，缺行為| SB
+    RT -->|reports ready| SEL
+
+    DG[docs-governance] -.->|periodic audit| RPT
+    DG -.-> DM[docs/delivery-map.md]
 ```
 
-## Rules
+## Cross-cutting Rules
 
-- **Execute in order**: Each skill has prerequisites that must be satisfied before proceeding to the next
-- **Discovery is a prerequisite**: Proceeding to implementation without goals.md, dominant-ops.md, and SYSTEM_MAP.md will block and require discovery first
-- **Guide, don't write for the user**: The discovery phase guides the user's thinking; all key decisions require user confirmation
-- **Align skills have dual modes**: First ask design mode (no existing code) or verify mode (code exists)
-- **Spec backlog is execution source**: `docs/spec-backlog/index.md` is the queue; `docs/spec-backlog/{finding-id}.md` is the single implementation spec
-- **WIP=1**: Only one finding may be `in-progress` at a time; multiple `draft/ready` items are allowed
-- **Partial index is allowed**: First pass can be one boundary/journey slice; do not block execution waiting for full inventory
-- **Test/lint/type check commands**: Always refer to project's CLAUDE.md Commands section
-- **Wait for user confirmation**: spec-to-gherkin coverage confirmation and tdd-workflow red confirmation require explicit approval
-- **Gherkin keywords in English, content in Traditional Chinese**
-- **Branch strategy**: Before implementation, ask whether to create a new branch; do not develop directly on main
+- **Discovery is prerequisite**: goals.md + dominant-ops.md + SYSTEM_MAP.md before alignment
+- **Skeleton before feature**: spec-behavior Verify only when slice's `skeleton_deps` are done
+- **Infrastructure → SYSTEM_MAP**: infrastructure gaps escalate to SYSTEM_MAP update, not finding cards
+- **WIP=1**: one `in-progress` finding at a time
+- **Report-row status source**: active status is maintained in contracts/surface/behaviors report rows
+- **Wait for user confirmation**: spec-to-gherkin confirmation gate before writing `.feature`
+- **Gherkin keywords English, content 繁體中文**
+- **Branch strategy**: ask before creating; never develop on main
+- **Test/lint/type check**: refer to project's CLAUDE.md Commands section
+- **Default path**: spec-to-gherkin includes coverage + writing; `gherkin`/`pre-complete` only on explicit request
 
 ## Skill Handoff Reference
 
 | From | To | Handoff |
 |------|----|---------|
-| goals-discovery | dominant-ops | After goals.md is confirmed, use Gx IDs as traceability anchors |
-| dominant-ops | system-map | After dominant-ops.md is confirmed, Dx + Anti-Patterns drive boundary design |
-| system-map | align-internals | SYSTEM_MAP Boundary Map drives contract alignment |
-| system-map | align-surface | SYSTEM_MAP Component Map + Dx journeys drive interface alignment |
-| align-internals/surface | spec-backlog | Produce/refresh index rows and finding cards from verified gaps |
-| start-feature | goals-discovery / dominant-ops / system-map / align-internals / align-surface / spec-backlog | Route to earliest missing layer; if ready, enter spec-backlog execution |
-| spec-backlog card | feature-coverage | Convert one finding card into coverage table and .feature scenarios |
-| feature-coverage | tdd-workflow | After coverage confirmed and .feature written, create Verification Ledger and enter Red |
-| tdd-workflow | design-review | After green + refactor, run design review and release-gate checks |
+| goals-discovery | dominant-ops | goals.md confirmed → Gx as traceability anchors |
+| dominant-ops | system-map | Dx + Design Implications + Anti-Patterns → boundary design + tech stack |
+| system-map | spec-contract | Boundary Map → internal handoff alignment |
+| system-map | spec-surface | Component Map + Dx journeys → external interface alignment |
+| system-map | spec-behavior | SYSTEM_MAP + goals + skeleton reports → behavior gap analysis |
+| spec-contract / spec-surface | report rows + finding cards | skeleton finding cards + report-row status sync |
+| spec-behavior | report rows + finding cards | feature finding cards + report-row status sync |
+| start-feature | earliest missing layer | Route to discovery / spec-xxx as needed |
+| spec-backlog card | spec-to-gherkin | type-routed coverage + .feature |
+| spec-to-gherkin | tdd-workflow | coverage confirmed + .feature written → Red |
+| tdd-workflow | design-review | green + refactor → review + release-gate |
+| design-review | docs-governance | optional sparse governance audit |
 
-## Spec Backlog Conventions
+## Finding Card Routing
 
-### 1) Index file
+| finding-id prefix | type | Gherkin Guide | Test Path |
+|-------------------|------|---------------|-----------|
+| `contract-*` | skeleton | contract-gherkin-guide | `tests/features/contracts/` |
+| `surface-*` | skeleton | surface-gherkin-guide | `tests/features/contracts/` |
+| `behavior-*` | feature | feature-gherkin-guide | `tests/features/behaviors/` |
 
-Path: `docs/spec-backlog/index.md`
-
-| finding-id | slice | source | serves | related | boundary | priority | status | deps |
-|---|---|---|---|---|---|---|---|---|
-
-- `source`: internals / surface / both
-- `status`: draft / ready / in-progress / done
-- `serves`: Gx IDs (`G1,G3`)
-- `related`: Dx/APx IDs (`D1,AP2`)
-
-### 2) Finding card
-
-Path: `docs/spec-backlog/{finding-id}.md`
-
-Required fields:
-- Source finding and report link
-- Serves (Gx)
-- Related pressure (Dx/APx)
-- Boundary
-- Behavior (SHALL/MUST)
-- Error Handling Strategy (catch boundary, domain errors, infrastructure recovery)
-- Done Criteria (testable)
-- Out of Scope
-- Integration Test Gaps (optional, updated after ledger)
-
-### 3) State transition
-
-- `draft -> ready`: scoped and reviewable
-- `ready -> in-progress`: execution starts; create finding card if missing
-- `in-progress -> done`: after TDD green + design-review/release-gate pass
-
-## References
-
-All skills share `references/`:
-
-- `references/architect-mindset.md` — discovery and design verification
-- `references/implementation-mindset.md` — error strategy, structure checks, coverage categories
+spec-to-gherkin reads `type` + prefix → auto-selects guide and path.
 
 ## Language Policy
 
-All output documents (goals.md, dominant-ops.md, SYSTEM_MAP.md, alignment reports,
-spec backlog files, verification ledgers, etc.) and user-facing communication must be in
-Traditional Chinese (繁體中文).
-
-Gherkin keywords remain English (Feature/Scenario/Given/When/Then/And/But/Background/Scenario Outline/Examples).
+All output documents and user-facing communication: **繁體中文**.
+Gherkin keywords: **English** (Feature/Scenario/Given/When/Then/And/But/Background/Scenario Outline/Examples).
 
 ## Prerequisites
 
-This plugin assumes project's CLAUDE.md contains:
+Project's CLAUDE.md must contain:
 
 - **Commands**: test/lint/format/type-check commands
 - **Feature Scenario Concrete Mapping Table** (optional)

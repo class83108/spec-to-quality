@@ -4,13 +4,13 @@
     "name": "class83108"
   },
   "metadata": {
-    "description": "Structured software development skills — from architectural discovery through TDD implementation to design review and quality verification."
+    "description": "Structured discovery-to-delivery workflow with spec-contract/spec-surface/spec-behavior, type-routed Gherkin, TDD refactor gates, and report-row governance."
   },
   "plugins": [
     {
       "name": "insight-to-quality",
       "source": "./plugins/insight-to-quality",
-      "description": "Structured software development skills — from architectural discovery through TDD implementation to design review and quality verification."
+      "description": "Structured discovery-to-delivery workflow with spec-contract/spec-surface/spec-behavior, type-routed Gherkin, TDD refactor gates, and report-row governance."
     }
   ]
 }
