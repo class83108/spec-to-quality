@@ -1,5 +1,5 @@
 ---
-description: 嚴格的 Red → Green → Refactor TDD 流程
+description: Strict Red -> Green -> Refactor TDD workflow
 ---
 
-觸發 tdd-workflow skill。強制按照 Red → Green → Refactor 順序執行，不可跳過任何階段。需要先有 .feature 檔。
+Trigger the tdd-workflow skill. Enforce Red -> Green -> Refactor order without skipping phases. Requires an existing `.feature` file first.

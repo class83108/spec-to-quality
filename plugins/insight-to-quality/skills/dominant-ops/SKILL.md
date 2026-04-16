@@ -12,9 +12,11 @@ description: >
 
 # Dominant Operations Analysis
 
+> **Output contract**：繁體中文。dominant-ops.md 的所有內容（Operations Inventory、Dx 描述、Anti-patterns、Theory Limits、Design Implications）皆使用繁體中文。
+
 You are guiding the user through the creation of **dominant-ops.md** — the document that answers "where does the pressure lie?" in this system. While goals.md defines what the system must do, dominant-ops.md identifies which operations carry the most weight and therefore deserve the most design attention.
 
-Read `references/architect-mindset.md` before proceeding, especially the Dominant Operations Thinking and Traceability sections.
+Read `../../references/architect-mindset.md` before proceeding, especially the Dominant Operations Thinking and Traceability sections.
 
 ## Working Style
 
@@ -29,6 +31,7 @@ Before declaring this skill complete, you MUST produce ALL of the following:
 
 - [ ] Operations Inventory table — list ALL significant operations before selecting Top 3; do not skip directly to the ranking
 - [ ] 2–3 Dominant Operations with Dx IDs, ranked by criticality
+- [ ] Design Implications per Dx — characteristic tags, technical requirements, and dimension decisions (confirmed or TBD)
 - [ ] At least one anti-pattern per Dx, each with an AP ID and an explicit Dx reference
 - [ ] Theory Limits table (one row per Dx) — **this section is not optional**; use `[estimate]` if real numbers don't exist
 - [ ] User has confirmed the final ranking
@@ -93,14 +96,56 @@ From the scored inventory, select the Top 3 dominant operations:
 For each Dx, document:
 - **What it does** (1-2 sentences)
 - **Why it dominates** (which dimension drives its criticality)
-- **Design implications** (what this means for architecture — boundaries, contracts, error handling)
 - **Goal traceability** (which Gx it serves)
+
+Design Implications are explored in Phase 4 after the Top 3 are confirmed.
 
 **Hard rules**:
 - No more than 3. If the user insists on 4+, ask: "If you had to sacrifice design attention on one of these to improve another, which would you drop?" That is your D4.
 - No fewer than necessary. Before finalizing D3, verify: does its criticality score exceed 2? If not, ask the user "Is this genuinely more critical than any unselected operation?" If the answer is no, stop at D1 and D2. A two-operation list is better than a padded three.
 
-### Phase 4: Anti-Patterns
+### Phase 4: Design Implications
+
+After the Top 3 are confirmed, explore what each Dx's pressure means for technical design. This phase is structured questioning — the agent facilitates, the user decides.
+
+Read `./references/system-design-dimensions.md` before this step.
+
+#### Step 1: Assign characteristic tags
+
+For each Dx, select applicable tags from the dimension mapping table in the reference. The canonical tag list:
+
+> high-frequency-read, high-frequency-write, high-failure-cost, real-time, long-running, short+long-coexist, large-data, human-in-loop, cross-boundary-dataflow, external-dependency, special-data-type, audit-compliance
+
+List only the tags that genuinely apply to the Dx. These tags determine which dimensions to explore — irrelevant tags lead to irrelevant questions.
+
+#### Step 2: Structured questioning (per Dx)
+
+Process one Dx at a time — complete all relevant dimensions for D1 before moving to D2.
+
+For each Dx:
+1. State the assigned characteristic tags
+2. Look up the "Dx characteristics -> relevant dimensions mapping" table to identify which dimensions to explore
+3. For each relevant dimension, ask the structured questions from that dimension's section in the reference
+4. Record the user's answer: a concrete choice, or "TBD — carry to system-map"
+
+**Do not ask all dimensions** — only those mapped from the Dx's tags. **Do not answer for the user** — technical decisions require domain knowledge that belongs to the user. The agent's job is to ensure the user has consciously thought through each relevant dimension, not to prescribe answers.
+
+**AP capture**: If the user mentions past mistakes or design failures during questioning, capture them as anti-pattern candidates for Phase 5. Do not interrupt the flow — note them and revisit later.
+
+#### Step 3: Record per Dx
+
+Output format:
+```
+Design Implications:
+  Characteristic tags: [tags from Step 1]
+  Technical requirements: [what the pressure demands, in 1-2 sentences]
+  [dimension]: [decision or "TBD — carry to system-map"]
+  rationale: [which tag drives this dimension selection]
+```
+
+The "Technical requirements" line bridges pressure and decisions — it states what the Dx needs without prescribing how. This makes the output consumable by system-map: read the tags to understand context, read the requirements to understand constraints, read the decisions for confirmed choices.
+
+### Phase 5: Anti-Patterns
 
 Anti-patterns are design mistakes that would hurt dominant operations. They are not general best practices — they are specific protections for D1/D2/D3.
 
@@ -112,7 +157,7 @@ For each anti-pattern:
 
 **The most important anti-pattern often comes from the user, not from you.** Ask: "What mistakes have you seen (or made) in similar systems?" Their experience-driven anti-patterns are more valuable than textbook ones.
 
-### Phase 5: Theory Limits
+### Phase 6: Theory Limits
 
 **This phase is required — do not skip it.** If real measurements do not exist, produce estimates marked `[estimate]` and flag them for future validation. An empty Theory Limits table is not acceptable output.
 
@@ -128,14 +173,15 @@ Theory limits serve two purposes:
 
 **Demand real measurements where possible.** If the system exists, ask the user to run benchmarks. If it does not exist yet, mark estimates clearly and flag them for validation.
 
-### Phase 6: Review and Cross-Check
+### Phase 7: Review and Cross-Check
 
 Before finalizing:
 
 1. **Goal coverage**: Does every goal with architectural implications have at least one operation touching it? Uncovered goals may indicate missing operations.
 2. **Constraint compatibility**: Do the theory limits conflict with any constraints? (e.g., "D1 needs 10 API calls but C3 limits the rate to 5/min" — this is a fundamental tension that must be resolved)
-3. **Anti-pattern completeness**: For each Dx, is there at least one anti-pattern protecting it?
-4. **No orphan operations**: Operations in the inventory that do not map to any goal should be questioned — why does this operation exist?
+3. **Design Implications completeness**: Does every Dx have characteristic tags, technical requirements, and at least one dimension decision (confirmed or TBD)? A Dx with no Design Implications means system-map has nothing to consume.
+4. **Anti-pattern completeness**: For each Dx, is there at least one anti-pattern protecting it?
+5. **No orphan operations**: Operations in the inventory that do not map to any goal should be questioned — why does this operation exist?
 
 ## Output Shape
 
@@ -154,7 +200,11 @@ Before finalizing:
 ### D1: [Name] (serves Gx, Gy)
 - **What**: [1-2 sentences]
 - **Why it dominates**: [which dimension, with numbers]
-- **Design implication**: [what this means for architecture]
+- **Design Implications**:
+  - Characteristic tags: [tags]
+  - Technical requirements: [what the pressure demands, 1-2 sentences]
+  - [dimension]: [decision or "TBD — carry to system-map"]
+  - rationale: [which tag drives this dimension selection]
 
 ### D2: [Name] (serves Gx)
 ...

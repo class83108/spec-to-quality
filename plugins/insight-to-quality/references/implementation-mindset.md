@@ -1,7 +1,7 @@
 # Implementation Mindset
 
 Shared thinking framework for implementation-phase skills.
-Primary consumers: `feature-coverage`, `tdd-workflow`, `design-review`.
+Primary consumers: `spec-to-gherkin`, `tdd-workflow`, `design-review`.
 
 Scope: code-level decisions within boundaries already defined by discovery docs.
 
@@ -40,14 +40,29 @@ For `docs/spec-backlog/index.md` fields:
   - score = failure impact x frequency x cost
   - convert to dominant-op bucket (`D1/D2/D3`) for queue ordering
 
+- `type`:
+  - source: producing skill
+  - `skeleton` — from `spec-contract` or `spec-surface`; covers contract/schema/API shape gaps
+  - `feature` — from `spec-behavior`; covers functional behavior/user journey gaps
+  - determines Gherkin anchor and test path (see Part 3)
+
+- `tests_path`:
+  - derive from `type`
+  - `skeleton` → `tests/features/contracts/`
+  - `feature` → `tests/features/behaviors/`
+
 - `status`:
   - `draft` default
-  - `ready` only if `serves/related/boundary/done-criteria-seed` all present
+  - `ready` only if `serves/related/boundary/done-criteria-seed/type` all present
   - `in-progress` only when WIP=1 condition passes
 
 ### 0.2 Finding Card Field Derivation
 
 For `docs/spec-backlog/{finding-id}.md`:
+
+- `type` and `tests_path`:
+  - copy directly from index row (see 0.1)
+  - do not invent or override; if missing, resolve in index first
 
 - `Behavior (SHALL/MUST)`:
   - source priority: alignment finding statement -> boundary constraints -> discovered implementation gaps
@@ -56,6 +71,8 @@ For `docs/spec-backlog/{finding-id}.md`:
 - `Done Criteria`:
   - every item must map to at least one scenario and one Then assertion
   - ban vague wording ("better", "optimized", "properly handled")
+  - for `skeleton` type: done criteria anchors on schema validity and contract enforcement
+  - for `feature` type: done criteria anchors on user-observable behavior and system response
 
 - `Error Handling Strategy`:
   - must declare catch boundary, domain errors, infrastructure recovery before test writing
@@ -150,11 +167,28 @@ Use questions to surface tradeoffs; use direct findings only for clear violation
 
 ## Part 3: Feature Coverage Analysis
 
-Mapping from finding card to the 6 scenario categories.
+Read finding card `type` first — it determines the Gherkin anchor and scenario focus.
+
+### Skeleton type (契約/schema finding)
+
+Happy path anchor: "valid input shape → contract passes"
 
 | # | Category | Analysis starting point |
 |---|---|---|
-| 1 | Happy path | finding card `Serves` + success behavior |
+| 1 | Happy path | valid schema passes boundary without rejection |
+| 2 | Error / Failure paths | invalid shape, missing required field, wrong type |
+| 3 | Boundary & Edge cases | empty value, max-length field, optional field absent |
+| 4 | Business rules | field constraint rules (enum values, format rules) |
+| 5 | State mutation | schema version change does not break existing consumers |
+| 6 | Output contract | error response shape matches declared contract |
+
+### Feature type (功能行為 finding)
+
+Happy path anchor: "使用者完成行為 → 系統正確回應"
+
+| # | Category | Analysis starting point |
+|---|---|---|
+| 1 | Happy path | finding card `Serves` (Gx) + end-to-end success behavior |
 | 2 | Error / Failure paths | finding card `Error Handling Strategy` + `Related` APx |
 | 3 | Boundary & Edge cases | finding card limits/constraints + dominant-op theory limits (if linked) |
 | 4 | Business rules | finding card `Behavior` conditional clauses |
@@ -172,8 +206,9 @@ Mapping from finding card to the 6 scenario categories.
 
 ## How Skills Use This Document
 
-- `align-internals` / `align-surface`: Part 0 field derivation and WIP discipline
-- `feature-planning`: Part 0 priority/dependency derivation
-- `feature-coverage`: Part 0 + Part 3 for criteria-to-scenario mapping
-- `tdd-workflow`: Part 1 declarations + triage levels
+- `spec-contract` / `spec-surface`: Part 0 field derivation and WIP discipline; produce `skeleton` type findings
+- `spec-behavior`: Part 0 field derivation; produce `feature` type findings
+- `docs-governance`: Part 0 priority/dependency derivation for scoped sync/route/archive checks
+- `spec-to-gherkin`: Part 0 + Part 3; reads finding card `type` to select skeleton or feature coverage table
+- `tdd-workflow`: Part 1 declarations + triage levels; test file goes to `tests_path` from finding card
 - `design-review`: Part 1 compliance + Part 2 structure + release gate evidence

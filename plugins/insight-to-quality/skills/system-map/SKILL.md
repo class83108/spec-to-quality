@@ -7,14 +7,16 @@ description: >
   depends on what, and what breaks when something changes.
   Requires goals.md and dominant-ops.md to exist.
   Do NOT use for: defining goals (use goals-discovery), analyzing pressure (use dominant-ops),
-  designing contracts/schemas (use align-internals), or designing interfaces (use align-surface).
+  defining internal data handoff contracts (use spec-contract), or defining external interface shapes (use spec-surface).
 ---
 
 # System Map
 
+> **Output contract**：繁體中文。SYSTEM_MAP.md 的所有內容（Overview、Component Map、Boundary Map、Architecture Decisions、Change Protocol）皆使用繁體中文。
+
 You are guiding the user through the creation of **SYSTEM_MAP.md** — the living navigation document for development. Think of it as a department manager: it knows the big picture, points to details, tracks progress, and coordinates changes. It is NOT a design document — it is a map.
 
-Read `references/architect-mindset.md` before proceeding, especially Document Level = Abstraction Level and The Abstraction Boundary Tests.
+Read `../../references/architect-mindset.md` before proceeding, especially Document Level = Abstraction Level and The Abstraction Boundary Tests.
 
 ## Working Style
 
@@ -28,11 +30,12 @@ Read `references/architect-mindset.md` before proceeding, especially Document Le
 Before declaring this skill complete, you MUST produce ALL of the following. Do not write SYSTEM_MAP.md before every item is checked:
 
 - [ ] System Overview (3–5 lines)
-- [ ] Component Map: table + Mermaid diagram — **the Mermaid diagram is required, not optional**
-- [ ] Boundary Map: at least 2 seams, each with direction, contract type, Dx reference, and change impact
+- [ ] Tech Stack Decisions: every "TBD — carry to system-map" from dominant-ops resolved or explicitly deferred with rationale
+- [ ] Component Map: table (with Tech column) + Mermaid diagram (with tech annotations) — **the Mermaid diagram is required, not optional**
+- [ ] Boundary Map: at least 2 seams, each with Architecture Decision (driven by / decision / rationale / technology)
 - [ ] Current State section (even if mostly gaps — write what is known; do not omit for new projects)
 - [ ] Change Protocol covering all 4 types
-- [ ] Phase 7 validation checklist completed (all three checks must pass before writing the document)
+- [ ] Phase 8 validation checklist completed (all three checks must pass before writing the document)
 
 **N/A Policy**: Sections that don't yet have content (e.g., Lessons on first creation) must contain a comment explaining why: `<!-- Empty at initial creation — populated by design-review as features are completed -->`. Never silently omit a section.
 
@@ -53,7 +56,48 @@ Write a 3-5 line overview that lets someone understand what this system does in 
 3. **Tech stack summary**: From constraints (e.g., "Django + PostgreSQL + Celery + Redis")
 4. **Current phase**: Where is the project in its lifecycle? (bootstrap, active development, production, maintenance)
 
-### Phase 2: Component Map
+### Phase 2: Tech Stack Decisions
+
+Consume the Design Implications from dominant-ops.md. For each Dx, read:
+- **Characteristic tags** — understand the pressure profile
+- **Technical requirements** — understand what the pressure demands
+- **Dimension decisions** — identify which are confirmed and which are "TBD — carry to system-map"
+
+#### Step 1: Resolve TBD items
+
+For each "TBD — carry to system-map" dimension, make a concrete technology decision. The agent presents the context (Dx tags + technical requirements + the question that was deferred), and the user decides.
+
+Record each decision in this format:
+
+```
+[dimension] for Dx:
+  decision:   [concrete technology choice]
+  rationale:  [why this choice, referencing Dx pressure]
+  source:     dominant-ops Design Implications → Dx
+```
+
+If the user still cannot decide (e.g., needs prototyping first), record as "deferred — requires [specific action]" with a concrete next step, not an open-ended deferral.
+
+#### Step 2: Cross-Dx consolidation
+
+Multiple Dx dimensions may point to the same technology area (e.g., D1 needs caching, D2 needs caching). Consolidate into a unified tech stack list:
+
+```
+Tech Stack:
+  Database:     [choice] — serves D1 (reliability), D2 (state persistence)
+  Cache:        [choice] — serves D1 (read performance)
+  Task Queue:   [choice] — serves D2 (isolation), D3 (batch processing)
+  Protocol:     [choice] — serves D2 (real-time feedback)
+  ...
+```
+
+Each entry must reference which Dx drives the choice. If a technology serves no Dx, question whether it is needed.
+
+#### Step 3: Constraint compatibility check
+
+Cross-check tech decisions against goals.md constraints (Cx). Flag conflicts immediately — e.g., "chose Redis but C4 says no additional infrastructure beyond PostgreSQL."
+
+### Phase 3: Component Map
 
 List every major component and visualize their relationships. A "component" is an independently deployable or independently changeable unit.
 
@@ -66,6 +110,7 @@ For each component:
 | Component | Name (linked to source directory or file) |
 | Responsibility | One sentence — what it does |
 | Owns | What data or state this component is the authority for |
+| Tech | Key technology from Phase 2 decisions (e.g., "FastAPI", "Celery worker", "PostgreSQL") |
 | Status | Active / Planned / Deprecated |
 
 #### Component Diagram
@@ -75,21 +120,21 @@ Use a Mermaid diagram to visualize component relationships and data flow. This g
 ```mermaid
 graph TD
     subgraph "User-Facing Layer"
-        A[Web UI] --> B[API Gateway]
+        A["Web UI (React)"] --> B["API Gateway (FastAPI)"]
     end
     subgraph "Business Logic"
         B --> C[Service A]
         B --> D[Service B]
-        C --> E[Worker Queue]
+        C --> E["Worker Queue (Celery)"]
     end
     subgraph "Data Layer"
-        C --> F[(Database)]
+        C --> F[("Database (PostgreSQL)")]
         D --> F
-        E --> G[Cache]
+        E --> G["Cache (Redis)"]
     end
 ```
 
-Adapt the diagram to the actual system. Keep it to one level of depth — nested subgraphs are fine for grouping, but do not diagram individual classes or methods. The diagram should answer: "What are the major moving parts and how do they connect?"
+Adapt the diagram to the actual system. Add tech annotations from Phase 2 decisions in parentheses after component names — this makes technology choices visible at the diagram level. Keep it to one level of depth — nested subgraphs are fine for grouping, but do not diagram individual classes or methods. The diagram should answer: "What are the major moving parts, what technology powers them, and how do they connect?"
 
 **Granularity guide**:
 - Too coarse: "Backend" — this is meaningless, what specifically?
@@ -100,7 +145,7 @@ The right granularity is: a unit that a developer can own, change, and deploy in
 
 **Guiding question**: "If a new developer joins the team, what are the 8-15 'buckets' they need to understand?"
 
-### Phase 3: Boundary Map
+### Phase 4: Boundary Map
 
 This is the most valuable section. Identify the key boundaries (seams) in the system — places where components interact through contracts.
 
@@ -109,9 +154,31 @@ For each boundary:
 1. **Name the boundary** and label it (Seam A, Seam B, Seam C...)
 2. **What connects**: Which components on each side?
 3. **Contract type**: Schema, API endpoint, event, shared DB table, file format
-4. **Driven by**: Which Dx makes this boundary critical?
+4. **Architecture Decision**: Structured four-line format (see below)
 5. **Change impact**: What breaks if this contract changes?
 6. **Where to look**: Link to contract definition (schema file, API spec, interface definition)
+
+#### Architecture Decision format
+
+Every seam must include an Architecture Decision block that traces from pressure to technology:
+
+```
+driven by:  Dx（[pressure description]）
+decision:   [architectural decision]
+rationale:  [why this decision, referencing Dx pressure]
+technology: [concrete technology choice, or "TBD — requires [action]"]
+```
+
+Example:
+```
+Seam C: Pipeline orchestration -> Stage execution
+  driven by:  D2 (human coordination, high failure cost)
+  decision:   Separate queues and workers for interactive vs long-running tasks
+  rationale:  D2 response time must not be starved by D3 long-running work
+  technology: Celery — dedicated `interactive` + `batch` queues
+```
+
+The `technology` field may be left as TBD during initial creation if the team needs prototyping first, but must include a concrete next step for resolution. A seam with no `driven by` reference should be questioned — if no Dx pressure drives this boundary, is it a real seam or an over-split?
 
 Apply the three abstraction boundary tests to each seam:
 - Independent Change: Can you change one side without the other?
@@ -136,7 +203,7 @@ graph LR
 - Between orchestration and execution (command/worker)
 - Between user-facing layer and business logic (controller/service)
 
-### Phase 4: Current State
+### Phase 5: Current State
 
 Track project progress at a high level:
 
@@ -146,7 +213,7 @@ Track project progress at a high level:
 
 This section is updated frequently — keep it scannable.
 
-### Phase 5: Lessons
+### Phase 6: Lessons
 
 A lightweight section that captures implementation pitfalls relevant to future work touching the same boundary or component. This section is **not written during initial SYSTEM_MAP creation** — it is populated incrementally by design-review's Lessons Capture step as features are completed.
 
@@ -156,7 +223,7 @@ Each entry is a one-line summary with a link to the detailed record in the spec-
 
 **What does NOT belong here**: Small pitfalls local to a single change (stay in the finding card), or large discoveries that trigger a discovery revision (handled by the Discovery Conflict Triage in implementation-mindset.md).
 
-### Phase 6: Change Protocol
+### Phase 7: Change Protocol
 
 This is the section developers and AI agents consult most. Define what to do when something changes, organized by impact radius.
 
@@ -193,7 +260,21 @@ When adding a new component to the system:
 
 **For each type, the key question is: "What else do I need to touch?"** The Change Protocol answers this before the developer starts coding, preventing "changed A, forgot to update B" problems.
 
-### Phase 7: Review and Validate
+## Infrastructure Escalation Intake
+
+When spec-contract, spec-surface, or spec-behavior discover an infrastructure concern during their workflow, they do **not** open a finding card. Instead, they escalate back to system-map with a note: `escalate to SYSTEM_MAP`.
+
+When receiving an escalation:
+
+1. **Read the escalation context**: Which spec skill flagged it? What infrastructure decision is missing? Which Dx/Gx is affected?
+2. **Determine the right Boundary Map seam**: Does this concern belong to an existing seam, or does it require a new one?
+3. **Add or update the Architecture Decision**: Fill in the four-line format (driven by / decision / rationale / technology) for the affected seam.
+4. **Update Component Map if needed**: If the decision introduces a new component (e.g., a message queue, a cache layer), add it to the table and diagram.
+5. **Return to the spec skill**: After the Architecture Decision is recorded, the spec skill can resume its workflow.
+
+This is the single mechanism for infrastructure decisions. Finding cards are for contract and behavior gaps — infrastructure gaps are resolved in SYSTEM_MAP.
+
+### Phase 8: Review and Validate
 
 **You MUST complete all three checks before writing SYSTEM_MAP.md.** Present each result to the user before proceeding.
 
@@ -211,23 +292,36 @@ If any check reveals a problem → fix it first. Do not write SYSTEM_MAP.md unti
 ## Overview
 [3-5 lines: purpose, key numbers, tech stack, current phase]
 
+## Tech Stack
+
+| Technology | Role | Driven by |
+|---|---|---|
+| [e.g., PostgreSQL] | [e.g., primary database] | D1, D2 |
+| [e.g., Redis] | [e.g., cache + task broker] | D1, D2 |
+| ... | | |
+
 ## Component Map
 
-| Component | Responsibility | Owns | Status |
-|---|---|---|---|
-| [linked name] | [one sentence] | [data/state] | Active |
-| ... | | | |
+| Component | Responsibility | Owns | Tech | Status |
+|---|---|---|---|---|
+| [linked name] | [one sentence] | [data/state] | [technology] | Active |
+| ... | | | | |
 
-[Mermaid diagram showing component relationships]
+[Mermaid diagram showing component relationships with tech annotations]
 
 ## Boundary Map
 
-### Seam A: [Name] (driven by Dx)
+### Seam A: [Name]
 - **Connects**: [Component X] <-> [Component Y]
 - **Contract**: [type + link to definition]
+- **Architecture Decision**:
+  - driven by: Dx（[pressure description]）
+  - decision: [architectural decision]
+  - rationale: [why]
+  - technology: [concrete choice or "TBD — requires [action]"]
 - **Change impact**: [what breaks]
 
-### Seam B: [Name] (driven by Dx)
+### Seam B: [Name]
 ...
 
 [Optional: Mermaid diagram showing boundary relationships]
