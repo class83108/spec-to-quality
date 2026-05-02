@@ -1,5 +1,5 @@
 ---
-description: Guide the creation of SYSTEM_MAP.md — a navigation map for development with structure overview and change protocol
+description: Guide the creation of SYSTEM_MAP.md — a navigation map for development centered on responsibility units, key seams, and change protocol
 ---
 
-Trigger the system-map skill. Synthesize goals.md and dominant-ops.md into a Component Map, Boundary Map, and Change Protocol as the single source of truth during development.
+Trigger the system-map skill. Synthesize goals.md and design-driver-discovery.md into a responsibility map, boundary map, and change protocol that developers can use to navigate change safely.

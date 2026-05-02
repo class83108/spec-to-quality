@@ -1,192 +1,249 @@
 ---
 name: design-review
 description: >
-  Refactor-focused design verification after TDD green, plus release-gate checks.
-  Verifies refactor safety under test protection, type-specific quality gates, and completion evidence
-  before marking backlog item done.
+  Review a completed feature slice after implementation. Starting from the shared feature work
+  card, verify that the implemented code still matches the intended slice, responsibility units,
+  seams, test strategy, and manual validation expectations; then decide whether any upstream
+  writeback is required before the work is considered done.
 ---
 
-# Design Review (+ Release Gate)
+# Design Review
 
-This stage is a post-TDD refactor gate.
-TDD has already validated baseline behavior; this skill verifies refactor safety and release readiness.
+Read before proceeding:
 
-Before starting, read:
-- `../../references/architect-mindset.md` (traceability and boundary discipline)
-- `../../references/implementation-mindset.md` Part 2 (structural checks)
-- current finding card (`docs/spec-backlog/{finding-id}.md`)
+- `../../references/architect-mindset.md`, focusing on:
+  - boundary discipline
+  - traceability back to design intent
+- `../../references/implementation-mindset.md`, focusing on:
+  - refactor as drift removal
+  - deciding when a local implementation result requires upstream writeback
 
-## Prerequisites
+This skill exists to answer one question:
 
-- finding card exists with `type` and `tests_path`
-- corresponding spec-xxx report row is `in-progress`
-  - `contract-*` -> `docs/contracts/contracts-report.md`
-  - `surface-*` -> `docs/surface/surface-report.md`
-  - `behavior-*` -> `docs/behaviors/behavior-report.md`
-- TDD is green for this finding
-- `.feature` scenarios carry level tags (`@unit`/`@integration`) consistent with test execution evidence
+**Did this implementation stay aligned with the intended slice and system design, or did it discover changes that must be written back upstream?**
 
-If any prerequisite fails, stop and fix upstream status/evidence first.
+This is not just a style review.
 
-## Core Intent
+It is the checkpoint between:
 
-- perform refactor under test protection (not feature expansion)
-- rerun targeted checks after refactor to detect regressions
-- only mark `done` when post-refactor evidence is complete
+- local implementation success
+- and system-level confidence that the slice still fits the design
 
-## Type Routing
+## Working Style
 
-Read finding card `type` and `finding-id` prefix:
+- **Review against the intended slice, not against a vague idea of cleanliness.**
+- **Check whether refactor stayed local or escaped upward.**
+- **Findings come first.** If there are meaningful risks or regressions, report them before any summary.
+- **Use the work card as the main review anchor.**
+- **When implementation changed assumptions, push the change to the right upstream layer.**
 
-| `type` | `finding-id` prefix | Review mode | Primary gate |
-|---|---|---|---|
-| `skeleton` | `contract-` | Contract Skeleton Gate | internal handoff schema and boundary guard integrity |
-| `skeleton` | `surface-` | Surface Skeleton Gate | external interface shape/error contract integrity |
-| `feature` | `behavior-` | Behavior Feature Gate | user behavior/business rule/state transition integrity |
+## Inputs
 
-Route validation rules:
-- `contract-*` / `surface-*` must be `type: skeleton`
-- `behavior-*` must be `type: feature`
-- mismatch => stop and request finding card correction
+This skill MUST read:
 
-## Part 1: Declared Decisions Verification
+- `docs/features/<feature-slug>/work-card.md`
 
-Verify post-refactor implementation still matches finding card declarations:
-- catch boundary
-- domain errors
-- infrastructure recovery
-- boundary rules
-- anti-pattern constraints
+And may read when present:
 
-Type-specific decision gates:
-- Contract Skeleton Gate:
-  - handoff schema constraints are enforced at declared boundaries
-  - no silent coercion that can cause downstream data drift
-- Surface Skeleton Gate:
-  - request/response/event shape and error contract are consistent with declared boundary contract
-  - boundary tests do not depend on domain-specific semantics to pass
-- Behavior Feature Gate:
-  - behavior semantics match `Serves` goals and declared business rules
-  - state transitions (if declared) are consistent and observable
-  - feature behavior does not duplicate schema-shape ownership already covered by skeleton
+- `docs/features/<feature-slug>/<feature-slug>.feature`
+- `docs/features/<feature-slug>/surface.md`
+- `docs/features/<feature-slug>/contract.md`
+- `docs/features/<feature-slug>/behavior.md`
+- `goals.md`
+- `design-driver-discovery.md`
+- `SYSTEM_MAP.md`
 
-If violations exist, report directly with `file:line`.
+## Required Outputs
 
-## Part 2: Structural Checks
+Before declaring this skill complete, you MUST produce ALL of the following:
 
-Assess:
-- separation of concerns
-- dependency direction
-- naming semantics
-- testability
-- consistency
+- [ ] Work card read
+- [ ] Findings reported first when risks or misalignments exist
+- [ ] Review of slice alignment, seam alignment, and test-strategy alignment completed
+- [ ] Manual validation and deferred coverage reviewed when present
+- [ ] Upstream writeback decision made (`none`, `work-card only`, `spec`, `system-map`, `design-driver-discovery`, or `goals`)
 
-Type-specific structural intent:
-- `skeleton`: validation/guard code is isolated from business orchestration
-- `feature`: business decisions are explicit and not buried in transport/schema plumbing
+## Entry Preconditions
 
-Use questions for improvements; use direct statements for clear violations.
+This skill expects:
 
-## Part 2.5: Code Risk Review (mandatory)
+- a feature work card exists
+- implementation for the slice has been attempted
 
-Scan changed code paths for:
-- correctness (logic and edge-condition behavior)
-- state/transaction integrity
-- concurrency/race/order sensitivity
-- error handling and failure recovery
-- security and data exposure
-- performance and capacity regressions
-- observability (logs/metrics needed for diagnosis)
-- migration/backward compatibility impact
+If implementation has not started or the slice is not yet in execution, stop and route back to `tdd-workflow`.
 
-Type-specific risk anchors:
-- `contract-*`: schema drift risk, boundary bypass risk, downstream compatibility risk
-- `surface-*`: client-visible contract break risk, error-shape inconsistency risk
-- `behavior-*`: business rule regression risk, state-machine inconsistency risk
+## Workflow
 
-Every discovered issue must be reported with:
-- severity (`P0`/`P1`/`P2`/`P3`)
-- `file:line`
-- risk statement
-- fix suggestion
+### Phase 1: Reconstruct Intended Scope
 
-## Part 2.6: Test Adequacy Review (mandatory)
+From the work card, reconstruct:
 
-For each high-risk change, verify post-refactor test ownership and coverage level:
-- `unit` / `integration`
-- explicit mapping to Done Criteria or finding behavior
+- supported goal(s)
+- relevant design driver(s)
+- slice statement
+- primary responsibility unit
+- related seams
+- main risk to protect
+- test strategy
+- manual validation expectations
+- deferred coverage
 
-Also verify:
-- every Scenario has exactly one level tag (`@unit` or `@integration`)
-- scenario tags align with executed test evidence
-- for `behavior-*`, tests focus on semantics; schema-shape assertions remain in skeleton scope
+This is the baseline you review against.
 
-## Part 2.7: Scope Control Review (mandatory)
+### Phase 2: Slice Alignment Review
 
-Check whether code changes exceed current finding scope:
-- if no: mark `in-scope`
-- if yes: mark `scope-creep` and create follow-up finding/task reference
+Ask:
 
-Do not hide out-of-scope work under current finding `done`.
+- Did the implementation stay inside the intended slice?
+- Did it quietly absorb adjacent work?
+- Did it solve the intended risk, or drift into a different problem?
 
-## Part 3: Release Gate (mandatory)
+If the code went beyond the slice, classify:
 
-Run and record:
-1. post-refactor tests by level (`unit`, `integration`) for current finding scenarios
-2. lint/format
-3. type check
-4. `git diff --stat` + `git status`
-5. finding card sync status (Done Criteria evidence)
-6. discovery sync check (SYSTEM_MAP / dominant-ops / goals updates if needed)
+- **local expansion** — still inside the same responsibility unit and seam assumptions
+- **scope creep** — touches work that should have been a separate slice
 
-## Completion Rules
+### Phase 3: Responsibility And Seam Review
 
-Mark report row to `done` only when:
-- no blocking Part 1 violations
-- no blocking findings from Part 2.5/2.6/2.7
-- Part 3 commands executed with evidence
-- unresolved integration gaps are tracked (test/issue/manual checklist)
+Review whether the code still matches the system structure assumed in `SYSTEM_MAP.md`.
 
-Blocking criteria (must fail gate):
-- contract or boundary breakage that can corrupt data/flow
-- state-machine inconsistency or transaction integrity risk
-- missing recovery/error handling for declared failure strategy
-- high-risk code path without required test ownership
-- scenario level tags (`@unit`/`@integration`) missing or inconsistent with evidence
-- unresolved `scope-creep` without follow-up tracking
+Check:
 
-## Refactor Discipline
+- is the intended primary responsibility unit still the real owner?
+- did the code create a new seam or bypass an existing seam?
+- did responsibility leak across boundaries?
+- did a helper or adapter quietly absorb business ownership it should not own?
 
-- treat refactor as structure/quality improvement under unchanged acceptance behavior
-- if behavior changes are required, route back to new/updated finding before claiming `done`
-- avoid redoing full TDD design work here; focus on regression detection and safety evidence
+If the answer changes the system shape, the result is not just a local refactor. It needs writeback.
 
-## Output Order (mandatory)
+### Phase 4: Test Strategy Alignment Review
 
-1. Findings first (ordered by severity, highest first)
-2. Open questions/assumptions
-3. Output table summary
+Review whether the actual test execution matches the chosen strategy in the work card.
 
-Findings format:
+Check:
+
+- did the primary protection layer actually protect the main risk?
+- were supporting layers used where needed?
+- was manual validation done where declared?
+- is deferred coverage still acceptable and explicitly tracked?
+
+Typical misalignments:
+
+- unit tests exist, but the real seam risk was never tested
+- integration tests exist, but business behavior was never asserted
+- Gherkin exists, but the most important observable outcome is missing
+- manual validation was declared but skipped silently
+
+### Phase 5: Refactor Safety Review
+
+Inspect the final code for refactor quality, especially the risks we called out during `tdd-workflow`.
+
+#### Repetition and drift
+
+Check for:
+
+- duplicate helper logic
+- duplicate constants / enums / fixture knowledge
+- duplicated seam or rule semantics in both tests and implementation
+
+#### Responsibility overload
+
+Check for:
+
+- functions mixing rule logic, mapping, and I/O
+- helpers that now carry business ownership
+- tests with setup weight far larger than the behavior being protected
+
+#### Common smells
+
+Check for:
+
+- long functions
+- mixed abstraction levels
+- hidden side effects
+- fragile call order / temporal coupling
+- primitive-heavy seam handling
+- over-mocked tests protecting a fake world
+
+### Phase 6: Upstream Writeback Decision
+
+Decide whether the results stay local or need upstream updates.
+
+#### Work-card only
+
+Use when:
+
+- implementation stayed within the slice
+- no system structure changed
+- only execution notes / manual validation / deferred coverage need sync
+
+#### Spec writeback
+
+Use when:
+
+- surface / contract / behavior text is now stale
+- implementation exposed a clarification gap that should be captured durably
+
+#### System-map writeback
+
+Use when:
+
+- responsibility ownership changed
+- a seam moved or a new seam emerged
+- change navigation assumptions are no longer correct
+
+#### Design-driver writeback
+
+Use when:
+
+- the real pressure turned out different from what was assumed
+- an operational or seam risk became design-shaping
+
+#### Goals writeback
+
+Use when:
+
+- the feature changed what the system is now expected to do
+- or the implementation revealed the original goal framing was wrong
+
+### Phase 7: Completion Gate
+
+The slice is ready to be treated as complete only when:
+
+- no critical findings remain unresolved
+- the implemented code still fits the intended slice
+- the test strategy was actually honored or consciously adjusted
+- manual validation is either passed or explicitly blocked with reason
+- deferred coverage is visible, not forgotten
+- upstream writeback has either been applied or explicitly opened as follow-up
+
+## Findings Format
+
+Present findings first, ordered by severity.
+
+Use this format:
 
 | Severity | File:Line | Category | Risk | Suggested Fix |
 |---|---|---|---|---|
-| P1 | `path/to/file.py:120` | correctness | ... | ... |
+| P1 | `path/to/file.py:120` | seam ownership | logic bypasses intended boundary and weakens failure isolation | move boundary logic back to the owning unit or update the seam intentionally |
 
-## Output Table
+If no findings are discovered, say so explicitly, then list residual risks or coverage gaps.
 
-| Item | Status | Notes |
-|---|---|---|
-| Routed mode | Contract Skeleton / Surface Skeleton / Behavior Feature | |
-| Declared decisions | Complies / Violates | |
-| Structural checks | OK / Issues found | |
-| Code risk review | PASS / FAIL | |
-| Test adequacy | PASS / FAIL | |
-| Scope control | In-scope / Scope-creep | |
-| Tests | PASS / FAIL | |
-| Lint/Format | PASS / FAIL | |
-| Type check | PASS / FAIL | |
-| Change hygiene | PASS / FAIL | |
-| Finding card sync | PASS / FAIL | |
-| Discovery sync | Updated / No changes / N/A | |
-| Integration gaps tracking | Tracked / None / Missing | |
+## Review Summary
+
+After findings, summarize:
+
+- slice alignment: aligned / drifted
+- seam alignment: aligned / drifted
+- test strategy alignment: aligned / drifted
+- manual validation: pass / fail / blocked / none
+- deferred coverage: tracked / untracked / none
+- upstream writeback: none / work-card / spec / system-map / design-driver-discovery / goals
+
+## Key Rules
+
+- **A green test run is not enough by itself.**
+- **If refactor changed the slice assumptions, it is not "just local cleanup".**
+- **Manual validation is part of the design contract when declared.**
+- **Deferred coverage must stay visible.**
+- **When system shape changed, write it back upstream instead of relying on memory.**

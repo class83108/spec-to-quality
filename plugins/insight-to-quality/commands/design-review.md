@@ -1,5 +1,5 @@
 ---
-description: Design review after TDD green + release-gate validation
+description: Review a completed feature slice for slice alignment, seam alignment, test-strategy alignment, and upstream writeback needs
 ---
 
-Trigger the design-review skill. First run design consistency and structural checks, then run the release gate (tests/lint/type-check/change hygiene/finding card sync) before marking a backlog item as done.
+Trigger the design-review skill. Read the shared feature work card and the implemented code, report findings first if risks remain, then decide whether the work is truly done locally or requires writeback to spec, system-map, design-driver-discovery, or goals.

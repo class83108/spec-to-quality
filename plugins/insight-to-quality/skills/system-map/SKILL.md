@@ -1,288 +1,260 @@
 ---
 name: system-map
 description: >
-  Guide the creation of SYSTEM_MAP.md — a navigation map for development that synthesizes goals
-  and dominant-ops into a Component Map, Boundary Map, and Change Protocol. This is the single
-  living document that developers and AI agents consult to understand where things are, what
-  depends on what, and what breaks when something changes.
-  Requires goals.md and dominant-ops.md to exist.
-  Do NOT use for: defining goals (use goals-discovery), analyzing pressure (use dominant-ops),
-  defining internal data handoff contracts (use spec-contract), or defining external interface shapes (use spec-surface).
+  Guide the creation of SYSTEM_MAP.md — a living navigation map that turns goals and design drivers
+  into a responsibility map, boundary map, and change protocol for day-to-day development.
+  Requires goals.md and design-driver-discovery.md to exist. Trigger when discovery is ready to be
+  turned into a working system structure that developers and AI agents can safely change.
+  Do NOT use for: defining goals (use goals-discovery), discovering design pressure
+  (use design-driver-discovery), clarifying slice-level specs (use spec-clarification), or
+  implementation readiness checks (use tdd-ready-check).
 ---
 
 # System Map
 
-> **Output contract**：繁體中文。SYSTEM_MAP.md 的所有內容（Overview、Component Map、Boundary Map、Architecture Decisions、Change Protocol）皆使用繁體中文。
+> **Output contract**：繁體中文。`SYSTEM_MAP.md` 的所有內容皆使用繁體中文。
 
-You are guiding the user through the creation of **SYSTEM_MAP.md** — the living navigation document for development. Think of it as a department manager: it knows the big picture, points to details, tracks progress, and coordinates changes. It is NOT a design document — it is a map.
+You are guiding the user through the creation of **SYSTEM_MAP.md** — the living navigation document that answers:
 
-Read `../../references/architect-mindset.md` before proceeding, especially Document Level = Abstraction Level and The Abstraction Boundary Tests.
+- 主要責任模塊是什麼？
+- 哪些縫隙是關鍵 seam？
+- 哪些結構是被 design drivers 推出來的？
+- 如果要改某件事，應該先看哪裡、可能影響哪裡？
+
+This document sits after:
+
+- `goals.md`
+- `design-driver-discovery.md`
+
+And before:
+
+- detailed specs
+- Gherkin
+- TDD implementation work
+
+Read `../../references/architect-mindset.md` before proceeding. Focus especially on:
+
+- drawing boundaries around responsibility, change, and failure
+- distinguishing ownership structure from analysis views
+- keeping system structure traceable to upstream design intent
 
 ## Working Style
 
-- **Map, not territory.** SYSTEM_MAP.md should fit in your head in 30 seconds. If you are writing paragraphs of explanation, you have crossed into design-doc territory. Write pointers, not prose.
-- **Every cell is a link.** Components, boundaries, and contracts should all point to the actual files or documents where details live. The map tells you where to look, not what you will find.
-- **This is a living document.** Unlike goals.md and dominant-ops.md (which are mostly write-once), SYSTEM_MAP.md is updated with every significant change. Design it for maintainability, not completeness.
-- **Boundaries are the most valuable part.** Developers rarely ask "what components exist?" — they ask "if I change X, what else breaks?" The Boundary Map and Change Protocol answer this question directly.
+- **Map responsibilities, not source files.** `SYSTEM_MAP.md` is not a directory index and not a class diagram. It should show the main responsibility units that matter for change and coordination.
+- **Boundaries matter more than boxes.** The reason to draw the map is not to say "these modules exist." It is to show where responsibility changes hands, where failure should stop, and where later specs will need stronger contracts.
+- **Front-end responsibility counts.** If a UI area owns meaningful interaction state, error recovery, or timing responsibility, it belongs on the map.
+- **Use human-sized granularity.** Too coarse: `Backend`. Too fine: `submit_job.py`. Right level: `Job Intake`, `Review Workflow`, `Output Rendering`, `Frontend Review Workspace`.
+- **Change navigation is a first-class goal.** A good `SYSTEM_MAP.md` helps a developer know what to touch before they start coding.
+- **Map, not territory.** If the document starts listing field-by-field contracts or internal class structures, you have gone too deep.
 
 ## Required Outputs
 
-Before declaring this skill complete, you MUST produce ALL of the following. Do not write SYSTEM_MAP.md before every item is checked:
+Before declaring this skill complete, you MUST produce ALL of the following:
 
-- [ ] System Overview (3–5 lines)
-- [ ] Tech Stack Decisions: every "TBD — carry to system-map" from dominant-ops resolved or explicitly deferred with rationale
-- [ ] Component Map: table (with Tech column) + Mermaid diagram (with tech annotations) — **the Mermaid diagram is required, not optional**
-- [ ] Boundary Map: at least 2 seams, each with Architecture Decision (driven by / decision / rationale / technology)
-- [ ] Current State section (even if mostly gaps — write what is known; do not omit for new projects)
-- [ ] Change Protocol covering all 4 types
-- [ ] Phase 8 validation checklist completed (all three checks must pass before writing the document)
+- [ ] `SYSTEM_MAP.md` with the sections: Overview, Design Drivers In Scope, Responsibility Map, Boundary Map, Decision Notes, Current Focus, Change Protocol
+- [ ] A responsibility map with clearly named responsibility units
+- [ ] A boundary map with at least 2 key seams, each explained in terms of what it protects and why it exists
+- [ ] Explicit traceability from major boundaries or decisions back to relevant goals and design drivers
+- [ ] A change protocol that distinguishes goal changes, driver changes, boundary changes, behavior changes, and implementation-only changes
+- [ ] User has confirmed the resulting system shape at the current level of abstraction
 
-**N/A Policy**: Sections that don't yet have content (e.g., Lessons on first creation) must contain a comment explaining why: `<!-- Empty at initial creation — populated by design-review as features are completed -->`. Never silently omit a section.
+**N/A Policy**: If a section has no content, write `(none identified — [reason])` rather than omitting it.
 
 ## Prerequisites
 
-- **goals.md must exist** — provides the Gx IDs and system purpose
-- **dominant-ops.md must exist** — provides the Dx IDs, anti-patterns, and design implications
-- If either is missing, redirect to the appropriate skill first
+- **goals.md must exist**
+- **design-driver-discovery.md must exist**
+- If either is missing, stop and redirect to the appropriate skill first
 
 ## Workflow
 
-### Phase 1: System Overview
+### Phase 1: System Orientation
 
-Write a 3-5 line overview that lets someone understand what this system does in 30 seconds. Include:
+Start by grounding the map in the current discovery state.
 
-1. **Purpose**: One sentence from goals.md's System Purpose
-2. **Key numbers**: From dominant-ops.md's theory limits (e.g., "processes ~N items/day", "serves ~N users")
-3. **Tech stack summary**: From constraints (e.g., "Django + PostgreSQL + Celery + Redis")
-4. **Current phase**: Where is the project in its lifecycle? (bootstrap, active development, production, maintenance)
+Summarize:
 
-### Phase 2: Tech Stack Decisions
+1. **System purpose** — from `goals.md`
+2. **First-version scope** — what the system is actually trying to support now
+3. **Key design drivers** — from `design-driver-discovery.md`
+4. **Important constraints** — especially those that shape boundaries or technology choices
 
-Consume the Design Implications from dominant-ops.md. For each Dx, read:
-- **Characteristic tags** — understand the pressure profile
-- **Technical requirements** — understand what the pressure demands
-- **Dimension decisions** — identify which are confirmed and which are "TBD — carry to system-map"
+This is not a long architecture essay. It is a short orientation so future readers know what the map is optimizing for.
 
-#### Step 1: Resolve TBD items
+### Phase 2: Responsibility Mapping
 
-For each "TBD — carry to system-map" dimension, make a concrete technology decision. The agent presents the context (Dx tags + technical requirements + the question that was deferred), and the user decides.
+This is the core of the document.
 
-Record each decision in this format:
+Identify the main **responsibility units** of the system.
 
-```
-[dimension] for Dx:
-  decision:   [concrete technology choice]
-  rationale:  [why this choice, referencing Dx pressure]
-  source:     dominant-ops Design Implications → Dx
-```
+A responsibility unit is:
 
-If the user still cannot decide (e.g., needs prototyping first), record as "deferred — requires [specific action]" with a concrete next step, not an open-ended deferral.
+- a part of the system with a meaningful job
+- something that owns a set of rules, state, or coordination responsibility
+- something that tends to change for a distinct reason
+- something that can hand work or state to another unit across a seam
 
-#### Step 2: Cross-Dx consolidation
+It is **not**:
 
-Multiple Dx dimensions may point to the same technology area (e.g., D1 needs caching, D2 needs caching). Consolidate into a unified tech stack list:
+- a whole technical layer like `Backend`
+- a tiny code artifact like a serializer or helper
+- a pure analysis concept like `validation` unless it is truly centralized and owned
 
-```
-Tech Stack:
-  Database:     [choice] — serves D1 (reliability), D2 (state persistence)
-  Cache:        [choice] — serves D1 (read performance)
-  Task Queue:   [choice] — serves D2 (isolation), D3 (batch processing)
-  Protocol:     [choice] — serves D2 (real-time feedback)
-  ...
-```
+Useful prompts:
 
-Each entry must reference which Dx drives the choice. If a technology serves no Dx, question whether it is needed.
+- "Who or what is responsible for first receiving work?"
+- "Who owns the main state transitions?"
+- "Who pushes the workflow forward?"
+- "Who is responsible for recovery or retry?"
+- "Which UI area owns meaningful interaction or draft state?"
 
-#### Step 3: Constraint compatibility check
+For each responsibility unit, capture:
 
-Cross-check tech decisions against goals.md constraints (Cx). Flag conflicts immediately — e.g., "chose Redis but C4 says no additional infrastructure beyond PostgreSQL."
+1. **Name**
+2. **Primary responsibility**
+3. **Owns** — what state, rule set, or workflow authority it holds
+4. **Changes when** — what kind of change usually affects it
+5. **Related design drivers**
 
-### Phase 3: Component Map
+#### Granularity Rule
 
-List every major component and visualize their relationships. A "component" is an independently deployable or independently changeable unit.
+Use a "department" level of granularity:
 
-#### Component Table
+- too coarse: `Frontend`, `Backend`, `Database`
+- too fine: `submit_form.tsx`, `JobSerializer`
+- good: `Job Intake`, `Review Workflow`, `Speech-to-Text Processing`, `Output Delivery`
 
-For each component:
+### Phase 3: Boundary Mapping
 
-| Column | Content |
-|---|---|
-| Component | Name (linked to source directory or file) |
-| Responsibility | One sentence — what it does |
-| Owns | What data or state this component is the authority for |
-| Tech | Key technology from Phase 2 decisions (e.g., "FastAPI", "Celery worker", "PostgreSQL") |
-| Status | Active / Planned / Deprecated |
+Once responsibility units are visible, identify the key seams between them.
 
-#### Component Diagram
+A **boundary** in `SYSTEM_MAP.md` is not a field list or schema definition. It is the place where responsibility changes hands.
 
-Use a Mermaid diagram to visualize component relationships and data flow. This gives a visual overview that the table alone cannot provide.
+For each boundary, answer:
 
-```mermaid
-graph TD
-    subgraph "User-Facing Layer"
-        A["Web UI (React)"] --> B["API Gateway (FastAPI)"]
-    end
-    subgraph "Business Logic"
-        B --> C[Service A]
-        B --> D[Service B]
-        C --> E["Worker Queue (Celery)"]
-    end
-    subgraph "Data Layer"
-        C --> F[("Database (PostgreSQL)")]
-        D --> F
-        E --> G["Cache (Redis)"]
-    end
-```
+1. **Between** — which responsibility units are involved
+2. **Carries** — what kind of thing is being handed off
+3. **Why this seam exists** — what pressure or driver it protects against
+4. **What can go wrong** — the main failure concern at this seam
+5. **Change impact** — what likely needs review if this seam changes
+6. **Where detail lives** — which later spec should define the exact contract
 
-Adapt the diagram to the actual system. Add tech annotations from Phase 2 decisions in parentheses after component names — this makes technology choices visible at the diagram level. Keep it to one level of depth — nested subgraphs are fine for grouping, but do not diagram individual classes or methods. The diagram should answer: "What are the major moving parts, what technology powers them, and how do they connect?"
+Useful prompts:
 
-**Granularity guide**:
-- Too coarse: "Backend" — this is meaningless, what specifically?
-- Too fine: "UserSerializer" — this is a single class, not a component
-- Right level: "Authentication module", "Order processing service", "Report generator"
+- "Why should these two responsibilities not collapse into one?"
+- "Where do you want failures to stop instead of spreading?"
+- "Which handoff cannot rely on informal assumptions?"
+- "If this seam changes, who else has to care?"
 
-The right granularity is: a unit that a developer can own, change, and deploy independently.
+Apply the boundary tests:
 
-**Guiding question**: "If a new developer joins the team, what are the 8-15 'buckets' they need to understand?"
+- Independent Change Test
+- Change Reason Test
+- Failure Isolation Test
 
-### Phase 4: Boundary Map
+If a seam fails these tests, it may be drawn at the wrong level.
 
-This is the most valuable section. Identify the key boundaries (seams) in the system — places where components interact through contracts.
+### Phase 4: Decision Notes
 
-For each boundary:
+Capture only the architecture decisions that matter at map level.
 
-1. **Name the boundary** and label it (Seam A, Seam B, Seam C...)
-2. **What connects**: Which components on each side?
-3. **Contract type**: Schema, API endpoint, event, shared DB table, file format
-4. **Architecture Decision**: Structured four-line format (see below)
-5. **Change impact**: What breaks if this contract changes?
-6. **Where to look**: Link to contract definition (schema file, API spec, interface definition)
+These are not implementation notes. They are short justifications for structure.
 
-#### Architecture Decision format
+For each important decision, record:
 
-Every seam must include an Architecture Decision block that traces from pressure to technology:
+1. **What was chosen**
+2. **Why** — which design driver or constraint pushed this choice
+3. **What it protects**
+4. **What is still intentionally unresolved**
 
-```
-driven by:  Dx（[pressure description]）
-decision:   [architectural decision]
-rationale:  [why this decision, referencing Dx pressure]
-technology: [concrete technology choice, or "TBD — requires [action]"]
-```
+Examples:
 
-Example:
-```
-Seam C: Pipeline orchestration -> Stage execution
-  driven by:  D2 (human coordination, high failure cost)
-  decision:   Separate queues and workers for interactive vs long-running tasks
-  rationale:  D2 response time must not be starved by D3 long-running work
-  technology: Celery — dedicated `interactive` + `batch` queues
-```
+- separate user-facing intake from long-running processing
+- isolate workflow state tracking from stage execution
+- keep front-end draft state separate from persisted job state
 
-The `technology` field may be left as TBD during initial creation if the team needs prototyping first, but must include a concrete next step for resolution. A seam with no `driven by` reference should be questioned — if no Dx pressure drives this boundary, is it a real seam or an over-split?
+If a technology choice matters because of structure, include it briefly. Do not let the map become a stack inventory.
 
-Apply the three abstraction boundary tests to each seam:
-- Independent Change: Can you change one side without the other?
-- Change Reason: Do the two sides change for different reasons?
-- Failure Isolation: Can one side fail without corrupting the other?
+### Phase 5: Current Focus
 
-If a boundary fails any test, it may be drawn in the wrong place. Discuss with the user.
+This section keeps the map alive during development.
 
-Optionally, visualize boundary relationships with a Mermaid diagram:
+Capture:
 
-```mermaid
-graph LR
-    A[Component X] -- "Seam A: schema contract" --> B[Component Y]
-    B -- "Seam B: protocol/adapter" --> C[External Service]
-    D[Orchestrator] -- "Seam C: command" --> A
-    D -- "Seam C: command" --> B
-```
+1. **What parts of the map are active right now**
+2. **Which responsibility units are still rough or provisional**
+3. **Which seams are known to need spec work**
+4. **What is intentionally deferred**
 
-**Common boundary patterns**:
-- Between processing stages (input/output schemas)
-- Between internal logic and external services (protocol/adapter)
-- Between orchestration and execution (command/worker)
-- Between user-facing layer and business logic (controller/service)
+This prevents the map from pretending the architecture is more settled than it really is.
 
-### Phase 5: Current State
+### Phase 6: Change Protocol
 
-Track project progress at a high level:
+This is one of the most important sections. It tells developers and AI agents what kind of change they are making and where they must go next.
 
-1. **Phase progress**: What major milestones are done, in progress, and planned?
-2. **In-flight work**: What is currently being developed? (link to specs or branches)
-3. **Known gaps**: What is missing compared to goals.md? (link to issues or specs)
+Use these categories:
 
-This section is updated frequently — keep it scannable.
+#### 1. Goal-level change
 
-### Phase 6: Lessons
+The system is being asked to do something materially different.
 
-A lightweight section that captures implementation pitfalls relevant to future work touching the same boundary or component. This section is **not written during initial SYSTEM_MAP creation** — it is populated incrementally by design-review's Lessons Capture step as features are completed.
+Action:
 
-Each entry is a one-line summary with a link to the detailed record in the spec-backlog finding card. SYSTEM_MAP is the navigator; the spec-backlog finding is the source of truth.
+- revisit `goals.md`
+- then revisit `design-driver-discovery.md`
+- then update `SYSTEM_MAP.md`
 
-**What belongs here**: Mid-size pitfalls that would affect someone working on the same boundary or component in the future. Examples: a contract needing unexpected nullable handling, an anti-pattern that was harder to obey than expected, a technical limitation that forced a design compromise.
+#### 2. Design-driver change
 
-**What does NOT belong here**: Small pitfalls local to a single change (stay in the finding card), or large discoveries that trigger a discovery revision (handled by the Discovery Conflict Triage in implementation-mindset.md).
+The main pressure has changed:
 
-### Phase 7: Change Protocol
+- a background flow became dominant
+- a latency requirement became critical
+- a previously minor recovery problem now shapes architecture
 
-This is the section developers and AI agents consult most. Define what to do when something changes, organized by impact radius.
+Action:
 
-#### Type 1: Goal Change (largest impact)
+- revisit `design-driver-discovery.md`
+- then inspect affected responsibility units and seams in `SYSTEM_MAP.md`
 
-When a goal in goals.md changes or a new goal is added:
-1. Review dominant-ops.md — does the pressure ranking change?
-2. Review SYSTEM_MAP boundaries — do any seams need to move?
-3. Create a spec-backlog finding for the implementation work
-4. Update SYSTEM_MAP after implementation
+#### 3. Boundary change
 
-#### Type 2: Contract/Boundary Change (medium impact)
+A responsibility handoff or ownership line is moving.
 
-When a schema, API contract, or interface changes:
-1. Identify all components on both sides of the boundary
-2. Update producer and consumer simultaneously (or version the contract)
-3. Update tests on both sides
-4. Update SYSTEM_MAP boundary entry
+Action:
 
-#### Type 3: Internal Component Change (smallest impact)
+- update `SYSTEM_MAP.md`
+- identify affected specs
+- check both sides of the seam
 
-When changing logic inside a single component without affecting its contract:
-1. Verify the output contract is unchanged
-2. Update internal tests
-3. No SYSTEM_MAP update needed (unless status changes)
+#### 4. Behavior change
 
-#### Type 4: New Component Addition
+The boundary stays, but logic, rules, or user flow changes.
 
-When adding a new component to the system:
-1. Define its contracts with existing components (what seams does it touch?)
-2. Add to Component Map (table and diagram)
-3. Add new boundaries to Boundary Map
-4. Update orchestration if applicable
+Action:
 
-**For each type, the key question is: "What else do I need to touch?"** The Change Protocol answers this before the developer starts coding, preventing "changed A, forgot to update B" problems.
+- keep `SYSTEM_MAP.md` stable unless the structure is affected
+- update specs / Gherkin / tests
 
-## Infrastructure Escalation Intake
+#### 5. Implementation-only change
 
-When spec-contract, spec-surface, or spec-behavior discover an infrastructure concern during their workflow, they do **not** open a finding card. Instead, they escalate back to system-map with a note: `escalate to SYSTEM_MAP`.
+Internal code changes without altering behavior or seam shape.
 
-When receiving an escalation:
+Action:
 
-1. **Read the escalation context**: Which spec skill flagged it? What infrastructure decision is missing? Which Dx/Gx is affected?
-2. **Determine the right Boundary Map seam**: Does this concern belong to an existing seam, or does it require a new one?
-3. **Add or update the Architecture Decision**: Fill in the four-line format (driven by / decision / rationale / technology) for the affected seam.
-4. **Update Component Map if needed**: If the decision introduces a new component (e.g., a message queue, a cache layer), add it to the table and diagram.
-5. **Return to the spec skill**: After the Architecture Decision is recorded, the spec skill can resume its workflow.
+- no `SYSTEM_MAP.md` change required unless the ownership model or seam risk changes
 
-This is the single mechanism for infrastructure decisions. Finding cards are for contract and behavior gaps — infrastructure gaps are resolved in SYSTEM_MAP.
+### Phase 7: Review And Validate
 
-### Phase 8: Review and Validate
+Before finalizing:
 
-**You MUST complete all three checks before writing SYSTEM_MAP.md.** Present each result to the user before proceeding.
+1. **Navigation test** — If a developer needs to change one important flow, can they identify the likely responsibility units and seams from this document?
+2. **Boundary usefulness test** — Do the boundaries explain why they exist, not just where they are?
+3. **Abstraction test** — Does the map stay above field-level contracts and class-level implementation?
+4. **Driver traceability test** — Can each major boundary or decision be traced back to a design driver?
+5. **False box test** — Did you draw boxes that are just technical containers with no real responsibility?
 
-1. **Navigation test** — Pick a random goal from goals.md. Trace it through the Component Map and Boundary Map to the relevant source files. Can you do this within 3 steps? If not → identify and fill the gap before writing.
-2. **Change simulation** — Pick a likely future change (e.g., "swap storage implementation", "add a new CLI command"). Walk through the Change Protocol. Does it tell the developer everything they need to touch? If not → refine the protocol before writing.
-3. **Newcomer test** — Could a developer who has never seen this codebase use SYSTEM_MAP.md to orient themselves in under 5 minutes? If not → simplify or restructure before writing.
-
-If any check reveals a problem → fix it first. Do not write SYSTEM_MAP.md until all three pass.
+If any check fails, fix the map before writing the final document.
 
 ## Output Shape
 
@@ -290,94 +262,142 @@ If any check reveals a problem → fix it first. Do not write SYSTEM_MAP.md unti
 # SYSTEM_MAP — [System Name]
 
 ## Overview
-[3-5 lines: purpose, key numbers, tech stack, current phase]
+- Purpose: [1-2 lines]
+- Current focus: [what this version is trying to support]
+- Main pressures: [short summary from design-driver-discovery]
+- Important constraints: [short summary]
 
-## Tech Stack
+## Design Drivers In Scope
 
-| Technology | Role | Driven by |
-|---|---|---|
-| [e.g., PostgreSQL] | [e.g., primary database] | D1, D2 |
-| [e.g., Redis] | [e.g., cache + task broker] | D1, D2 |
-| ... | | |
+### [Driver title]
+- Why it matters: [short summary]
+- Affects: [which parts of the system shape]
 
-## Component Map
+## Responsibility Map
 
-| Component | Responsibility | Owns | Tech | Status |
+| Responsibility Unit | Primary Responsibility | Owns | Changes When | Related Drivers |
 |---|---|---|---|---|
-| [linked name] | [one sentence] | [data/state] | [technology] | Active |
-| ... | | | | |
+| [unit name] | [one sentence] | [state / rule / workflow authority] | [what kind of change affects it] | [driver titles] |
+| ... | ... | ... | ... | ... |
 
-[Mermaid diagram showing component relationships with tech annotations]
+```mermaid
+graph TD
+    A["Job Intake"] --> B["Review Workflow"]
+    B --> C["Output Delivery"]
+    B --> D["State Tracking"]
+    E["Frontend Review Workspace"] --> B
+```
 
 ## Boundary Map
 
-### Seam A: [Name]
-- **Connects**: [Component X] <-> [Component Y]
-- **Contract**: [type + link to definition]
-- **Architecture Decision**:
-  - driven by: Dx（[pressure description]）
-  - decision: [architectural decision]
-  - rationale: [why]
-  - technology: [concrete choice or "TBD — requires [action]"]
-- **Change impact**: [what breaks]
+### [Seam title]
+- Between: [unit A] <-> [unit B]
+- Carries: [what type of thing is handed off]
+- Why this seam exists: [which driver / pressure it protects]
+- What can go wrong: [main failure concern]
+- Change impact: [what likely needs review]
+- Detail lives in: [spec reference or "TBD"]
 
-### Seam B: [Name]
-...
+### [Seam title]
+- Between: ...
+- Carries: ...
+- Why this seam exists: ...
+- What can go wrong: ...
+- Change impact: ...
+- Detail lives in: ...
 
-[Optional: Mermaid diagram showing boundary relationships]
+## Decision Notes
 
-## Current State
-- **Phase**: [current phase description]
-- **In-flight**: [linked list of active work]
-- **Gaps**: [linked list of known gaps]
+### [Decision title]
+- Chosen structure: [what was chosen]
+- Driven by: [driver title / constraint]
+- Protects: [what risk or pressure]
+- Still open: [what remains unresolved]
 
-## Lessons
-<!-- Populated by design-review Lessons Capture; empty at initial creation -->
-- [Seam/Component]: [one-line summary] ([docs/spec-backlog/FINDING-ID.md])
+## Current Focus
+- Active areas: [what is currently in play]
+- Provisional structure: [what may still move]
+- Deferred seams/specs: [what is intentionally postponed]
 
 ## Change Protocol
-[Type 1-4 as described above]
+
+### Goal-level change
+- [what to do]
+
+### Design-driver change
+- [what to do]
+
+### Boundary change
+- [what to do]
+
+### Behavior change
+- [what to do]
+
+### Implementation-only change
+- [what to do]
 ```
+
+## Formatting Guidance
+
+The final `SYSTEM_MAP.md` should feel like a development navigation map, not an architecture encyclopedia.
+
+- Keep explanations short
+- Prefer responsibility names that sound like real work
+- Use diagrams to show shape, not internal complexity
+- Put exact contracts in specs, not here
+- Be explicit about what is still provisional
 
 ## Design Checks
 
 Revisit this document if:
-- A new boundary is discovered during implementation that is not on the map
-- The Change Protocol fails to predict a ripple effect during a real change
-- A developer asks "where is X?" and the map cannot answer
-- Component count grows beyond 20 — consider grouping into subsystems
+
+- a new responsibility unit emerges during implementation
+- a seam is discovered that is not on the map
+- a "small change" unexpectedly ripples across multiple units
+- a design driver starts affecting a different part of the system than expected
+- developers repeatedly ask "where should this change go?"
 
 ## Examples
 
-### Example 1: Boundary Fails the Three Tests
+### Example 1: Responsibility Unit vs. Technical Layer
 
-User proposes a boundary between "API handlers" and "database queries."
+Bad unit:
 
-Apply the tests:
-- Independent Change: Can you change the API handler without changing the DB query? Often no — they are tightly coupled through the data shape.
-- This boundary may be drawn at the wrong level. A better boundary might be between "request handling" and "business logic", where the business logic defines its own data interface.
+- `Backend`
 
-### Example 2: Map Becomes Territory
+Why it is weak:
 
-User starts writing detailed class diagrams and method signatures in SYSTEM_MAP.md.
+- too coarse
+- does not reveal ownership
+- does not help change navigation
 
-Stop them: "This level of detail belongs in the code itself or in a design doc. SYSTEM_MAP should point to these files, not reproduce them. If someone needs to know the method signatures, they can follow the link. The map's job is to tell them which file to open."
+Better units:
 
-### Example 3: Change Protocol Catches a Gap
+- `Job Intake`
+- `Processing Workflow`
+- `Output Delivery`
 
-During a real change (adding a caching layer), the developer walks through Type 4 (New Component). The protocol asks "what seams does it touch?" — the developer realizes the cache invalidation strategy affects the contract between the data layer and the API layer. Without the protocol, they might have added the cache and discovered stale data bugs in production.
+These help answer who owns what and where a change should begin.
 
-### Example 4: Component Granularity Negotiation
+### Example 2: Boundary As Handoff, Not API Table
 
-User lists 25 components for a mid-size web application.
+Weak boundary description:
 
-Push back: "25 components means no one can hold the map in their head. Can we group related components? For example, 'user auth', 'user profile', 'user preferences', and 'user notifications' might all be 'User Management' at the map level, with a link to a sub-map if needed. Aim for 8-15 top-level components."
+- "POST /jobs returns job_id and status"
+
+Better map-level boundary description:
+
+- Between: `Job Intake` -> `Processing Workflow`
+- Carries: accepted job ready for downstream work
+- Why this seam exists: protect user-facing submission from long-running work
+- What can go wrong: accepted submission with lost downstream state
+
+The exact API shape belongs in a spec, not in `SYSTEM_MAP.md`.
 
 ## Key Rules
 
-- **Pointers, not prose.** Every entry in the map should be 1-2 lines maximum. If you need to explain something at length, write it in a separate document and link to it.
-- **Boundaries are the answer to "what breaks?"** If the Boundary Map cannot answer "I changed X, what else is affected?", it is incomplete.
-- **Change Protocol is the most-used section.** Invest the most effort here. The rest of the map is context for the protocol.
-- **Update discipline matters more than initial quality.** A perfect map that goes stale is worse than a rough map that stays current. Design for easy updates.
-- **Do not duplicate goals.md or dominant-ops.md.** Reference them by ID (Gx, Dx). If you find yourself re-explaining a goal, you are at the wrong abstraction level.
-- **Mermaid diagrams are navigation aids.** Keep them simple — one level of depth, labeled edges, grouped subgraphs. If the diagram needs a legend, it is too complex.
+- **Responsibility units must answer "who owns this?"**
+- **Boundaries must answer "why is this handoff protected?"**
+- **If a box has no distinct change reason, it may not deserve to be on the map.**
+- **If a seam has no failure or change significance, it may not deserve to be a seam.**
+- **Change Protocol is not an appendix.** It is one of the main reasons the map exists.

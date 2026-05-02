@@ -1,110 +1,228 @@
 # insight-to-quality — Agent Guide
 
-Structured discovery → spec-xxx alignment (contract/surface/behavior) → finding execution → TDD → design verification.
+This plugin is built around one main idea:
 
-## Core Belief
+**keep discovery, slice clarification, testing strategy, implementation, and review connected, so local coding decisions do not drift away from system intent.**
 
-Bad research produces bad plans; bad plans produce bad code. When discovery documents are missing, guide the user to complete discovery first — no exceptions.
+---
 
-## Skeleton vs. Feature
+## Main Flow
 
-| Layer | Definition | Produced by |
-|-------|-----------|-------------|
-| **Skeleton** | Data contracts, schemas, boundary guards | spec-contract / spec-surface |
-| **Feature** | Functional logic, user journeys, business behavior | spec-behavior |
+Use this high-level chain:
 
-Skeleton first — it defines the growth boundary for features. In existing systems alignment mostly finds missing skeleton; in greenfield systems spec-behavior fills the gap for Gx functional implementation.
+1. `goals-discovery`
+2. `design-driver-discovery`
+3. `system-map`
+4. `feature-slice`
+5. `spec-clarification`
+6. `tdd-ready-check`
+7. `gherkin-extraction` or `direct TDD`
+8. `tdd-workflow`
+9. `design-review`
 
-## Full Workflow
+This is not a rigid waterfall.
+Move upward when the problem belongs to a higher layer.
 
-```mermaid
-flowchart TD
-    NEW([新專案 / 新需求]) --> G[goals-discovery]
-    G --> D[dominant-ops]
-    D --> S[system-map]
+---
 
-    S --> SC[spec-contract<br/>internal handoff schemas]
-    S --> SS[spec-surface<br/>external interface shapes]
+## What Each Stage Does
 
-    S --> SB[spec-behavior<br/>Design: inventory Gx flows]
-    SB -->|Verify: skeleton_deps done| RPT
+### `goals-discovery`
 
-    SC --> RPT[spec-xxx reports<br/>contracts/surface/behaviors]
-    SS --> RPT
+Clarifies:
 
-    RPT --> SEL{Select next ready row}
-    SEL -->|ready + deps met| IP[in-progress · WIP=1]
+- what the system must do
+- what it will not do
+- what constraints already exist
 
-    IP --> CARD["docs/spec-backlog/{finding-id}.md"]
-    CARD --> STG[spec-to-gherkin<br/>type-routed]
-    STG --> TDD[tdd-workflow<br/>Red → Green → Refactor]
-    TDD --> DR[design-review + release-gate]
+### `design-driver-discovery`
 
-    DR -->|pass| DONE[report row → done]
-    DR -->|fail| CARD
-    DONE --> SEL
+Clarifies:
 
-    SF([start-feature]) --> RT{earliest gap?}
-    RT -->|no goals| G
-    RT -->|no dominant-ops| D
-    RT -->|no system-map| S
-    RT -->|缺內部契約| SC
-    RT -->|缺外部介面| SS
-    RT -->|骨架就緒，缺行為| SB
-    RT -->|reports ready| SEL
+- which flows deserve protection
+- which pressures should shape the design
+- which problems are real design drivers versus symptoms
 
-    DG[docs-governance] -.->|periodic audit| RPT
-    DG -.-> DM[docs/delivery-map.md]
-```
+### `system-map`
 
-## Cross-cutting Rules
+Clarifies:
 
-- **Discovery is prerequisite**: goals.md + dominant-ops.md + SYSTEM_MAP.md before alignment
-- **Skeleton before feature**: spec-behavior Verify only when slice's `skeleton_deps` are done
-- **Infrastructure → SYSTEM_MAP**: infrastructure gaps escalate to SYSTEM_MAP update, not finding cards
-- **WIP=1**: one `in-progress` finding at a time
-- **Report-row status source**: active status is maintained in contracts/surface/behaviors report rows
-- **Wait for user confirmation**: spec-to-gherkin confirmation gate before writing `.feature`
-- **Gherkin keywords English, content 繁體中文**
-- **Branch strategy**: ask before creating; never develop on main
-- **Test/lint/type check**: refer to project's CLAUDE.md Commands section
-- **Default path**: spec-to-gherkin includes coverage + writing; `gherkin`/`pre-complete` only on explicit request
+- the main responsibility units
+- the important seams
+- what to inspect when change happens
 
-## Skill Handoff Reference
+### `feature-slice`
 
-| From | To | Handoff |
-|------|----|---------|
-| goals-discovery | dominant-ops | goals.md confirmed → Gx as traceability anchors |
-| dominant-ops | system-map | Dx + Design Implications + Anti-Patterns → boundary design + tech stack |
-| system-map | spec-contract | Boundary Map → internal handoff alignment |
-| system-map | spec-surface | Component Map + Dx journeys → external interface alignment |
-| system-map | spec-behavior | SYSTEM_MAP + goals + skeleton reports → behavior gap analysis |
-| spec-contract / spec-surface | report rows + finding cards | skeleton finding cards + report-row status sync |
-| spec-behavior | report rows + finding cards | feature finding cards + report-row status sync |
-| start-feature | earliest missing layer | Route to discovery / spec-xxx as needed |
-| spec-backlog card | spec-to-gherkin | type-routed coverage + .feature |
-| spec-to-gherkin | tdd-workflow | coverage confirmed + .feature written → Red |
-| tdd-workflow | design-review | green + refactor → review + release-gate |
-| design-review | docs-governance | optional sparse governance audit |
+Turns a feature idea into:
 
-## Finding Card Routing
+- one concrete slice of one flow
+- mapped to goals, design drivers, responsibility units, and seams
 
-| finding-id prefix | type | Gherkin Guide | Test Path |
-|-------------------|------|---------------|-----------|
-| `contract-*` | skeleton | contract-gherkin-guide | `tests/features/contracts/` |
-| `surface-*` | skeleton | surface-gherkin-guide | `tests/features/contracts/` |
-| `behavior-*` | feature | feature-gherkin-guide | `tests/features/behaviors/` |
+### `spec-clarification`
 
-spec-to-gherkin reads `type` + prefix → auto-selects guide and path.
+Fills only the missing slice-level clarity:
 
-## Language Policy
+- surface
+- contract
+- behavior
 
-All output documents and user-facing communication: **繁體中文**.
-Gherkin keywords: **English** (Feature/Scenario/Given/When/Then/And/But/Background/Scenario Outline/Examples).
+### `tdd-ready-check`
 
-## Prerequisites
+Decides:
 
-Project's CLAUDE.md must contain:
+- whether the slice is clear enough for implementation
+- what risk is being protected
+- what test strategy to use
 
-- **Commands**: test/lint/format/type-check commands
-- **Feature Scenario Concrete Mapping Table** (optional)
+### `gherkin-extraction`
+
+Used only when the slice deserves acceptance-style executable scenarios.
+
+### `tdd-workflow`
+
+Executes:
+
+- Red
+- Green
+- Refactor
+
+using the already chosen test strategy.
+
+### `design-review`
+
+Checks:
+
+- whether the implementation stayed aligned with the slice
+- whether seams or ownership drifted
+- whether writeback is needed upstream
+
+---
+
+## Shared Execution Anchor
+
+For feature implementation work, the shared coordination document is:
+
+- `docs/features/<feature-slug>/work-card.md`
+
+This is the active anchor for:
+
+- `feature-slice`
+- `spec-clarification`
+- `tdd-ready-check`
+- `gherkin-extraction`
+- `tdd-workflow`
+- `design-review`
+
+Do not scatter slice execution state across unrelated notes if the work card can hold it.
+
+---
+
+## Core Rules
+
+- **Do not skip discovery when upstream intent is unclear.**
+- **Do not jump into code before the slice is clear.**
+- **Do not default every slice to the same test level.**
+- **Do not assume Gherkin is always needed.**
+- **Do not hide structural problems inside local refactor.**
+- **Do not let deferred risk disappear from view.**
+- **When assumptions move, write back to the layer where the assumption lives.**
+
+---
+
+## Test Strategy Rules
+
+Choose tests by risk, not by habit.
+
+### Use `unit` when the main risk is:
+
+- local logic
+- helper behavior
+- deterministic transformation
+
+### Use `integration` when the main risk is:
+
+- seam or handoff correctness
+- persistence behavior
+- adapter or coordination behavior
+
+### Use `feature` when the main risk is:
+
+- user-visible behavior
+- acceptance-worthy business outcome
+
+### Use `manual validation` when the main risk is:
+
+- perceived responsiveness
+- UI or message clarity
+- media/content quality
+- a temporary happy path not yet worth full automation
+
+Mixed strategies are normal.
+
+---
+
+## Red / Green / Refactor Rules
+
+### Red
+
+Start Red at the layer where the real uncertainty lives.
+
+Red does not have to begin with a unit test.
+
+### Green
+
+Implement the smallest change that resolves the targeted uncertainty.
+
+### Refactor
+
+Refactor should remove:
+
+- duplicate knowledge
+- overloaded responsibilities
+- drift between tests and implementation
+- weak naming and poor locality
+
+If refactor reveals a structural problem, escalate upward.
+
+---
+
+## Review Rules
+
+A green test run is not enough.
+
+Review should check:
+
+- slice alignment
+- seam alignment
+- test strategy alignment
+- manual validation completion
+- deferred coverage visibility
+- upstream writeback needs
+
+Findings come first when real risks remain.
+
+---
+
+## Upward Routing Heuristic
+
+When implementation discovers a problem, route it to the right layer:
+
+- system purpose changed -> `goals-discovery`
+- real design pressure changed -> `design-driver-discovery`
+- ownership or seam changed -> `system-map`
+- slice meaning is unclear -> `feature-slice`
+- surface / contract / behavior is unclear -> `spec-clarification`
+- test strategy no longer fits -> `tdd-ready-check`
+
+Do not compensate for an upstream problem with clever local code.
+
+---
+
+## Mindset Sources
+
+Two reference documents define the underlying principles:
+
+- `references/architect-mindset.md`
+- `references/implementation-mindset.md`
+
+Skills should use them as principle sources, not as workflow scripts.

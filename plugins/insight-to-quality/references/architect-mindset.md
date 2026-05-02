@@ -1,95 +1,236 @@
 # Architect Mindset
 
-This is the shared thinking framework for all discovery skills. Every skill references this document — internalize these principles before guiding the user.
+This document captures architecture and discovery principles.
 
-## Core Belief
+It is intentionally independent of any specific workflow, skill name, file path, or template.
+Use it as a thinking framework, not as a step-by-step procedure.
 
-**Design quality = stability under change.** A good design is not one that handles today's requirements elegantly — it's one that absorbs tomorrow's requirement changes with minimal ripple. Every design decision should be evaluated through this lens.
+---
 
-## The Abstraction Boundary Tests
+## 1. Design For Change
 
-When drawing a boundary (between modules, services, stages, layers), apply all three tests. If any test fails, the boundary is likely wrong.
+The quality of a design is measured by how well it absorbs change.
 
-1. **Independent Change Test**: Can you change one side of the boundary without changing the other? If yes, boundary is correct.
-2. **Change Reason Test**: Do the two sides change for *different* reasons? If yes, boundary is correct.
-3. **Failure Isolation Test**: When one side fails, can the other maintain a valid state? If yes, boundary is correct.
+A design is not good because it fits today's requirements elegantly.
+It is good because tomorrow's changes cause limited ripple, clear impact, and understandable tradeoffs.
 
-**When to use**: splitting skills, splitting modules, defining stage boundaries, deciding what belongs in which document.
+When evaluating a design decision, ask:
 
-## Document Level = Abstraction Level
+- What kind of change is this structure trying to make easier?
+- What kind of change does it make harder?
+- If requirements shift, where will the pressure show up first?
 
-Each discovery document answers exactly one question. A detail belongs to the document whose answer would change if you removed that detail.
+If a design is optimized only for the current snapshot, it is probably too brittle.
 
-| Document | Question it answers | Change signal |
-|---|---|---|
-| goals.md | What must the system do / not do? | Changing it means the system's fundamental capabilities shift |
-| dominant-ops.md | Where does the pressure lie? | Changing it means the optimization target shifts |
-| SYSTEM_MAP.md | Where is everything, and what breaks if I change it? | Changing it means component boundaries or contracts shift |
-| Implementation code | How does a single component work internally? | Changing it affects only that component |
+---
 
-**The "remove the number" test**: Take a sentence from goals.md and remove the numbers. If the sentence collapses, it is a goal-level statement (numbers are parameters, not the point). If the sentence still stands without numbers, the numbers belong in dominant-ops.md or NFRs.
+## 2. Abstraction Exists To Protect Meaning
 
-## Dominant Operations Thinking
+Abstraction is not about hiding detail for its own sake.
+It is about protecting stable meaning from unstable detail.
 
-Not all operations are equal. Design effort should be concentrated on the operations that matter most:
+A good abstraction:
 
-```
-Criticality = Frequency x Cost x Failure Impact
-```
+- preserves what matters
+- hides what changes often
+- makes responsibility easier to reason about
 
-- **Frequency**: How often does this operation run?
-- **Cost**: How much time/compute/money does each run consume?
-- **Failure Impact**: What is the worst-case consequence of this operation failing silently?
+A weak abstraction:
 
-Failure impact is the most commonly underestimated factor. A low-frequency operation with silent data corruption can be far more critical than a high-frequency, harmless operation.
+- hides important differences
+- bundles unrelated concerns
+- forces readers to guess where truth actually lives
 
-**Top 3 rule**: Identify at most 3 dominant operations. If everything is dominant, nothing is — push the user to make hard choices.
+Useful check:
 
-## Traceability
+- If removing a detail changes the meaning of the decision, that detail belongs at this level.
+- If removing a detail does not change the meaning, it probably belongs lower.
 
-Every design decision must trace back to a source:
+---
 
-```
-Goal (Gx) --> Dominant Op (Dx) --> Boundary/Contract --> Implementation
-```
+## 3. Boundaries Should Follow Change And Failure
 
-If a design element cannot be traced to a goal or dominant op, question its existence. If a goal has no downstream design element, it is either aspirational (move to Open Questions) or missing implementation (flag as a gap).
+The point of a boundary is not visual neatness.
+The point is to separate things that should change differently and fail differently.
 
-## Design for the Hardest Constraint
+Use these tests:
 
-Let the hardest constraint shape the abstraction boundary — do not spread abstraction evenly across all concerns. If GPU cold-start time is the binding constraint, the entire stage boundary design should revolve around that, not around aesthetic symmetry.
+### Independent Change Test
 
-## What NOT to Abstract
+Can one side change without forcing change on the other?
 
-Premature abstraction is as harmful as premature optimization. Do not abstract:
+### Change Reason Test
 
-- **Internal sub-steps** of a single operation (e.g., TTS batch, verify, retry-single is an internal concern)
-- **Persistence details** when the framework already handles them well (e.g., Django ORM does not need a repository pattern wrapper)
-- **Admin/management UI** when the framework provides it (e.g., Django Admin does not need a ViewModel layer)
+Do the two sides change for different reasons?
 
-The test: "Is anyone outside this boundary asking about this detail?" If no, do not abstract it.
+### Failure Isolation Test
 
-## Anti-Pattern Discipline
+Can one side fail without corrupting the other side's state or meaning?
 
-When documenting anti-patterns, every anti-pattern must reference a specific dominant operation it protects:
+If a boundary fails these tests, it is probably drawn in the wrong place.
 
-- Good: `AP2 (protects D1, D2, D3): DB is the single source of truth between stages`
-- Bad: `AP2: Don't use in-memory state` (too vague, no traceability)
+---
 
-## The Questioning Hierarchy
+## 4. Responsibilities Matter More Than Containers
 
-When guiding users through discovery, the quality of questions matters more than the quality of answers:
+Architectural structure should first answer:
 
-1. **"What is the worst that happens if this fails?"** — better than "Is this important?"
-2. **"Can you think of 2-4 different ways to achieve this?"** — tests whether the goal is at the right abstraction level
-3. **"If we remove this, does the system still make sense?"** — separates must-haves from nice-to-haves
-4. **"Will this still be true in 6 months?"** — filters out ephemeral concerns from stable goals
+- who owns this responsibility?
+- who owns this state?
+- who decides this rule?
+- who handles failure here?
 
-## Working with Existing Code (Verify Mode)
+Technical containers such as modules, services, layers, or directories are secondary.
 
-When the system already has code, discovery is not greenfield design — it is alignment verification:
+Good structure is responsibility-first:
 
-- **Read before judging**: Understand what exists and why before declaring misalignment
-- **Trace, do not redesign**: Check whether existing code traces back to goals and dominant-ops, do not propose a new architecture
-- **Gaps over rewrites**: Surface what is missing or misaligned, do not suggest rewriting what works
-- **Respect earned complexity**: If code is complex, check whether a dominant-op justifies that complexity before simplifying
+- ownership is visible
+- handoffs are explainable
+- change impact is easier to predict
+
+Bad structure is container-first:
+
+- everything looks organized
+- but no one can explain where a change should begin
+
+---
+
+## 5. Pressure Should Shape Structure
+
+Not every flow matters equally.
+Not every pain point should influence architecture.
+
+The flows that deserve design attention are the ones where pressure concentrates:
+
+- high frequency
+- high cost
+- high failure impact
+- high coordination burden
+- slow or fragile recovery
+- important user-visible waiting or uncertainty
+
+The goal is not to rank activity for its own sake.
+The goal is to identify which pressures should shape structure.
+
+Ask:
+
+- Which flows are worth protecting first?
+- Which pressure would force an ownership or boundary decision?
+- Which painful symptom is really caused by a deeper structural issue?
+
+Architecture should be shaped by real pressure, not by aesthetic symmetry.
+
+---
+
+## 6. Distinguish Views From Ownership
+
+Many useful ways of analyzing a system are not the same as ownership structure.
+
+Examples of analysis views:
+
+- input/output flow
+- validation
+- state transitions
+- recovery behavior
+
+These are useful for understanding the system.
+But they do not automatically define the main architectural units.
+
+Ownership structure should answer:
+
+- who receives work
+- who owns state
+- who advances the workflow
+- who handles recovery
+- who delivers the result
+
+Do not mistake a useful analysis lens for a stable ownership boundary.
+
+---
+
+## 7. Traceability Keeps Design Honest
+
+A design decision should be explainable from upstream intent to downstream implementation.
+
+At minimum, you should be able to answer:
+
+- what purpose or goal this serves
+- what pressure or risk justifies it
+- what responsibility or boundary it affects
+- what implementation choice follows from it
+
+If a design element cannot be explained in these terms, question whether it is real structure or just accidental complexity.
+
+Traceability is not bureaucracy.
+It is a way to keep local decisions from drifting away from system intent.
+
+---
+
+## 8. Do Not Abstract Noise
+
+Premature abstraction is a form of information loss.
+
+Do not abstract details that:
+
+- no one outside the local area cares about
+- do not affect ownership or change impact
+- are already well handled by existing mechanisms
+- are only internal sub-steps of one stable responsibility
+
+Good abstractions remove noise.
+Bad abstractions hide reality.
+
+If people still need the raw detail to do real work, the abstraction is probably too early or too weak.
+
+---
+
+## 9. Ask Better Questions Before Designing
+
+Discovery quality depends more on question quality than answer quality.
+
+Prefer questions like:
+
+- What is the worst thing that happens if this fails?
+- Who feels the pain first?
+- What would still need to be true if the implementation changed completely?
+- What would make this structurally harder to change later?
+- If we remove this, does the system still make sense?
+
+Avoid questions that invite vague wish lists without forcing tradeoffs.
+
+Good questions pull hidden assumptions into the open.
+
+---
+
+## 10. Respect Earned Complexity
+
+Some complexity is accidental and should be removed.
+Some complexity is earned because the system is protecting something real.
+
+Before simplifying, ask:
+
+- Is this complexity protecting an important pressure?
+- Is this seam preventing meaningful failure spread?
+- Is this awkwardness compensating for a real external constraint?
+
+Do not confuse unfamiliar complexity with unnecessary complexity.
+
+At the same time, do not defend accidental mess by calling it architecture.
+The burden is to explain what the complexity is buying.
+
+---
+
+## 11. Revisit The Architecture When Assumptions Move
+
+Architectural thinking is not one-and-done.
+
+Revisit the architecture when:
+
+- the goal changes
+- the real pressure shifts
+- a seam no longer isolates what it should
+- ownership becomes unclear
+- implementation repeatedly leaks across the same boundary
+
+Do not wait for a catastrophic rewrite moment.
+Architecture should be adjusted when the assumptions behind it are no longer true.
