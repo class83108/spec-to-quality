@@ -1,8 +1,9 @@
 ---
 name: system-map
 description: >
-  Guide the creation of SYSTEM_MAP.md — a living navigation map that turns goals and design drivers
-  into a responsibility map, boundary map, and change protocol for day-to-day development.
+  Guide the creation of SYSTEM_MAP.md — a living navigation map that turns goals, the global
+  interaction surface, and design drivers into a responsibility map, boundary map, and change
+  protocol for day-to-day development.
   Requires goals.md and design-driver-discovery.md to exist. Trigger when discovery is ready to be
   turned into a working system structure that developers and AI agents can safely change.
   Do NOT use for: defining goals (use goals-discovery), discovering design pressure
@@ -16,8 +17,10 @@ description: >
 
 You are guiding the user through the creation of **SYSTEM_MAP.md** — the living navigation document that answers:
 
+- 全局互動面對應到哪些責任單位？
 - 主要責任模塊是什麼？
 - 哪些縫隙是關鍵 seam？
+- 核心 state / entity 的 ownership 在哪裡？
 - 哪些結構是被 design drivers 推出來的？
 - 如果要改某件事，應該先看哪裡、可能影響哪裡？
 
@@ -41,18 +44,23 @@ Read `../../references/architect-mindset.md` before proceeding. Focus especially
 ## Working Style
 
 - **Map responsibilities, not source files.** `SYSTEM_MAP.md` is not a directory index and not a class diagram. It should show the main responsibility units that matter for change and coordination.
+- **Anchor the map in the interaction surface.** The map should explain which responsibility units stand behind the system's top-level interactions, and which ones are facades versus real owners.
 - **Boundaries matter more than boxes.** The reason to draw the map is not to say "these modules exist." It is to show where responsibility changes hands, where failure should stop, and where later specs will need stronger contracts.
 - **Front-end responsibility counts.** If a UI area owns meaningful interaction state, error recovery, or timing responsibility, it belongs on the map.
 - **Use human-sized granularity.** Too coarse: `Backend`. Too fine: `submit_job.py`. Right level: `Job Intake`, `Review Workflow`, `Output Rendering`, `Frontend Review Workspace`.
 - **Change navigation is a first-class goal.** A good `SYSTEM_MAP.md` helps a developer know what to touch before they start coding.
+- **Ownership must be explicit.** If a critical entity, state machine, or workflow authority has no clear owner on the map, the map is incomplete.
 - **Map, not territory.** If the document starts listing field-by-field contracts or internal class structures, you have gone too deep.
 
 ## Required Outputs
 
 Before declaring this skill complete, you MUST produce ALL of the following:
 
-- [ ] `SYSTEM_MAP.md` with the sections: Overview, Design Drivers In Scope, Responsibility Map, Boundary Map, Decision Notes, Current Focus, Change Protocol
+- [ ] `SYSTEM_MAP.md` with the sections: Overview, Global Interaction Surface Mapping, Design Drivers In Scope, Responsibility Map, Core Entity / State Ownership, Boundary Map, Decision Notes, Current Focus, Change Protocol
+- [ ] A mapping from the global interaction surface to the main responsibility units
 - [ ] A responsibility map with clearly named responsibility units
+- [ ] Explicit ownership for core state / entity / workflow authority where it matters
+- [ ] A core entity / state ownership view that distinguishes true owners from derived/read-only consumers
 - [ ] A boundary map with at least 2 key seams, each explained in terms of what it protects and why it exists
 - [ ] Explicit traceability from major boundaries or decisions back to relevant goals and design drivers
 - [ ] A change protocol that distinguishes goal changes, driver changes, boundary changes, behavior changes, and implementation-only changes
@@ -75,13 +83,27 @@ Start by grounding the map in the current discovery state.
 Summarize:
 
 1. **System purpose** — from `goals.md`
-2. **First-version scope** — what the system is actually trying to support now
-3. **Key design drivers** — from `design-driver-discovery.md`
-4. **Important constraints** — especially those that shape boundaries or technology choices
+2. **Global interaction surface** — from `design-driver-discovery.md`
+3. **First-version scope** — what the system is actually trying to support now
+4. **Key design drivers** — from `design-driver-discovery.md`
+5. **Important constraints** — especially those that shape boundaries or technology choices
 
 This is not a long architecture essay. It is a short orientation so future readers know what the map is optimizing for.
 
-### Phase 2: Responsibility Mapping
+### Phase 2: Global Interaction Surface Mapping
+
+Map the major interactions identified upstream to responsibility units.
+
+For each top-level interaction, ask:
+
+1. **Who receives it first?**
+2. **Who actually owns the resulting state change or workflow authority?**
+3. **Is this interaction a facade, a trigger, a query surface, or the real owner?**
+4. **Which interactions appear similar but should not share the same owner?**
+
+This step prevents the map from drifting away from the external system language.
+
+### Phase 3: Responsibility Mapping
 
 This is the core of the document.
 
@@ -103,6 +125,7 @@ It is **not**:
 Useful prompts:
 
 - "Who or what is responsible for first receiving work?"
+- "Who truly owns the core entity or workflow after intake accepts it?"
 - "Who owns the main state transitions?"
 - "Who pushes the workflow forward?"
 - "Who is responsible for recovery or retry?"
@@ -124,7 +147,32 @@ Use a "department" level of granularity:
 - too fine: `submit_form.tsx`, `JobSerializer`
 - good: `Job Intake`, `Review Workflow`, `Speech-to-Text Processing`, `Output Delivery`
 
-### Phase 3: Boundary Mapping
+### Phase 4: Core Entity / State Ownership
+
+Once the main responsibility units are visible, identify the **core entities, core state objects, and workflow authorities** that the system cannot reason about informally.
+
+You are not building a full domain model. You are making ownership explicit enough that later specs and implementation do not guess.
+
+For each important entity or stateful thing, capture:
+
+1. **Entity / State**
+2. **Primary owner** — the responsibility unit that is source of truth
+3. **Lifecycle focus** — what main transitions or stages matter
+4. **Source of truth** — where the authoritative version lives
+5. **Consumers / derived views** — who reads, mirrors, or projects it without owning it
+6. **Key handoffs** — where ownership transfer, state transition, or meaning transfer becomes risky
+
+Useful prompts:
+
+- "What are the few stateful things the system cannot afford to misunderstand?"
+- "Who is allowed to change this entity's authoritative state?"
+- "Who only reads or derives a view from it?"
+- "Which transitions matter enough that future specs must not guess?"
+- "Where would people accidentally confuse data access with ownership?"
+
+If something is only a DTO, cache, or view model, do not elevate it unless it changes how the system reasons about ownership or failure.
+
+### Phase 5: Boundary Mapping
 
 Once responsibility units are visible, identify the key seams between them.
 
@@ -154,7 +202,7 @@ Apply the boundary tests:
 
 If a seam fails these tests, it may be drawn at the wrong level.
 
-### Phase 4: Decision Notes
+### Phase 6: Decision Notes
 
 Capture only the architecture decisions that matter at map level.
 
@@ -175,7 +223,7 @@ Examples:
 
 If a technology choice matters because of structure, include it briefly. Do not let the map become a stack inventory.
 
-### Phase 5: Current Focus
+### Phase 7: Current Focus
 
 This section keeps the map alive during development.
 
@@ -188,7 +236,7 @@ Capture:
 
 This prevents the map from pretending the architecture is more settled than it really is.
 
-### Phase 6: Change Protocol
+### Phase 8: Change Protocol
 
 This is one of the most important sections. It tells developers and AI agents what kind of change they are making and where they must go next.
 
@@ -244,15 +292,17 @@ Action:
 
 - no `SYSTEM_MAP.md` change required unless the ownership model or seam risk changes
 
-### Phase 7: Review And Validate
+### Phase 9: Review And Validate
 
 Before finalizing:
 
-1. **Navigation test** — If a developer needs to change one important flow, can they identify the likely responsibility units and seams from this document?
-2. **Boundary usefulness test** — Do the boundaries explain why they exist, not just where they are?
-3. **Abstraction test** — Does the map stay above field-level contracts and class-level implementation?
-4. **Driver traceability test** — Can each major boundary or decision be traced back to a design driver?
-5. **False box test** — Did you draw boxes that are just technical containers with no real responsibility?
+1. **Interaction mapping test** — Can a reader tell how the top-level interactions map onto owners and non-owners?
+2. **Ownership test** — For each critical entity or state machine, is the true owner unambiguous?
+3. **Navigation test** — If a developer needs to change one important flow, can they identify the likely responsibility units and seams from this document?
+4. **Boundary usefulness test** — Do the boundaries explain why they exist, not just where they are?
+5. **Abstraction test** — Does the map stay above field-level contracts and class-level implementation?
+6. **Driver traceability test** — Can each major boundary or decision be traced back to a design driver?
+7. **False box test** — Did you draw boxes that are just technical containers with no real responsibility?
 
 If any check fails, fix the map before writing the final document.
 
@@ -267,6 +317,12 @@ If any check fails, fix the map before writing the final document.
 - Main pressures: [short summary from design-driver-discovery]
 - Important constraints: [short summary]
 
+## Global Interaction Surface Mapping
+
+| Top-Level Interaction | Entry Responsibility | Real Owner | Notes |
+|---|---|---|---|
+| [interaction] | [who receives it first] | [who owns resulting state/workflow] | [facade/query/command/async trigger] |
+
 ## Design Drivers In Scope
 
 ### [Driver title]
@@ -279,6 +335,13 @@ If any check fails, fix the map before writing the final document.
 |---|---|---|---|---|
 | [unit name] | [one sentence] | [state / rule / workflow authority] | [what kind of change affects it] | [driver titles] |
 | ... | ... | ... | ... | ... |
+
+## Core Entity / State Ownership
+
+| Core Entity / State | Primary Owner | Lifecycle Focus | Source of Truth | Consumers / Derived Views | Key Handoffs |
+|---|---|---|---|---|---|
+| [entity/state] | [responsibility unit] | [important transitions/stages] | [authoritative store/owner] | [readers/projections] | [risky seam or ownership transfer] |
+| ... | ... | ... | ... | ... | ... |
 
 ```mermaid
 graph TD

@@ -4,6 +4,8 @@ description: >
   Clarify the minimum specification needed for a feature slice before Gherkin or TDD. Starting
   from a shared feature work card, inspect which clarification views are missing — surface,
   contract, and/or behavior — and update the same work card plus any needed detailed spec files.
+  Escalate to a targeted deep dive when structural uncertainty remains too high for honest test
+  design.
   Requires goals.md, design-driver-discovery.md, SYSTEM_MAP.md, and a feature work card created by
   feature-slice.
 ---
@@ -40,6 +42,7 @@ The skill may update one, two, or all three views depending on what the slice ac
 - **Use the shared work card as the main coordination document.** Detailed spec files are optional outputs when the clarification needs durable detail.
 - **Do not confuse exploration with formalization.** First make the slice understandable; only then write durable spec text where it helps.
 - **Keep the abstraction level above code, but below discovery.** This is pre-TDD clarification, not project-wide architecture work.
+- **Escalate when guessing begins.** If clarification cannot proceed without inventing ownership, consistency, or failure semantics, mark a deep dive instead of faking certainty.
 
 ## Shared Document
 
@@ -69,7 +72,7 @@ Before declaring this skill complete, you MUST produce ALL of the following:
 - [ ] Clarification status refreshed for Surface / Contract / Behavior
 - [ ] Missing questions resolved or explicitly left as blockers
 - [ ] Earliest useful detailed spec file(s) created or updated when needed
-- [ ] Recommendation recorded for next step: more clarification, `gherkin-extraction`, or `tdd-ready-check`
+- [ ] Recommendation recorded for next step: more clarification, targeted deep dive, `gherkin-extraction`, or `tdd-ready-check`
 
 ## Entry Preconditions
 
@@ -89,6 +92,7 @@ If the work card does not exist, stop and route back to `feature-slice`.
 Read the feature work card and extract:
 
 - supported goal(s)
+- top-level interaction and shared language
 - relevant design driver(s)
 - flow type and slice statement
 - primary responsibility unit
@@ -123,6 +127,14 @@ Decide which view(s) are actually missing enough clarity to block progress.
 - the slice needs decision logic or invariants pinned down
 
 Do not over-clarify. Mark only the views that are truly blocking.
+
+#### Deep dive is needed when:
+
+- a boundary exists on paper but ownership is still unstable
+- core state / entity lifecycle is unclear
+- failure, retry, compensation, or consistency semantics would still be guesswork
+- multiple slices are likely to drift into conflicting API/model language
+- the missing clarity is no longer local to one view and points back to discovery or map structure
 
 ### Phase 3: Clarify The Missing View(s)
 
@@ -169,6 +181,8 @@ Also update:
 - `Test strategy`
 - `Ready for TDD`
 - `Blockers`
+- `Deep dive needed`
+- `Deep dive focus`
 
 ### Phase 5: Create Durable Spec Files Only If Needed
 
@@ -192,6 +206,7 @@ When creating a detailed file:
 Choose one:
 
 - `stay in spec-clarification` — more than one blocking ambiguity still unresolved
+- `targeted deep dive` — the blocking ambiguity is structural, not just slice-local
 - `gherkin-extraction` — acceptance-worthy behavior is now clear
 - `tdd-ready-check` — clarification is sufficient, validate readiness formally
 
@@ -207,13 +222,21 @@ The shared work card should already contain this structure:
 - Why now: ...
 - Out of scope: ...
 
+## Interaction Surface Context
+- Top-level interaction: ...
+- Shared language to preserve: ...
+- Interaction drift risk: ...
+
 ## Design Driver Context
 - Relevant drivers: ...
 - Pressure to protect: ...
 
 ## Feature Slice
+- Flow id: ...
 - Flow type: ...
+- Interaction anchor: ...
 - Slice: ...
+- Sibling slices: ...
 - Start: ...
 - End: ...
 - Primary responsibility unit: ...
@@ -241,6 +264,8 @@ The shared work card should already contain this structure:
 - Test strategy: [primary layer + supporting layers + manual/deferred coverage]
 - Ready for TDD: yes / no
 - Blockers: ...
+- Deep dive needed: yes / no
+- Deep dive focus: [ownership / failure semantics / consistency / shared language / none]
 
 ## Next Step
 - Route to: ...
@@ -253,4 +278,5 @@ The shared work card should already contain this structure:
 - **Do not create `surface.md`, `contract.md`, and `behavior.md` by reflex.**
 - **If the slice can move forward with just a work-card update, do that.**
 - **If the slice still has upstream ambiguity, go back to `feature-slice`, `design-driver-discovery`, or `system-map` instead of guessing.**
+- **If the ambiguity is structural rather than local, call it a deep dive and say exactly what needs to be resolved.**
 - **The goal is readiness for Gherkin or TDD, not documentation volume.**

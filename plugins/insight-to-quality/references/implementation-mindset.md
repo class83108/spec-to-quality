@@ -286,3 +286,41 @@ Ask:
 The answer tells you where to write back.
 
 This is how implementation stays connected to architecture instead of gradually drifting away from it.
+
+---
+
+## 14. Worked Examples
+
+These examples make two recurring anti-patterns concrete. Both come from real routing and risk-framing mistakes that look reasonable in the moment but create downstream drift.
+
+### Example A — Goal Alignment Does Not Guarantee Routing
+
+**Scenario.** A transcription system has a goal to keep transcription cost predictable, and a design driver about high cost-of-failure. The cache currently stores `{audio-id: full-transcript}` only — successful results, never partial state. A user requests: "When transcription fails mid-run, resume from the failure point instead of restarting."
+
+**Tempting routing.** The request aligns with both the goal and the design driver. Treat it as a normal feature slice and proceed.
+
+**Hidden problem.** The request quietly requires the cache (or a new component) to store something it does not currently store: partial results plus a progress marker. That is a seam-shape change, not a feature implementation.
+
+**Better routing.** Enter `feature-slice` as the intake gate, but route up to `system-map` as soon as the slice surfaces the seam reshape. The work is structural before it is functional.
+
+**Lesson.** Goal and design-driver alignment is necessary but not sufficient. Before continuing into spec or TDD, ask: *can the current system map hold this request without reshaping a seam?* If the answer is no, the work is structural before it is functional, and the routing should reflect that.
+
+---
+
+### Example B — Risk Is "What Bad Outcome", Not "What We Need"
+
+**Scenario.** Same resume feature. Asked to state the main risk this slice should protect.
+
+**Weak framing.** "We don't know where transcription got to, so we need to track progress."
+
+**Why it is weak.** This is a solution shape disguised as a risk. It assumes "progress tracking" is the answer before naming the bad outcome. Tests written from this framing tend to verify that progress tracking exists, not that the resumed transcript is correct or that cost was actually saved.
+
+**Better framing (any one of these is a real risk):**
+
+- "Resumed transcript may contain duplicated or missing audio segments."
+- "Resume may silently re-run already-transcribed audio, defeating the cost goal."
+- "Repeated resume attempts may corrupt or accumulate partial state."
+
+Each follows the shape *"under condition X, bad observable outcome Y can occur."* That shape lets the test scenarios target the outcome, not the chosen mechanism.
+
+**Lesson.** Risk lives in the problem space. The moment a risk statement names a mechanism (`we need to track`, `we need to store`, `we need to add`), it has moved to the solution space and the test scenarios will inherit that bias. Keep risk framed as observable failure, and let mechanism choice happen later.

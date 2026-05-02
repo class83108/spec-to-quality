@@ -50,6 +50,7 @@ Before declaring this skill complete, you MUST produce ALL of the following:
 - [ ] Work card read and updated
 - [ ] Readiness assessed across goal context, slice clarity, responsibility/seam context, clarification status, and test intent
 - [ ] Test strategy confirmed (primary protection layer, supporting layers, manual validation, and deferred coverage)
+- [ ] **Scenarios To Write table populated** — required for both `gherkin-extraction` and `direct TDD` paths, covering at least: happy path, primary risk failure, boundary / edge candidates, error or rejection path
 - [ ] Recommended next step recorded (`gherkin-extraction`, `direct TDD`, or `return for clarification`)
 - [ ] Explicit blockers recorded if the slice is not ready
 
@@ -223,6 +224,33 @@ Main risk profile:
 
 Manual validation can coexist with automated layers. It is not a failure state by itself.
 
+### Phase 3B: Scenarios To Write
+
+After choosing the test strategy, populate the work card's `Scenarios To Write` table. **This is required for both `gherkin-extraction` and `direct TDD` paths** — direct TDD without this table is the most common place where boundary thinking gets skipped.
+
+For each candidate scenario, fill four columns:
+
+| Scenario | Risk Protected | Observable Outcome | Primary Layer |
+|---|---|---|---|
+
+Use these prompts as a minimum (do not skip a row by saying "not applicable" without recording why):
+
+1. **Happy path** — the slice works for a typical input
+2. **Primary risk failure** — the failure mode the slice exists to protect against
+3. **Input boundary** — empty / max / min / null / wrong type / off-by-one
+4. **Edge case** — single-element collections, repeated invocation, special characters, concurrency or ordering surprises
+5. **Error or rejection path** — invalid input, dependency failure, partial-state recovery
+6. **State / output contract** — persisted state is consistent after the operation; returned shape matches its declared contract
+
+Rules:
+
+- Every row must protect a real risk (not "we should test this in case")
+- Every row must have an observable outcome (not "the function runs")
+- Every row's primary layer must match the chosen test strategy (a `feature`-layer scenario inside a `unit`-only strategy is a sign the strategy is wrong)
+- If a prompt category is genuinely not applicable, write a one-line reason in the Risk Protected column instead of dropping the row silently
+
+This table feeds directly into `gherkin-extraction` (when warranted) or `tdd-workflow` Red planning (when going direct).
+
 ### Phase 3A: Quick Selection Table
 
 Use this table when choosing the primary protection layer:
@@ -291,6 +319,12 @@ The work card should contain at least:
 - Ready for TDD: yes / no
 - Blockers: ...
 
+## Scenarios To Write
+<!-- Required for both gherkin-extraction and direct TDD paths -->
+| Scenario | Risk Protected | Observable Outcome | Primary Layer |
+|---|---|---|---|
+| ... | ... | ... | unit / integration / feature / manual |
+
 ## Next Step
 - Route to: ...
 - Why: ...
@@ -303,4 +337,5 @@ The work card should contain at least:
 - **Small code units can go straight to unit TDD if their meaning is already clear.**
 - **Business-rule helpers still need behavior clarity.**
 - **Boundary adapters still need contract clarity.**
+- **Direct TDD is not an excuse to skip boundary thinking.** The Scenarios To Write table is required even when going direct.
 - **When readiness fails, push the problem back to the right layer instead of writing speculative tests.**

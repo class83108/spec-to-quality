@@ -123,66 +123,35 @@ Do not scatter slice execution state across unrelated notes if the work card can
 - **Do not jump into code before the slice is clear.**
 - **Do not default every slice to the same test level.**
 - **Do not assume Gherkin is always needed.**
+- **Direct TDD does not skip boundary thinking.** The Scenarios To Write table is required even when going direct.
 - **Do not hide structural problems inside local refactor.**
 - **Do not let deferred risk disappear from view.**
 - **When assumptions move, write back to the layer where the assumption lives.**
 
 ---
 
-## Test Strategy Rules
+## Test Strategy (Summary)
 
-Choose tests by risk, not by habit.
+Choose tests by risk, not by habit. Layer rough cuts:
 
-### Use `unit` when the main risk is:
-
-- local logic
-- helper behavior
-- deterministic transformation
-
-### Use `integration` when the main risk is:
-
-- seam or handoff correctness
-- persistence behavior
-- adapter or coordination behavior
-
-### Use `feature` when the main risk is:
-
-- user-visible behavior
-- acceptance-worthy business outcome
-
-### Use `manual validation` when the main risk is:
-
-- perceived responsiveness
-- UI or message clarity
-- media/content quality
-- a temporary happy path not yet worth full automation
+- `unit` — local logic, helpers, deterministic transformations
+- `integration` — seams, handoffs, persistence, adapters, coordination
+- `feature` — user-visible behavior, acceptance-worthy outcomes
+- `manual validation` — perceived quality, UI clarity, media/content, temporary happy paths
 
 Mixed strategies are normal.
 
+Full guidance, including the readiness dimensions and the Scenarios To Write table: `skills/tdd-ready-check/SKILL.md`.
+
 ---
 
-## Red / Green / Refactor Rules
+## Red / Green / Refactor (Summary)
 
-### Red
+- **Red** — start at the layer where real uncertainty lives; not always unit
+- **Green** — smallest change that resolves the targeted uncertainty
+- **Refactor** — remove duplicate knowledge, responsibility overload, test/impl drift, weak locality; escalate when structural
 
-Start Red at the layer where the real uncertainty lives.
-
-Red does not have to begin with a unit test.
-
-### Green
-
-Implement the smallest change that resolves the targeted uncertainty.
-
-### Refactor
-
-Refactor should remove:
-
-- duplicate knowledge
-- overloaded responsibilities
-- drift between tests and implementation
-- weak naming and poor locality
-
-If refactor reveals a structural problem, escalate upward.
+Full guidance: `skills/tdd-workflow/SKILL.md`.
 
 ---
 
@@ -210,6 +179,7 @@ When implementation discovers a problem, route it to the right layer:
 - system purpose changed -> `goals-discovery`
 - real design pressure changed -> `design-driver-discovery`
 - ownership or seam changed -> `system-map`
+- request requires a seam to hold or expose something it currently does not -> `system-map` (Type 4 reshape before continuing)
 - slice meaning is unclear -> `feature-slice`
 - surface / contract / behavior is unclear -> `spec-clarification`
 - test strategy no longer fits -> `tdd-ready-check`
@@ -226,3 +196,5 @@ Two reference documents define the underlying principles:
 - `references/implementation-mindset.md`
 
 Skills should use them as principle sources, not as workflow scripts.
+
+`implementation-mindset.md` Section 14 contains worked examples for routing and risk framing — read these when in doubt about whether a request belongs upstream or how to phrase a real risk.

@@ -127,7 +127,7 @@ For each planned scenario, capture:
 
 ### Phase 4: Scenario Mapping
 
-Build a short mapping table before writing:
+Start from the `Scenarios To Write` table already populated by `tdd-ready-check`. Do not re-derive scenarios from scratch — filter and refine that table for acceptance-level value:
 
 | Scenario | Risk Protected | Observable Outcome | Primary Layer |
 |---|---|---|---|
@@ -135,10 +135,12 @@ Build a short mapping table before writing:
 
 Rules:
 
-- Every scenario must protect a real risk
-- Every scenario must have an observable outcome
-- Every scenario must have a primary layer
+- Drop rows whose primary layer is `unit` only — those belong in unit tests, not Gherkin
+- Keep rows whose observable outcome is acceptance-worthy (user-visible, cross-seam, or rule-significant)
+- Every kept scenario must protect a real risk
+- Every kept scenario must have an observable outcome
 - Avoid scenarios that only restate internal implementation
+- If you find new acceptance-worthy scenarios while filtering, add them back to the work card's `Scenarios To Write` table so the source of truth stays consistent
 
 ### Phase 5: Write Gherkin
 
