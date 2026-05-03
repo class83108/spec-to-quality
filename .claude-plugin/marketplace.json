@@ -4,13 +4,13 @@
     "name": "class83108"
   },
   "metadata": {
-    "description": "Structured discovery-to-delivery workflow with spec-contract/spec-surface/spec-behavior, type-routed Gherkin, TDD refactor gates, and report-row governance."
+    "description": "Structured discovery-to-delivery workflow built around goals discovery, design-driver discovery, system mapping, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and design review."
   },
   "plugins": [
     {
       "name": "insight-to-quality",
       "source": "./plugins/insight-to-quality",
-      "description": "Structured discovery-to-delivery workflow with spec-contract/spec-surface/spec-behavior, type-routed Gherkin, TDD refactor gates, and report-row governance."
+      "description": "Structured discovery-to-delivery workflow built around goals discovery, design-driver discovery, system mapping, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and design review."
     }
   ]
 }

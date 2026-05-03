@@ -22,8 +22,8 @@
 
 主要依賴：
 
-- `Document Level = Abstraction Level`
-- `Questioning Hierarchy`
+- 穩定抽象層
+- 問對問題，再談解法
 
 用途：
 
@@ -35,9 +35,9 @@
 
 主要依賴：
 
-- `Dominant Operations Thinking`
-- `Traceability`
-- `Questioning Hierarchy`
+- 壓力驅動結構
+- Traceability
+- 問對問題，再談解法
 
 用途：
 
@@ -49,9 +49,9 @@
 
 主要依賴：
 
-- `The Abstraction Boundary Tests`
-- `Document Level = Abstraction Level`
-- `Traceability`
+- 邊界品質測試
+- 責任與 ownership
+- Traceability
 
 用途：
 
@@ -67,8 +67,8 @@
 
 主要依賴：
 
-- `Document Level = Abstraction Level`
-- `Traceability`
+- 正確切 slice，而不是偷帶實作
+- Traceability
 
 用途：
 
@@ -80,8 +80,9 @@
 
 主要依賴：
 
-- `Document Level = Abstraction Level`
-- `implementation-mindset.md` 中與 derivation、error strategy 相關的部分
+- testing 前先釐清
+- 把規格放在對的抽象層
+- 先承認未知，再補清楚
 
 用途：
 
@@ -93,7 +94,9 @@
 
 主要依賴：
 
-- `implementation-mindset.md` 中與驗證邊界、測試策略、交付風險相關的部分
+- 主風險優先
+- 最低誠實測試層
+- 保留 deferred risk 的可見性
 
 用途：
 
@@ -105,11 +108,12 @@
 
 ## 後段 Skills
 
-### `spec-to-gherkin`
+### `gherkin-extraction`
 
 主要依賴：
 
-- `implementation-mindset.md` 中與 acceptance-oriented verification 相關的部分
+- 只抽取值得驗收的行為
+- acceptance 不等於所有測試
 
 用途：
 
@@ -120,7 +124,9 @@
 
 主要依賴：
 
-- `implementation-mindset.md`
+- Red 應暴露真實不確定性
+- Green 只做到剛好通過
+- Refactor 要消除 drift 與 overload
 
 用途：
 
@@ -132,9 +138,9 @@
 
 主要依賴：
 
-- `Traceability`
-- `The Abstraction Boundary Tests`
-- `implementation-mindset.md` 中的 release / validation thinking
+- Traceability
+- 邊界品質測試
+- alignment 比綠燈更重要
 
 用途：
 
@@ -161,12 +167,12 @@
 
 | Skill | 主要依賴 |
 |---|---|
-| `goals-discovery` | Abstraction level, Questioning hierarchy |
-| `design-driver-discovery` | Dominant operations thinking, Traceability |
-| `system-map` | Boundary tests, Traceability |
-| `feature-slice` | Abstraction level, Traceability |
-| `spec-clarification` | Abstraction level, Derivation, Error strategy |
-| `tdd-ready-check` | Test strategy, Validation boundary |
-| `spec-to-gherkin` | Acceptance-oriented verification |
-| `tdd-workflow` | Implementation workflow |
-| `design-review` | Traceability, Boundary tests, Release validation |
+| `goals-discovery` | Stable abstraction, Better questioning |
+| `design-driver-discovery` | Pressure shapes structure, Traceability |
+| `system-map` | Boundary quality, Ownership, Traceability |
+| `feature-slice` | Slice the right thing, Traceability |
+| `spec-clarification` | Clarify before testing, Keep abstraction honest |
+| `tdd-ready-check` | Main risk first, Lowest honest test layer |
+| `gherkin-extraction` | Acceptance-worthy behavior only |
+| `tdd-workflow` | Real Red, minimal Green, drift-removing Refactor |
+| `design-review` | Alignment, boundary integrity, writeback thinking |

@@ -73,7 +73,7 @@
 
 ---
 
-### Phase 2. 壓力與流程辨識
+### Phase 2. 設計驅動因素辨識
 
 回答：
 - 哪些 operation 最常發生
@@ -83,12 +83,11 @@
 - 哪些 flow 是高風險 internal / operational flow
 
 主要產物：
-- `dominant-ops.md`
-- `docs/flows/README.md`
-- `docs/flows/Fxx-<flow-name>.md`
+- `design-driver-discovery.md`
+- 必要時補充的 flow notes
 
 建議 skill：
-- `insight-to-quality:dominant-ops`
+- `insight-to-quality:design-driver-discovery`
 
 建議方法：
 - event storming
@@ -124,7 +123,7 @@
 
 ---
 
-### Phase 4. 高風險規格化
+### Phase 4. Feature Slice 與規格釐清
 
 回答：
 - 哪些地方需要明確定義外部互動面
@@ -132,17 +131,15 @@
 - 哪些規則與狀態轉移最容易被寫錯
 
 主要產物：
-- `specs/<feature>/spec.md`
-或
-- `specs/<feature>/surface.md`
-- `specs/<feature>/contracts.md`
-- `specs/<feature>/behavior.md`
+- `docs/features/<feature-slug>/work-card.md`
+- 必要時再補：
+- `docs/features/<feature-slug>/surface.md`
+- `docs/features/<feature-slug>/contract.md`
+- `docs/features/<feature-slug>/behavior.md`
 
 建議 skills：
-- `insight-to-quality:start-feature`
-- `insight-to-quality:spec-surface`
-- `insight-to-quality:spec-contract`
-- `insight-to-quality:spec-behavior`
+- `insight-to-quality:feature-slice`
+- `insight-to-quality:spec-clarification`
 
 原則：
 - 不是整個系統一起寫滿 spec
@@ -150,7 +147,7 @@
 
 ---
 
-### Phase 5. 驗收規格與測試設計
+### Phase 5. TDD 入口判斷與驗收抽取
 
 回答：
 - 哪些行為值得寫成 acceptance scenarios
@@ -158,10 +155,12 @@
 - 哪些 internal flow 比較適合 contract / integration test
 
 主要產物：
-- `features/<feature>/<finding-id>.feature`
+- `docs/features/<feature-slug>/work-card.md`
+- 必要時抽出的 `.feature` 檔
 
-建議 skill：
-- `insight-to-quality:spec-to-gherkin`
+建議 skills：
+- `insight-to-quality:tdd-ready-check`
+- `insight-to-quality:gherkin-extraction`
 
 原則：
 - Gherkin 只抓高價值 scenario
@@ -169,12 +168,12 @@
 
 ---
 
-### Phase 6. 實作
+### Phase 6. 實作與 TDD
 
 回答：
 - 具體如何落地到 code
 - DB / queue / cache / retry / state library 怎麼選
-- 如何讓實作持續追溯到前面的 goals、dominant ops、system map、spec
+- 如何讓實作持續追溯到前面的 goals、design drivers、system map、clarification
 
 主要產物：
 - production code
@@ -187,7 +186,7 @@
 
 ---
 
-### Phase 7. 驗證與回寫
+### Phase 7. 驗證、回寫與對齊
 
 回答：
 - 這次實作有沒有破壞既有邊界
@@ -196,12 +195,11 @@
 
 主要產物更新：
 - `SYSTEM_MAP.md`
-- `specs/<feature>/notes.md`
-- 必要時回寫 `goals.md` / `dominant-ops.md`
+- `docs/features/<feature-slug>/work-card.md`
+- 必要時回寫 `goals.md` / `design-driver-discovery.md`
 
-建議 skills：
+建議 skill：
 - `insight-to-quality:design-review`
-- `insight-to-quality:docs-governance`
 
 ---
 
@@ -344,30 +342,23 @@
 
 ```text
 /goals.md
-/dominant-ops.md
+/design-driver-discovery.md
 /SYSTEM_MAP.md
 
-/docs/flows/README.md
-/docs/flows/F01-<flow-name>.md
-/docs/flows/F02-<flow-name>.md
-
-/specs/<feature>/spec.md
-或
-/specs/<feature>/surface.md
-/specs/<feature>/contracts.md
-/specs/<feature>/behavior.md
-/specs/<feature>/notes.md
-
-/features/<feature>/<finding-id>.feature
+/docs/features/<feature-slug>/work-card.md
+/docs/features/<feature-slug>/surface.md
+/docs/features/<feature-slug>/contract.md
+/docs/features/<feature-slug>/behavior.md
+/tests/features/<feature>.feature
 ```
 
 如果專案剛開始，最重要的三個根文件是：
 
 - `goals.md`
-- `dominant-ops.md`
+- `design-driver-discovery.md`
 - `SYSTEM_MAP.md`
 
-後面的 `specs/` 與 `features/` 可以隨 feature 漸進長出來。
+後面的 `docs/features/` 與 `.feature` 驗收檔，可以隨 feature 漸進長出來。
 
 ---
 
@@ -376,22 +367,17 @@
 ### 專案啟動期
 
 1. `insight-to-quality:goals-discovery`
-2. `insight-to-quality:dominant-ops`
+2. `insight-to-quality:design-driver-discovery`
 3. `insight-to-quality:system-map`
 
 ### 單一 Feature 進場
 
-1. `insight-to-quality:start-feature`
-2. `insight-to-quality:spec-surface`
-3. `insight-to-quality:spec-contract`
-4. `insight-to-quality:spec-behavior`
-5. `insight-to-quality:spec-to-gherkin`
-6. `insight-to-quality:tdd-workflow`
-7. `insight-to-quality:design-review`
-
-### 文件維護
-
-1. `insight-to-quality:docs-governance`
+1. `insight-to-quality:feature-slice`
+2. `insight-to-quality:spec-clarification`
+3. `insight-to-quality:tdd-ready-check`
+4. `insight-to-quality:gherkin-extraction` 或直接進 TDD
+5. `insight-to-quality:tdd-workflow`
+6. `insight-to-quality:design-review`
 
 ---
 

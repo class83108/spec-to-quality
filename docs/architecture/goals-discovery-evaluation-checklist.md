@@ -190,17 +190,17 @@
 
 ## 四、流程銜接能力
 
-### 10. 是否能自然接到 dominant-ops
+### 10. 是否能自然接到 design-driver-discovery
 
 檢查：
 
-- goals 是否足以支撐下一步找 dominant operations
+- goals 是否足以支撐下一步找 design drivers
 - 是否能看出哪些 flow 可能重要
 - 是否能看出哪些 failure impact 值得深入
 
 好的訊號：
 
-- 做完 goals 後，下一步很自然會去問「哪個 operation 最重要」
+- 做完 goals 後，下一步很自然會去問「哪些 flow 與壓力會主導設計」
 
 不好的訊號：
 
@@ -273,7 +273,7 @@
 2. goals 有沒有掉進 implementation detail
 3. non-goals 有沒有成形
 4. open questions 有沒有被挖出來
-5. 產物能不能自然接到 `dominant-ops`
+5. 產物能不能自然接到 `design-driver-discovery`
 
 ---
 
@@ -311,4 +311,4 @@
 
 - 它能不能穩定把混亂對話變成可用的 `goals.md`
 - 它能不能讓人和 AI 在正確抽象層上合作
-- 它能不能支撐後面的 `dominant-ops` 與 `SYSTEM_MAP`
+- 它能不能支撐後面的 `design-driver-discovery` 與 `SYSTEM_MAP`
