@@ -288,8 +288,8 @@ then stop treating it as a local refactor and route back upstream.
 
 If implementation reveals a problem, route it to the right layer:
 
-- goal mismatch -> `goals-discovery`
-- new design pressure -> `design-driver-discovery`
+- goal mismatch -> `discovery`
+- new system-design decision or trade-off pressure -> `system-design`
 - unclear ownership or broken seam -> `system-map`
 - missing surface / contract / behavior clarity -> `spec-clarification`
 - test strategy no longer makes sense -> `tdd-ready-check`

@@ -1,7 +1,7 @@
 {
   "name": "insight-to-quality",
   "version": "0.9.0",
-  "description": "Structured discovery-to-delivery workflow built around goals discovery, design-driver discovery, system mapping, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and design review.",
+  "description": "Structured discovery-to-delivery workflow built around discovery, system design, system mapping, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and design review.",
   "author": {
     "name": "class83108"
   },
@@ -17,12 +17,12 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Insight to Quality",
-    "shortDescription": "Discovery-to-delivery skills with feature slicing and risk-based TDD gates",
-    "longDescription": "A complete workflow covering goals discovery, design-driver discovery, system mapping, feature slicing, clarification, Gherkin extraction, TDD, and design review.",
+    "shortDescription": "Discovery-to-delivery skills with system design, feature slicing, and risk-based TDD gates",
+    "longDescription": "A complete workflow covering discovery, system design, system mapping, feature slicing, clarification, Gherkin extraction, TDD, and design review.",
     "category": "Coding",
     "capabilities": [],
     "defaultPrompt": [
-      "Use insight-to-quality skills to drive discovery, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and TDD delivery with refactor-focused quality gates"
+      "Use insight-to-quality skills to drive discovery, system design, system mapping, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and TDD delivery with refactor-focused quality gates"
     ],
     "screenshots": []
   }

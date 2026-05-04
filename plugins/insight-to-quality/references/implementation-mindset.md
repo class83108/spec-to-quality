@@ -280,7 +280,7 @@ Ask:
 - Did the intended behavior turn out to be unclear?
 - Did the seam turn out to be different?
 - Did the ownership model change?
-- Did the real design pressure change?
+- Did the real system-design decision or trade-off assumption change?
 - Did the system purpose change?
 
 The answer tells you where to write back.
@@ -295,15 +295,15 @@ These examples make two recurring anti-patterns concrete. Both come from real ro
 
 ### Example A — Goal Alignment Does Not Guarantee Routing
 
-**Scenario.** A transcription system has a goal to keep transcription cost predictable, and a design driver about high cost-of-failure. The cache currently stores `{audio-id: full-transcript}` only — successful results, never partial state. A user requests: "When transcription fails mid-run, resume from the failure point instead of restarting."
+**Scenario.** A transcription system has a discovery-level goal to keep transcription cost predictable, and a prior system-design decision that treats failed reprocessing as high-cost. The cache currently stores `{audio-id: full-transcript}` only — successful results, never partial state. A user requests: "When transcription fails mid-run, resume from the failure point instead of restarting."
 
-**Tempting routing.** The request aligns with both the goal and the design driver. Treat it as a normal feature slice and proceed.
+**Tempting routing.** The request aligns with both the discovery intent and the prior system-design decision. Treat it as a normal feature slice and proceed.
 
 **Hidden problem.** The request quietly requires the cache (or a new component) to store something it does not currently store: partial results plus a progress marker. That is a seam-shape change, not a feature implementation.
 
 **Better routing.** Enter `feature-slice` as the intake gate, but route up to `system-map` as soon as the slice surfaces the seam reshape. The work is structural before it is functional.
 
-**Lesson.** Goal and design-driver alignment is necessary but not sufficient. Before continuing into spec or TDD, ask: *can the current system map hold this request without reshaping a seam?* If the answer is no, the work is structural before it is functional, and the routing should reflect that.
+**Lesson.** Discovery alignment and system-design alignment are necessary but not sufficient. Before continuing into spec or TDD, ask: *can the current system map hold this request without reshaping a seam?* If the answer is no, the work is structural before it is functional, and the routing should reflect that.
 
 ---
 

@@ -5,7 +5,7 @@ description: >
   from the shared feature work card, verify that the slice, responsibility, seams, clarification
   status, and test intent are sufficiently clear, then record readiness and the recommended next
   execution path.
-  Requires goals.md, design-driver-discovery.md, SYSTEM_MAP.md, and a feature work card.
+  Requires discovery.md, system-design.md, SYSTEM_MAP.md, and a feature work card.
 ---
 
 # TDD Ready Check
@@ -58,8 +58,8 @@ Before declaring this skill complete, you MUST produce ALL of the following:
 
 This skill expects:
 
-- `goals.md`
-- `design-driver-discovery.md`
+- `discovery.md`
+- `system-design.md`
 - `SYSTEM_MAP.md`
 - `docs/features/<feature-slug>/work-card.md`
 
@@ -72,7 +72,8 @@ If the work card does not exist, stop and route back to `feature-slice`.
 From the work card, extract:
 
 - supported goal(s)
-- relevant design driver(s)
+- relevant prior system-design decision(s)
+- relevant trade-offs / risks
 - slice statement
 - primary responsibility unit
 - related seams
@@ -93,7 +94,7 @@ Ask:
 - Is the slice's success condition meaningful relative to that goal?
 - Is out-of-scope work explicit enough to prevent drift?
 
-If not, route back to `feature-slice` or `goals-discovery`.
+If not, route back to `feature-slice` or `discovery`.
 
 #### 2. Slice Clarity
 
@@ -309,6 +310,31 @@ Also update `Next Step` with one of:
 The work card should contain at least:
 
 ```markdown
+## Discovery Context
+- Supports goals: ...
+- Top-level interaction: ...
+- Baseline flow: ...
+- Out of scope: ...
+
+## System Design Context
+- Relevant prior decisions: ...
+- Relevant trade-offs / risks: ...
+- Upstream drift risk: ...
+
+## System Map Context
+- Primary responsibility unit: ...
+- Related seams: ...
+- Touched ownership areas: ...
+
+## Feature Slice
+- Flow id: ...
+- Flow type: ...
+- Slice statement: ...
+- Sibling slices: ...
+- Start: ...
+- End: ...
+- Main risk: ...
+
 ## TDD Readiness
 - Main risk to protect: ...
 - Test strategy:

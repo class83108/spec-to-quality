@@ -84,7 +84,7 @@ From the work card, extract:
 - main risk to protect
 - test strategy
 - relevant goal(s)
-- relevant design driver(s)
+- relevant prior system-design decision(s)
 - current clarification status
 
 If the work card still says `Ready for TDD: no`, stop and route back to `tdd-ready-check` or `spec-clarification`.

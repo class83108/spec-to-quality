@@ -49,8 +49,8 @@ And may read when present:
 - `docs/features/<feature-slug>/surface.md`
 - `docs/features/<feature-slug>/contract.md`
 - `docs/features/<feature-slug>/behavior.md`
-- `goals.md`
-- `design-driver-discovery.md`
+- `discovery.md`
+- `system-design.md`
 - `SYSTEM_MAP.md`
 
 ## Required Outputs
@@ -61,7 +61,7 @@ Before declaring this skill complete, you MUST produce ALL of the following:
 - [ ] Findings reported first when risks or misalignments exist
 - [ ] Review of slice alignment, seam alignment, and test-strategy alignment completed
 - [ ] Manual validation and deferred coverage reviewed when present
-- [ ] Upstream writeback decision made (`none`, `work-card only`, `spec`, `system-map`, `design-driver-discovery`, or `goals`)
+- [ ] Upstream writeback decision made (`none`, `work-card only`, `spec`, `system-map`, `system-design`, or `discovery`)
 
 ## Entry Preconditions
 
@@ -79,7 +79,7 @@ If implementation has not started or the slice is not yet in execution, stop and
 From the work card, reconstruct:
 
 - supported goal(s)
-- relevant design driver(s)
+- relevant prior system-design decision(s)
 - slice statement
 - primary responsibility unit
 - related seams
@@ -192,14 +192,14 @@ Use when:
 - a seam moved or a new seam emerged
 - change navigation assumptions are no longer correct
 
-#### Design-driver writeback
+#### System-design writeback
 
 Use when:
 
 - the real pressure turned out different from what was assumed
 - an operational or seam risk became design-shaping
 
-#### Goals writeback
+#### Discovery writeback
 
 Use when:
 
@@ -238,7 +238,7 @@ After findings, summarize:
 - test strategy alignment: aligned / drifted
 - manual validation: pass / fail / blocked / none
 - deferred coverage: tracked / untracked / none
-- upstream writeback: none / work-card / spec / system-map / design-driver-discovery / goals
+- upstream writeback: none / work-card / spec / system-map / system-design / discovery
 
 ## Key Rules
 
