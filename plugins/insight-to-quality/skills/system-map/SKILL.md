@@ -1,7 +1,7 @@
 ---
 name: system-map
 description: >
-  Guide the creation of system_map.md — an implementation-facing system cut that turns
+  Guide the creation of system-map.md — an implementation-facing system cut that turns
   discovery.md and system-design.md into responsibility units, core data/state boundaries,
   entity-selection rationale, interaction flows between core entities, candidate implementation
   cuts, and a practical change protocol for day-to-day development.
@@ -15,9 +15,9 @@ description: >
 
 # System Map
 
-> **Output contract:** The skill's conversational output must be in Traditional Chinese, and every section written into `system_map.md` must also be in Traditional Chinese.
+> **Output contract:** The skill's conversational output must be in Traditional Chinese, and every section written into `system-map.md` must also be in Traditional Chinese.
 
-You are guiding the user through the creation of **system_map.md**.
+You are guiding the user through the creation of **system-map.md**.
 
 This document is not another round of requirements analysis, and it is not another round of system design.
 
@@ -90,7 +90,7 @@ This skill is not responsible for:
 
 Before finishing, you must produce:
 
-- `system_map.md`, with at least these sections:
+- `system-map.md`, with at least these sections:
   `Overview`, `Responsibility Map`, `Core Data / State Map`, `Entity Selection Notes`, `Entity Interaction Map`, `Boundary / Seam Map`, `Implementation Cut`, `Current Focus`, `Change Protocol`
 - a clear responsibility map
 - a clear core data / state map that says what the system manages, who is the main place responsible, what other parts only read or display it, and what currently counts as the source of record
@@ -314,7 +314,7 @@ The goal is to help developers and AI agents know when they must go back upstrea
 
 ## Modeling Boundary
 
-At `system_map` level, the job is to decide whether an important data/state/handoff object must be explicitly named for the structure to stay legible and implementable.
+At `system-map` level, the job is to decide whether an important data/state/handoff object must be explicitly named for the structure to stay legible and implementable.
 
 It is not the job to fully design:
 
