@@ -1,9 +1,10 @@
 ---
 name: system-map
 description: >
-  Guide the creation of system_map.md — a software structure and change-navigation map that turns
-  discovery.md and system-design.md into responsibility units, ownership boundaries, key seams, and
-  a practical change protocol for day-to-day development.
+  Guide the creation of system_map.md — an implementation-facing system cut that turns
+  discovery.md and system-design.md into responsibility units, ownership boundaries, candidate
+  domain entities, candidate component seams, and a practical change protocol for day-to-day
+  development.
   Requires discovery.md and system-design.md to exist. Use when the system shape and key design
   decisions are clear enough that the team now needs a stable structural map for implementation and
   modification work.
@@ -25,13 +26,16 @@ Its job is to expand:
 - `discovery.md`
 - `system-design.md`
 
-into a **software structure map** that developers can use to implement, maintain, and safely modify the system.
+into an **implementation-facing system cut** that developers can use to implement, maintain, and
+safely modify the system.
 
 This map should help later contributors answer:
 
 - What are the major responsibility units in the system?
 - Who owns each important state, entity, or workflow truth?
 - Which seams, handoffs, or risk boundaries matter most?
+- Which core entities or truth objects should exist before feature slicing gets detailed?
+- Which components or modules should probably be cut apart before implementation starts?
 - If something needs to change, where should they look first?
 
 It should not reopen questions like:
@@ -60,6 +64,8 @@ This skill is responsible for:
 - making core ownership explicit
 - checking whether any high-pressure state, entity, or workflow truth still lacks a stable name at map level
 - identifying important seams and handoffs
+- deriving candidate domain entities from the agreed system shape
+- deriving a candidate component / module cut from the responsibility and ownership map
 - establishing a practical change protocol
 - adding a high-level structure diagram when it materially improves clarity
 
@@ -75,9 +81,11 @@ This skill is not responsible for:
 Before finishing, you must produce:
 
 - `system_map.md`, with at least these sections:
-  `Overview`, `Interaction-To-Responsibility Mapping`, `Responsibility Map`, `Core Ownership Map`, `Boundary / Seam Map`, `Decision Consequences In Structure`, `Current Focus`, `Change Protocol`
+  `Overview`, `Interaction-To-Responsibility Mapping`, `Responsibility Map`, `Core Ownership Map`, `Candidate Domain Entities`, `Candidate Component / Module Cut`, `Boundary / Seam Map`, `Decision Consequences In Structure`, `Current Focus`, `Change Protocol`
 - a clear responsibility map
 - a clear core ownership map
+- a candidate domain-entity cut that distinguishes core truth objects from snapshots, projections, logs, or temporary views
+- a candidate component / module cut that identifies likely implementation boundaries and dependency directions
 - an explicit note of any important truth object that is still missing a stable map-level name, or a statement that none are missing
 - at least 2 meaningful seams, each with an explanation of what it protects
 - a **high-level structure diagram** when helpful
@@ -107,7 +115,7 @@ route back to the appropriate upstream skill instead of forcing a structure map 
 
 ## Workflow
 
-### Phase 1: Re-anchor The Upstream Intent
+### Phase 1: Re-anchor The Upstream Intent Briefly
 
 Briefly restate the upstream baseline for this map.
 
@@ -116,11 +124,9 @@ Summarize:
 - system purpose
 - first-version scope
 - top-level interactions
-- baseline flow
 - key system-design decisions
-- major trade-offs that affect structure
 
-The point is not to rewrite the upstream documents. The point is to confirm which system, baseline, and decision set this map is serving.
+Keep this section short. The point is not to rewrite the upstream documents. The point is only to confirm which system, baseline, and decision set this map is serving before structural cutting begins.
 
 ### Phase 2: Map Interactions To Responsibility Units
 
@@ -213,7 +219,53 @@ Strong seams often come from:
 
 When a seam remains hard to explain, ask whether the real problem is a missing named truth object rather than a missing unit boundary.
 
-### Phase 6: Capture Decision Consequences In Structure
+### Phase 6: Derive Candidate Domain Entities
+
+This phase is where the map must become implementation-facing.
+
+Starting from the responsibility and ownership map, identify the likely core entities or truth objects that implementation will revolve around.
+
+For each candidate entity, capture at least:
+
+- `Entity / Truth Object`: the stable name
+- `Why it exists`: what lasting truth or authority it represents
+- `Owned by`: which responsibility unit owns it
+- `Kind`: core entity, versioned truth, lineage record, operational record, projection, snapshot, artifact registry, or telemetry record
+- `Must evolve with`: which other entities or rules are tightly coupled to it
+- `Not this`: what nearby thing it must not be confused with
+
+Use this phase to answer questions like:
+
+- what is a long-lived business truth vs a historical snapshot?
+- what deserves its own named record vs what is only a view?
+- which objects are likely aggregates or aggregate-like ownership centers?
+
+Do not fully design table schemas here. The goal is to make implementation-shaping objects visible early enough that feature slicing is grounded in real structure rather than vague nouns.
+
+### Phase 7: Derive Candidate Component / Module Cut
+
+Translate the responsibility and ownership map into likely code-level boundaries.
+
+For each candidate component or module, capture at least:
+
+- `Component / Module`
+- `Primary responsibility`
+- `Owns or coordinates`
+- `Depends on`
+- `Must not absorb`
+- `Why it should stay separate`
+
+At this level, "component / module" may mean:
+
+- a domain area
+- an application service boundary
+- a workflow/orchestration module
+- an integration adapter
+- a presentation/admin facade
+
+The point is not to predict the exact folder tree. The point is to expose the likely implementation seams before detailed coding begins.
+
+### Phase 8: Capture Decision Consequences In Structure
 
 This section continues from `system-design.md`, but it should not re-argue the decisions themselves.
 
@@ -229,7 +281,9 @@ Examples:
 - choosing append-only history means execution truth and current projection must be separated
 - choosing a human review gate means review-result ownership and resume authority must be unambiguous
 
-### Phase 7: Add A High-Level Structure Diagram When Helpful
+Keep this section compact. It exists to explain structural consequences, not to restate the full design rationale.
+
+### Phase 9: Add A High-Level Structure Diagram When Helpful
 
 If the text alone is not clear enough, add a high-level structure diagram.
 
@@ -248,7 +302,7 @@ Do not draw:
 - infrastructure provisioning
 - a full database schema
 
-### Phase 8: Write The Change Protocol
+### Phase 10: Write The Change Protocol
 
 One of the most important values of this document is helping people know where to look first when they need to change something.
 
@@ -264,7 +318,7 @@ The goal is to help developers and AI agents know when they must go back upstrea
 
 ## Modeling Boundary
 
-At `system_map` level, the job is to decide whether an important truth/state/handoff object must be explicitly named for the structure to stay legible.
+At `system_map` level, the job is to decide whether an important truth/state/handoff object must be explicitly named for the structure to stay legible and implementable.
 
 It is not the job to fully design:
 
@@ -276,6 +330,7 @@ It is not the job to fully design:
 Use this rule:
 
 - if the system cannot discuss ownership or seams honestly without naming the object, name it now
+- if implementation cannot be cleanly cut without naming the object or boundary now, name it now
 - if the object is already named clearly and only needs detailed fields or rules, leave that for `feature-slice` and downstream clarification
 
 ## Validation
@@ -286,6 +341,8 @@ Does this document actually describe:
 
 - responsibility
 - ownership
+- candidate entities
+- candidate component boundaries
 - seams
 
 instead of reopening requirements or technology-selection arguments?
@@ -318,6 +375,8 @@ After reading the map, can a new developer tell:
 - which responsibility unit to inspect first for a given interaction change
 - which state must not be modified across an ownership boundary
 - which seams require special caution
+- which core entities are likely to exist
+- which modules probably need to be separated before implementation starts
 
 ### Diagram check
 
@@ -332,6 +391,7 @@ If it only redraws the text or smuggles runtime detail into the map, leave it ou
 - Do not reverse-engineer responsibility units from the source tree.
 - Do not confuse read access with ownership.
 - Do not promote every handoff into a seam.
+- Do not stop at abstract labels if the map is already clear enough to derive candidate entities or module cuts.
 - Do not draw the diagram as a deployment diagram or sequence diagram.
 - If upstream decisions are still unsettled, do not sneak system design work into this skill.
-- The core value of this document is helping changers understand how the system is cut and where modification risk lives.
+- The core value of this document is helping changers understand how the system is cut, which entities and modules are likely to exist, and where modification risk lives.
