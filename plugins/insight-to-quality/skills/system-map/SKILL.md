@@ -3,8 +3,9 @@ name: system-map
 description: >
   Guide the creation of system-map.md — an implementation-facing system cut that turns
   discovery.md and system-design.md into responsibility units, core data/state boundaries,
-  entity-selection rationale, interaction flows between core entities, candidate implementation
-  cuts, and a practical change protocol for day-to-day development.
+  entity-selection rationale, interaction flows between core entities, minimum data-shape
+  sketches, seam contract sketches, candidate implementation cuts, and a practical change
+  protocol for day-to-day development.
   Requires discovery.md and system-design.md to exist. Use when the system shape and key design
   decisions are clear enough that the team now needs a stable structural map for implementation and
   modification work.
@@ -75,6 +76,8 @@ This skill is responsible for:
 - identifying important seams and handoffs
 - explaining why certain entities or records must be named separately before detailed implementation
 - describing how the core entities or records interact
+- sketching the minimum data shape already forced by the structure
+- sketching the typed handoff / seam contracts already forced by the structure
 - deriving a candidate component / module cut from the responsibility and core data / state map
 - establishing a practical change protocol
 - adding a high-level structure diagram when it materially improves clarity
@@ -91,11 +94,13 @@ This skill is not responsible for:
 Before finishing, you must produce:
 
 - `system-map.md`, with at least these sections:
-  `Overview`, `Responsibility Map`, `Core Data / State Map`, `Entity Selection Notes`, `Entity Interaction Map`, `Boundary / Seam Map`, `Implementation Cut`, `Current Focus`, `Change Protocol`
+  `Overview`, `Responsibility Map`, `Core Data / State Map`, `Entity Selection Notes`, `Entity Interaction Map`, `Minimum Data Shape Sketch`, `Boundary / Seam Map`, `Seam Contract Sketch`, `Implementation Cut`, `Current Focus`, `Change Protocol`
 - a clear responsibility map
 - a clear core data / state map that says what the system manages, who is the main place responsible, what other parts only read or display it, and what currently counts as the source of record
 - a short entity-selection rationale for the items that truly need stable names before implementation
 - an entity interaction map that describes how key entities or records create, update, select, replace, or reference one another
+- a minimum data-shape sketch that lists the structural records and the minimum fields already forced by identity, lifecycle, FK/reference, status, type, or active-selection needs
+- a seam contract sketch that uses code-like typed structures, pseudo-code, or pydantic-like models to show the minimum handoff meaning across the most important seams
 - an implementation cut that identifies likely components / modules and their dependency directions
 - an explicit note of any important core data item or key state that is still missing a stable map-level name, or a statement that none are missing
 - at least 2 meaningful seams, each with an explanation of what it protects
@@ -233,7 +238,42 @@ Focus on interactions such as:
 This section is not a schema and not a sequence diagram.
 Its job is to explain how core data / state moves, changes, and references other core data / state.
 
-### Phase 6: Build The Boundary / Seam Map
+### Phase 6: Write The Minimum Data Shape Sketch
+
+Starting from the already-named entities and records, sketch only the minimum structural fields that are already forced by the system shape.
+
+This section should be direct and table-oriented.
+Do not re-explain why the entity exists if that has already been covered above.
+
+For each record, include only fields that are already justified by structure, such as:
+
+- identity fields
+- parent reference / FK-like links
+- lifecycle or status fields
+- type / kind discriminators
+- active-selection fields
+- minimum ordering or version references when structurally necessary
+
+Good examples:
+
+- `id`
+- `video_id`
+- `pipeline_run_id`
+- `status`
+- `stage_type`
+- `is_active`
+
+Do not include:
+
+- convenience/debug fields
+- full timestamps by reflex
+- indexes, nullability, defaults, or migration details
+- fields only justified by later slice-level behavior
+
+This is not the full DB schema.
+It is the minimum data-shape sketch that later implementation planning and slice work can safely build on.
+
+### Phase 7: Build The Boundary / Seam Map
 
 Keep only the seams that actually matter.
 
@@ -254,11 +294,52 @@ Strong seams often come from:
 
 When a seam remains hard to explain, ask whether the real problem is a missing named data / state object rather than a missing unit boundary.
 
-### Phase 7: Derive The Implementation Cut
+### Phase 8: Write The Seam Contract Sketch
+
+After the prose seam map, sketch the most important seam handoffs in a more code-facing form.
+
+Use one of these shapes:
+
+- pydantic-like models
+- typed pseudo-code
+- minimal request / result structs
+
+The goal is to make the handoff meaning more concrete without turning this section into full production code.
+
+For each important seam sketch, show only:
+
+- the minimum required fields
+- the key references or ids
+- the lifecycle / status / version information the receiving side relies on
+- any structurally important invariants or comments
+
+Do not write:
+
+- full endpoint contracts
+- full ORM models
+- framework-specific production code
+- exhaustive payload variants
+
+This section should answer:
+
+- what does this seam minimally carry?
+- what must the receiver be able to rely on?
+- what current-vs-history or active-vs-inactive distinction must stay visible?
+
+### Phase 9: Derive The Implementation Cut
 
 This phase is where the map turns into likely code boundaries.
 
-Starting from the responsibility map, core data / state map, and entity interactions, identify the likely components or modules that implementation will revolve around.
+Starting from the responsibility map, core data / state map, entity interactions, minimum data shape, and seam contracts, identify the likely components or modules that implementation will revolve around.
+
+Do not use this section to re-explain:
+
+- why an entity exists
+- what fields it minimally needs
+- what a seam carries
+
+Those should already be handled earlier.
+This section is only the mapping from the prior structural conclusions to likely code boundaries.
 
 For each candidate component or module, capture at least:
 
@@ -279,7 +360,7 @@ At this level, "component / module" may mean:
 
 The point is not to predict the exact folder tree. The point is to expose the likely implementation seams before detailed coding begins.
 
-### Phase 8: Add A High-Level Structure Diagram When Helpful
+### Phase 10: Add A High-Level Structure Diagram When Helpful
 
 If the text alone is not clear enough, add a high-level structure diagram.
 
@@ -298,7 +379,7 @@ Do not draw:
 - infrastructure provisioning
 - a full database schema
 
-### Phase 9: Write The Change Protocol
+### Phase 11: Write The Change Protocol
 
 One of the most important values of this document is helping people know where to look first when they need to change something.
 
@@ -318,7 +399,7 @@ At `system-map` level, the job is to decide whether an important data/state/hand
 
 It is not the job to fully design:
 
-- table schemas
+- full table schemas
 - field sets
 - endpoint contracts
 - feature-level state machines
@@ -339,6 +420,8 @@ Does this document actually describe:
 - core data / state management
 - why certain entities or records need separate names
 - how the key entities or records interact
+- the minimum structural data shape
+- the minimum seam handoff meaning
 - implementation boundaries
 - seams
 
@@ -373,6 +456,8 @@ After reading the map, can a new developer tell:
 - which core data or key state is managed where
 - why certain entities or records deserve separate names
 - how the key entities or records affect one another
+- what minimum fields the core records likely need
+- what minimum meaning the key seams must carry
 - which seams require special caution
 - which modules probably need to be separated before implementation starts
 
@@ -391,6 +476,8 @@ If it only redraws the text or smuggles runtime detail into the map, leave it ou
 - Do not promote every handoff into a seam.
 - Do not list entities without explaining why they deserve separate names.
 - Do not write the entity interaction section as a schema dump or sequence diagram.
+- Do not turn the minimum data shape sketch into a full schema design pass.
+- Do not turn the seam contract sketch into full production code or final API design.
 - Do not draw the diagram as a deployment diagram or sequence diagram.
 - If upstream decisions are still unsettled, do not sneak system design work into this skill.
-- The core value of this document is helping changers understand how the system is cut, which data and entities matter, how they interact, which modules are likely to exist, and where modification risk lives.
+- The core value of this document is helping changers understand how the system is cut, which data and entities matter, how they interact, what the minimum record and seam shapes look like, which modules are likely to exist, and where modification risk lives.

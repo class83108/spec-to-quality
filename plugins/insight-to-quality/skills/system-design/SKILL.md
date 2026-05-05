@@ -4,9 +4,9 @@ description: >
   Guide the creation of system-design.md — starting from discovery.md, system requirements,
   and the top-level interaction sketch, identify the few key design decisions that define the
   system's shape, explain why those choices are being made, and capture the main trade-offs, risks,
-  and follow-up deep-dive topics before SYSTEM_MAP work. Treat the current baseline design as
+  and follow-up deep-dive topics before system-map work. Treat the current baseline design as
   revisable: deep-dive findings may refine or change the baseline before structure is flattened in
-  SYSTEM_MAP.
+  system_map.md.
   Do NOT use for: defining what the system does (use discovery), mapping component structure
   in detail (use system-map), or implementation planning (use spec-backlog execution).
 ---
@@ -31,7 +31,7 @@ If the document does not make the decision points visible, it tends to collapse 
 
 - abstract architecture commentary that does not help a new developer
 - a restatement of `discovery.md` or system requirements
-- premature ownership or seam discussion that belongs in `SYSTEM_MAP`
+- premature ownership or seam discussion that belongs in `system-map`
 
 Read `../../references/design-decision-mindset.md` before proceeding.
 
@@ -187,7 +187,7 @@ If a decision is still unresolved, say so honestly:
 - the current choice is not settled
 - more information is needed before choosing
 
-If the alternatives analysis clearly invalidates part of the baseline, update the current system shape directly instead of carrying the contradiction into `SYSTEM_MAP`.
+If the alternatives analysis clearly invalidates part of the baseline, update the current system shape directly instead of carrying the contradiction into `system-map`.
 
 Do not let a decision write-up drift into:
 
@@ -195,7 +195,7 @@ Do not let a decision write-up drift into:
 - which entity or record should be the main source of record
 - how future code should be split into components
 
-Those belong later in `SYSTEM_MAP`.
+Those belong later in `system-map`.
 
 ### Phase 4: Capture Trade-offs And Risks
 
@@ -311,8 +311,8 @@ If a topic is simply unresolved, move it to `Open Questions`.
 - Do not treat implementation trivia as a key decision.
 - Do not list only the current choice without the alternatives.
 - Do not list only benefits while hiding trade-offs and risks.
-- Do not move early into ownership or seam expansion that belongs in `SYSTEM_MAP`.
-- Do not pre-empt `SYSTEM_MAP` by naming entity cuts, record cuts, interaction maps, or module cuts here.
+- Do not move early into ownership or seam expansion that belongs in `system-map`.
+- Do not pre-empt `system-map` by naming entity cuts, record cuts, interaction maps, or module cuts here.
 - Do not mix "not clarified yet" with "worth a deep dive."
 - Do not treat the baseline design as fixed; updating it when needed is part of this skill.
 - If the document does not help the reader understand "why this design," it is not finished.

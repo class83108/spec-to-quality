@@ -5,7 +5,7 @@ description: >
   from the shared feature work card, verify that the slice, responsibility, seams, clarification
   status, and test intent are sufficiently clear, then record readiness and the recommended next
   execution path.
-  Requires discovery.md, system-design.md, SYSTEM_MAP.md, and a feature work card.
+  Requires discovery.md, system-design.md, system_map.md, and a feature work card.
 ---
 
 # TDD Ready Check
@@ -60,7 +60,7 @@ This skill expects:
 
 - `discovery.md`
 - `system-design.md`
-- `SYSTEM_MAP.md`
+- `system_map.md`
 - `docs/features/<feature-slug>/work-card.md`
 
 If the work card does not exist, stop and route back to `feature-slice`.
@@ -76,6 +76,9 @@ From the work card, extract:
 - relevant trade-offs / risks
 - slice statement
 - primary responsibility unit
+- related core data / key states
+- related entities / records
+- relevant entity interaction path
 - related seams
 - current clarification status
 - current blockers
@@ -111,6 +114,8 @@ If not, route back to `feature-slice`.
 Ask:
 
 - Is the main responsibility unit known?
+- Are the related core data / key states known?
+- Is the relevant entity interaction path known?
 - Are the touched seams known?
 - Is it clear whether this work stays inside one box or crosses a handoff?
 
@@ -155,7 +160,7 @@ Use when the work is small and local, such as:
 
 - pure helper function
 - deterministic transformation
-- parser / formatter / mapper without design-significant seam ownership
+- parser / formatter / mapper without design-significant seam responsibility
 
 Conditions:
 
@@ -181,7 +186,7 @@ Use when the work crosses a seam or exercises handoff behavior:
 Conditions:
 
 - seam semantics are clear enough
-- responsibility ownership is known
+- responsibility is known
 
 Main risk profile:
 
@@ -323,8 +328,11 @@ The work card should contain at least:
 
 ## System Map Context
 - Primary responsibility unit: ...
+- Related core data / key states: ...
+- Related entities / records: ...
+- Relevant entity interaction path: ...
 - Related seams: ...
-- Touched ownership areas: ...
+- Touched main-management areas: ...
 
 ## Feature Slice
 - Flow id: ...

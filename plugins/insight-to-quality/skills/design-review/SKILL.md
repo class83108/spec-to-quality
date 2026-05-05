@@ -51,7 +51,7 @@ And may read when present:
 - `docs/features/<feature-slug>/behavior.md`
 - `discovery.md`
 - `system-design.md`
-- `SYSTEM_MAP.md`
+- `system_map.md`
 
 ## Required Outputs
 
@@ -105,7 +105,7 @@ If the code went beyond the slice, classify:
 
 ### Phase 3: Responsibility And Seam Review
 
-Review whether the code still matches the system structure assumed in `SYSTEM_MAP.md`.
+Review whether the code still matches the system structure assumed in `system_map.md`.
 
 Check:
 

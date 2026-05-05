@@ -6,7 +6,7 @@ description: >
   contract, and/or behavior — and update the same work card plus any needed detailed spec files.
   Escalate to a targeted deep dive when structural uncertainty remains too high for honest test
   design.
-  Requires discovery.md, system-design.md, SYSTEM_MAP.md, and a feature work card created by
+  Requires discovery.md, system-design.md, system_map.md, and a feature work card created by
   feature-slice.
 ---
 
@@ -16,7 +16,7 @@ Read before proceeding:
 
 - `../../references/architect-mindset.md`, focusing on:
   - keeping clarification at the right abstraction level
-  - keeping slice detail traceable to ownership and seams
+  - keeping slice detail traceable to main-management areas, data/state interactions, and seams
 - `../../references/implementation-mindset.md`, focusing on:
   - clarifying work before testing it
   - treating the shared work card as the active execution anchor
@@ -42,7 +42,7 @@ The skill may update one, two, or all three views depending on what the slice ac
 - **Use the shared work card as the main coordination document.** Detailed spec files are optional outputs when the clarification needs durable detail.
 - **Do not confuse exploration with formalization.** First make the slice understandable; only then write durable spec text where it helps.
 - **Keep the abstraction level above code, but below discovery.** This is pre-TDD clarification, not project-wide architecture work.
-- **Escalate when guessing begins.** If clarification cannot proceed without inventing ownership, consistency, or failure semantics, mark a deep dive instead of faking certainty.
+- **Escalate when guessing begins.** If clarification cannot proceed without inventing main-management responsibility, consistency, or failure semantics, mark a deep dive instead of faking certainty.
 
 ## Shared Document
 
@@ -80,7 +80,7 @@ This skill expects:
 
 - `discovery.md`
 - `system-design.md`
-- `SYSTEM_MAP.md`
+- `system_map.md`
 - `docs/features/<feature-slug>/work-card.md`
 
 If the work card does not exist, stop and route back to `feature-slice`.
@@ -116,7 +116,7 @@ Decide which view(s) are actually missing enough clarity to block progress.
 #### Contract is missing when:
 
 - a seam handoff is unclear
-- responsibility ownership is clear but the handoff semantics are not
+- responsibility is clear but the handoff semantics are not
 - payload / state handoff meaning is unstable
 - downstream expectations depend on a stronger seam definition
 
@@ -131,7 +131,7 @@ Do not over-clarify. Mark only the views that are truly blocking.
 
 #### Deep dive is needed when:
 
-- a boundary exists on paper but ownership is still unstable
+- a boundary exists on paper but main-management responsibility is still unstable
 - core state / entity lifecycle is unclear
 - failure, retry, compensation, or consistency semantics would still be guesswork
 - multiple slices are likely to drift into conflicting API/model language
@@ -231,8 +231,11 @@ The shared work card should already contain this structure:
 
 ## System Map Context
 - Primary responsibility unit: ...
+- Related core data / key states: ...
+- Related entities / records: ...
+- Relevant entity interaction path: ...
 - Related seams: ...
-- Touched ownership areas: ...
+- Touched main-management areas: ...
 
 ## Feature Slice
 - Flow id: ...
@@ -266,7 +269,7 @@ The shared work card should already contain this structure:
 - Ready for TDD: yes / no
 - Blockers: ...
 - Deep dive needed: yes / no
-- Deep dive focus: [ownership / failure semantics / consistency / shared language / none]
+- Deep dive focus: [main-management responsibility / failure semantics / consistency / shared language / none]
 
 ## Next Step
 - Route to: ...
