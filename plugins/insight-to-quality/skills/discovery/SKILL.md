@@ -40,13 +40,16 @@ This skill is responsible for:
 - surfacing the first-version system requirements
 - sketching the system's top-level interactions or API shape
 - converging that sketch into a stable top-level command/query surface for downstream discussion
-- sketching the baseline flow or high-level design shape
+- sketching the baseline flow or high-level system behavior shape
 - translating that understanding into a stable `discovery.md`
 
 This skill is not responsible for:
 
 - making the key system-design trade-off decisions
+- explaining why one major design option should be chosen over another
 - deciding responsibility boundaries or seams
+- deciding which entities or records deserve separate names
+- cutting implementation modules or component boundaries
 - writing detailed specs or implementation plans
 
 ## Outputs
@@ -62,7 +65,7 @@ Before this skill is complete, you must produce all of the following:
 - A **Top-Level Command / Query Surface Summary**:
   a short normalized list of the stable command and query names the later skills should reuse, including which commands create or advance workflow truth and which queries are read-only projections
 - A **Baseline Flow / High-Level Design Sketch**:
-  the current best-effort view of how the main interactions connect, what the main processing path looks like, and which major components or external capabilities seem to be involved
+  the current best-effort view of how the main interactions connect and what the main processing path looks like, without turning into design rationale, responsibility slicing, or implementation structure
 - `discovery.md` with these sections:
   Functional Goals, Non-Goals, Non-Functional Requirements, Constraints, Open Questions
 - User confirmation that the resulting `discovery.md` is acceptable
@@ -217,16 +220,17 @@ Do not turn this into:
 - event contract design
 
 The goal is to prevent later skills from re-describing the same interaction shape with drifting vocabulary.
+Later skills should reuse these stable names instead of replacing them with UI wording, temporary aliases, or implementation-specific labels.
 
-#### Phase 2C: Baseline Flow / High-Level Design Sketch
+#### Phase 2C: Baseline Flow / High-Level System Behavior Sketch
 
-Once the interaction sketch is visible, produce a lightweight baseline design view.
+Once the interaction sketch is visible, produce a lightweight baseline behavior view.
 
 This is not the final architecture and not a detailed component map. It is the current best-effort answer to:
 
 - how the main flow probably runs end-to-end
 - how the major interactions connect
-- what major components, stages, or external capabilities are likely involved
+- what major stages or external capabilities seem likely to be involved at a high level
 
 Examples:
 
@@ -249,8 +253,10 @@ Do not over-specify:
 - detailed data schemas
 - internal class/module structure
 - final infrastructure topology
+- responsibility ownership
+- why one design option is better than another
 
-The goal is to create a baseline design that the next skill can challenge, justify, and revise.
+The goal is to create a baseline system shape that the next skill can challenge, justify, and revise.
 
 ### Phase 3: Goals Synthesis
 

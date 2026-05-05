@@ -2,9 +2,9 @@
 name: system-map
 description: >
   Guide the creation of system_map.md — an implementation-facing system cut that turns
-  discovery.md and system-design.md into responsibility units, ownership boundaries, candidate
-  domain entities, candidate component seams, and a practical change protocol for day-to-day
-  development.
+  discovery.md and system-design.md into responsibility units, core data/state boundaries,
+  entity-selection rationale, interaction flows between core entities, candidate implementation
+  cuts, and a practical change protocol for day-to-day development.
   Requires discovery.md and system-design.md to exist. Use when the system shape and key design
   decisions are clear enough that the team now needs a stable structural map for implementation and
   modification work.
@@ -32,9 +32,11 @@ safely modify the system.
 This map should help later contributors answer:
 
 - What are the major responsibility units in the system?
-- Who owns each important state, entity, or workflow truth?
+- Which core data or key states does the system actually manage?
+- Which part of the system is the main place responsible for each core data item or key state?
+- How do the core entities or records affect one another?
 - Which seams, handoffs, or risk boundaries matter most?
-- Which core entities or truth objects should exist before feature slicing gets detailed?
+- Which entities or records need stable names before feature slicing gets detailed?
 - Which components or modules should probably be cut apart before implementation starts?
 - If something needs to change, where should they look first?
 
@@ -51,8 +53,15 @@ Read `../../references/architect-mindset.md` before proceeding. Focus especially
 
 - responsibilities over containers
 - boundaries around change and failure
-- explicit ownership
+- explicit responsibility for core data and state
 - structural traceability back to upstream intent
+
+Prefer plain implementation-facing language over architecture jargon.
+When possible, use terms like:
+
+- `核心資料` or `關鍵狀態` instead of `truth`
+- `主責管理` or `以這裡為準` instead of `owner`
+- `顯示用資料`, `對照資料`, or `衍生結果` instead of `projection`
 
 ## Purpose
 
@@ -61,11 +70,12 @@ Use this skill to turn a known system shape and known design decisions into a st
 This skill is responsible for:
 
 - defining the major responsibility units
-- making core ownership explicit
-- checking whether any high-pressure state, entity, or workflow truth still lacks a stable name at map level
+- making core data / state responsibility explicit
+- checking whether any high-pressure state, entity, or workflow data still lacks a stable name at map level
 - identifying important seams and handoffs
-- deriving candidate domain entities from the agreed system shape
-- deriving a candidate component / module cut from the responsibility and ownership map
+- explaining why certain entities or records must be named separately before detailed implementation
+- describing how the core entities or records interact
+- deriving a candidate component / module cut from the responsibility and core data / state map
 - establishing a practical change protocol
 - adding a high-level structure diagram when it materially improves clarity
 
@@ -81,12 +91,13 @@ This skill is not responsible for:
 Before finishing, you must produce:
 
 - `system_map.md`, with at least these sections:
-  `Overview`, `Interaction-To-Responsibility Mapping`, `Responsibility Map`, `Core Ownership Map`, `Candidate Domain Entities`, `Candidate Component / Module Cut`, `Boundary / Seam Map`, `Decision Consequences In Structure`, `Current Focus`, `Change Protocol`
+  `Overview`, `Responsibility Map`, `Core Data / State Map`, `Entity Selection Notes`, `Entity Interaction Map`, `Boundary / Seam Map`, `Implementation Cut`, `Current Focus`, `Change Protocol`
 - a clear responsibility map
-- a clear core ownership map
-- a candidate domain-entity cut that distinguishes core truth objects from snapshots, projections, logs, or temporary views
-- a candidate component / module cut that identifies likely implementation boundaries and dependency directions
-- an explicit note of any important truth object that is still missing a stable map-level name, or a statement that none are missing
+- a clear core data / state map that says what the system manages, who is the main place responsible, what other parts only read or display it, and what currently counts as the source of record
+- a short entity-selection rationale for the items that truly need stable names before implementation
+- an entity interaction map that describes how key entities or records create, update, select, replace, or reference one another
+- an implementation cut that identifies likely components / modules and their dependency directions
+- an explicit note of any important core data item or key state that is still missing a stable map-level name, or a statement that none are missing
 - at least 2 meaningful seams, each with an explanation of what it protects
 - a **high-level structure diagram** when helpful
   - show only responsibility units, ownership, top-level handoffs, and facade-to-owner relationships
@@ -128,20 +139,7 @@ Summarize:
 
 Keep this section short. The point is not to rewrite the upstream documents. The point is only to confirm which system, baseline, and decision set this map is serving before structural cutting begins.
 
-### Phase 2: Map Interactions To Responsibility Units
-
-Start from top-level interactions, not from the source tree.
-
-For each important interaction, answer:
-
-- who receives it first?
-- who truly owns the state change or workflow authority it triggers?
-- which parts are only facades?
-- which parts are actual owners?
-
-This avoids mixing UI, API entrypoints, workflow control, and data ownership into one blurred layer.
-
-### Phase 3: Build The Responsibility Map
+### Phase 2: Build The Responsibility Map
 
 Identify the main responsibility units.
 
@@ -167,25 +165,25 @@ Good example granularity:
 - Asset lifecycle management
 - External compute adapter
 
-### Phase 4: Build The Core Ownership Map
+### Phase 3: Build The Core Data / State Map
 
-Identify the important state, entity, or workflow truth that the system cannot afford to handle ambiguously.
+Identify the important core data and key states that the system cannot afford to handle ambiguously.
 
 For each important item, capture:
 
 - what it is
-- who the primary owner is
-- where the source of truth lives
-- who is only a consumer, projection, or derived view
+- which responsibility unit is the main place responsible for managing it
+- where the source of record lives
+- which other parts only read it, display it, or derive data from it
 - which handoff is most likely to fail
 
 Keep these distinctions sharp:
 
-- readable does not mean owned
+- readable does not mean `主責管理`
 - queryable does not mean writable
-- projected does not mean source of truth
+- displayed data does not mean source of record
 
-Also check whether any high-pressure truth is currently described only as:
+Also check whether any high-pressure data / state is currently described only as:
 
 - UI behavior
 - workflow prose
@@ -194,11 +192,48 @@ Also check whether any high-pressure truth is currently described only as:
 
 If so, do not jump to feature-level schema design. Instead:
 
-- name the truth at map level
-- identify its likely owner
+- name the data or state at map level
+- identify which unit should main-manage it
 - state whether the current map is sufficient or must be revised before feature slicing
 
-### Phase 5: Build The Boundary / Seam Map
+### Phase 4: Write Entity Selection Notes
+
+Do not start by listing every possible entity.
+
+Instead, explain why certain items need to exist as separately named entities or records before implementation details begin.
+
+Use criteria such as:
+
+- it represents long-lived core data
+- it has its own identity
+- it has its own lifecycle
+- it is the main anchor for a key rule set or state transition
+- the system would become ambiguous if this were left as just a field, temporary payload, or display-only structure
+
+For each selected item, capture at least:
+
+- `項目`
+- `為什麼要獨立命名`
+- `如果不獨立命名會失真什麼`
+
+Keep this section selective. It should justify the key entities or records, not re-list every data structure in the system.
+
+### Phase 5: Write The Entity Interaction Map
+
+Before writing seams, describe how the key entities or records affect one another.
+
+Focus on interactions such as:
+
+- one entity creates another
+- one record selects the currently effective version of another
+- one workflow step updates or replaces another piece of core data
+- one execution record produces artifacts, telemetry, or history records
+- one decision turns current data into historical comparison data
+
+This section is not a schema and not a sequence diagram.
+Its job is to explain how core data / state moves, changes, and references other core data / state.
+
+### Phase 6: Build The Boundary / Seam Map
 
 Keep only the seams that actually matter.
 
@@ -212,45 +247,24 @@ Each seam should answer at least:
 
 Strong seams often come from:
 
-- ownership transfer
+- handoff between different main-managing units
 - workflow authority handoff
-- translation between current truth and historical truth
+- translation between current effective data and historical comparison data
 - a gate before an expensive or irreversible downstream action
 
-When a seam remains hard to explain, ask whether the real problem is a missing named truth object rather than a missing unit boundary.
+When a seam remains hard to explain, ask whether the real problem is a missing named data / state object rather than a missing unit boundary.
 
-### Phase 6: Derive Candidate Domain Entities
+### Phase 7: Derive The Implementation Cut
 
-This phase is where the map must become implementation-facing.
+This phase is where the map turns into likely code boundaries.
 
-Starting from the responsibility and ownership map, identify the likely core entities or truth objects that implementation will revolve around.
-
-For each candidate entity, capture at least:
-
-- `Entity / Truth Object`: the stable name
-- `Why it exists`: what lasting truth or authority it represents
-- `Owned by`: which responsibility unit owns it
-- `Kind`: core entity, versioned truth, lineage record, operational record, projection, snapshot, artifact registry, or telemetry record
-- `Must evolve with`: which other entities or rules are tightly coupled to it
-- `Not this`: what nearby thing it must not be confused with
-
-Use this phase to answer questions like:
-
-- what is a long-lived business truth vs a historical snapshot?
-- what deserves its own named record vs what is only a view?
-- which objects are likely aggregates or aggregate-like ownership centers?
-
-Do not fully design table schemas here. The goal is to make implementation-shaping objects visible early enough that feature slicing is grounded in real structure rather than vague nouns.
-
-### Phase 7: Derive Candidate Component / Module Cut
-
-Translate the responsibility and ownership map into likely code-level boundaries.
+Starting from the responsibility map, core data / state map, and entity interactions, identify the likely components or modules that implementation will revolve around.
 
 For each candidate component or module, capture at least:
 
 - `Component / Module`
 - `Primary responsibility`
-- `Owns or coordinates`
+- `Main-manages or coordinates`
 - `Depends on`
 - `Must not absorb`
 - `Why it should stay separate`
@@ -265,25 +279,7 @@ At this level, "component / module" may mean:
 
 The point is not to predict the exact folder tree. The point is to expose the likely implementation seams before detailed coding begins.
 
-### Phase 8: Capture Decision Consequences In Structure
-
-This section continues from `system-design.md`, but it should not re-argue the decisions themselves.
-
-For each important prior decision, answer:
-
-- which responsibility units does this decision force into existence?
-- which ownership boundaries must become explicit because of it?
-- which seams become important because of it?
-
-Examples:
-
-- choosing dynamic redirect means the handoff around cache, lookup, and current mapping truth must be explicit
-- choosing append-only history means execution truth and current projection must be separated
-- choosing a human review gate means review-result ownership and resume authority must be unambiguous
-
-Keep this section compact. It exists to explain structural consequences, not to restate the full design rationale.
-
-### Phase 9: Add A High-Level Structure Diagram When Helpful
+### Phase 8: Add A High-Level Structure Diagram When Helpful
 
 If the text alone is not clear enough, add a high-level structure diagram.
 
@@ -302,7 +298,7 @@ Do not draw:
 - infrastructure provisioning
 - a full database schema
 
-### Phase 10: Write The Change Protocol
+### Phase 9: Write The Change Protocol
 
 One of the most important values of this document is helping people know where to look first when they need to change something.
 
@@ -318,7 +314,7 @@ The goal is to help developers and AI agents know when they must go back upstrea
 
 ## Modeling Boundary
 
-At `system_map` level, the job is to decide whether an important truth/state/handoff object must be explicitly named for the structure to stay legible and implementable.
+At `system_map` level, the job is to decide whether an important data/state/handoff object must be explicitly named for the structure to stay legible and implementable.
 
 It is not the job to fully design:
 
@@ -329,7 +325,7 @@ It is not the job to fully design:
 
 Use this rule:
 
-- if the system cannot discuss ownership or seams honestly without naming the object, name it now
+- if the system cannot discuss who main-manages a core data item or key state without naming the object, name it now
 - if implementation cannot be cleanly cut without naming the object or boundary now, name it now
 - if the object is already named clearly and only needs detailed fields or rules, leave that for `feature-slice` and downstream clarification
 
@@ -340,16 +336,17 @@ Use this rule:
 Does this document actually describe:
 
 - responsibility
-- ownership
-- candidate entities
-- candidate component boundaries
+- core data / state management
+- why certain entities or records need separate names
+- how the key entities or records interact
+- implementation boundaries
 - seams
 
 instead of reopening requirements or technology-selection arguments?
 
-### Ownership check
+### Data / state check
 
-Does every important state, entity, or workflow truth have a clear owner?
+Does every important core data item, key state, or workflow record have a clear main-managing unit?
 
 If not, the map is still too weak to be useful.
 
@@ -373,9 +370,10 @@ If not, the structure is probably being cut by intuition instead of intent.
 After reading the map, can a new developer tell:
 
 - which responsibility unit to inspect first for a given interaction change
-- which state must not be modified across an ownership boundary
+- which core data or key state is managed where
+- why certain entities or records deserve separate names
+- how the key entities or records affect one another
 - which seams require special caution
-- which core entities are likely to exist
 - which modules probably need to be separated before implementation starts
 
 ### Diagram check
@@ -389,9 +387,10 @@ If it only redraws the text or smuggles runtime detail into the map, leave it ou
 - Do not write this document as an architecture essay.
 - Do not reopen upstream decisions.
 - Do not reverse-engineer responsibility units from the source tree.
-- Do not confuse read access with ownership.
+- Do not confuse read access with main-management responsibility.
 - Do not promote every handoff into a seam.
-- Do not stop at abstract labels if the map is already clear enough to derive candidate entities or module cuts.
+- Do not list entities without explaining why they deserve separate names.
+- Do not write the entity interaction section as a schema dump or sequence diagram.
 - Do not draw the diagram as a deployment diagram or sequence diagram.
 - If upstream decisions are still unsettled, do not sneak system design work into this skill.
-- The core value of this document is helping changers understand how the system is cut, which entities and modules are likely to exist, and where modification risk lives.
+- The core value of this document is helping changers understand how the system is cut, which data and entities matter, how they interact, which modules are likely to exist, and where modification risk lives.

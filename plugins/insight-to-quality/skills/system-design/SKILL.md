@@ -59,6 +59,9 @@ This skill is not responsible for:
 
 - redefining goals or system requirements
 - cutting the system into responsibility units
+- deciding which core data items, records, or states deserve separate stable names
+- mapping how entities or records interact in detail
+- cutting implementation modules or component boundaries
 - producing low-level specs or an implementation plan
 
 ## Outputs
@@ -107,7 +110,13 @@ Review and summarize:
 - the top-level API or interaction sketch
 - the currently assumed major technical path
 
-The goal here is not to rewrite the previous document. The goal is to create a shared baseline so the later decision discussion has something concrete to stand on.
+Keep this section lean. The goal here is not to rewrite the previous document. The goal is to create a shared baseline so the later decision discussion has something concrete to stand on.
+
+Do not use this section to:
+
+- restate the full requirements set
+- expand into responsibility boundaries
+- pre-cut entities, records, or modules
 
 Before moving on, a new developer should already be able to answer:
 
@@ -180,6 +189,14 @@ If a decision is still unresolved, say so honestly:
 
 If the alternatives analysis clearly invalidates part of the baseline, update the current system shape directly instead of carrying the contradiction into `SYSTEM_MAP`.
 
+Do not let a decision write-up drift into:
+
+- which module should own the behavior
+- which entity or record should be the main source of record
+- how future code should be split into components
+
+Those belong later in `SYSTEM_MAP`.
+
 ### Phase 4: Capture Trade-offs And Risks
 
 Do not present any decision as a one-way win. Every important decision should include cost.
@@ -238,6 +255,14 @@ If the document mostly restates:
 
 then it is not done yet.
 
+If the document starts deciding:
+
+- which core data / states are managed where
+- which entities or records should be named separately
+- how modules or seams should be cut
+
+then it has also gone too far.
+
 ## Validation
 
 ### Traceability check
@@ -287,6 +312,7 @@ If a topic is simply unresolved, move it to `Open Questions`.
 - Do not list only the current choice without the alternatives.
 - Do not list only benefits while hiding trade-offs and risks.
 - Do not move early into ownership or seam expansion that belongs in `SYSTEM_MAP`.
+- Do not pre-empt `SYSTEM_MAP` by naming entity cuts, record cuts, interaction maps, or module cuts here.
 - Do not mix "not clarified yet" with "worth a deep dive."
 - Do not treat the baseline design as fixed; updating it when needed is part of this skill.
 - If the document does not help the reader understand "why this design," it is not finished.

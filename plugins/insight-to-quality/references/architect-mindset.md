@@ -39,7 +39,7 @@ A weak abstraction:
 
 - hides important differences
 - bundles unrelated concerns
-- forces readers to guess where truth actually lives
+- forces readers to guess where the real source of record actually lives
 
 Useful check:
 
@@ -75,8 +75,8 @@ If a boundary fails these tests, it is probably drawn in the wrong place.
 
 Architectural structure should first answer:
 
-- who owns this responsibility?
-- who owns this state?
+- who main-manages this responsibility?
+- who main-manages this core data or key state?
 - who decides this rule?
 - who handles failure here?
 
@@ -84,7 +84,7 @@ Technical containers such as modules, services, layers, or directories are secon
 
 Good structure is responsibility-first:
 
-- ownership is visible
+- main-management responsibility is visible
 - handoffs are explainable
 - change impact is easier to predict
 
@@ -122,9 +122,9 @@ Architecture should be shaped by real pressure, not by aesthetic symmetry.
 
 ---
 
-## 6. Distinguish Views From Ownership
+## 6. Distinguish Display / Analysis Views From Main Management
 
-Many useful ways of analyzing a system are not the same as ownership structure.
+Many useful ways of analyzing a system are not the same as the system's main management structure.
 
 Examples of analysis views:
 
@@ -136,15 +136,24 @@ Examples of analysis views:
 These are useful for understanding the system.
 But they do not automatically define the main architectural units.
 
-Ownership structure should answer:
+The main management structure should answer:
 
 - who receives work
-- who owns state
+- who main-manages core data or key state
 - who advances the workflow
 - who handles recovery
 - who delivers the result
 
-Do not mistake a useful analysis lens for a stable ownership boundary.
+Do not mistake a useful analysis lens, display shape, or report shape for a stable management boundary.
+
+Useful phrasing at system-map level is often:
+
+- `核心資料`
+- `關鍵狀態`
+- `主責管理`
+- `以哪裡為準`
+- `顯示用資料`
+- `衍生結果`
 
 ---
 
@@ -166,7 +175,51 @@ It is a way to keep local decisions from drifting away from system intent.
 
 ---
 
-## 8. Do Not Abstract Noise
+## 8. Name Entities Only When The System Needs Them
+
+Do not start from tables, classes, or framework objects.
+Start from the system's need to keep certain data or state stable, traceable, and changeable.
+
+A thing is more likely to deserve its own stable name when:
+
+- it represents long-lived core data
+- it has its own identity
+- it has its own lifecycle
+- it is the main anchor for an important rule set or state transition
+- the system becomes ambiguous if it is treated as just a field, payload, or display-only structure
+
+Ask:
+
+- What would break or become unclear if this were not named separately?
+- Is this something the system must keep as a durable record?
+- Is this currently effective data, historical comparison data, or only a display shape?
+
+Do not name entities just because the implementation could store them separately.
+Name them when the system needs them to stay structurally honest.
+
+---
+
+## 9. Understand Interactions Before Drawing Seams
+
+Before drawing a seam, understand how the important data, records, and state changes interact.
+
+Useful questions:
+
+- What creates this record?
+- What updates the currently effective data?
+- What turns current data into historical comparison data?
+- What selects the active version?
+- What produces artifacts, telemetry, or cleanup work?
+
+A seam should usually protect one of these high-pressure interactions.
+If the interaction is still unclear, the seam is probably premature or mislabeled.
+
+Do not jump straight from a noun list to boundaries.
+First understand what changes what, what references what, and where the fragile handoffs actually are.
+
+---
+
+## 10. Do Not Abstract Noise
 
 Premature abstraction is a form of information loss.
 
@@ -184,7 +237,7 @@ If people still need the raw detail to do real work, the abstraction is probably
 
 ---
 
-## 9. Ask Better Questions Before Designing
+## 11. Ask Better Questions Before Designing
 
 Discovery quality depends more on question quality than answer quality.
 
@@ -202,7 +255,7 @@ Good questions pull hidden assumptions into the open.
 
 ---
 
-## 10. Respect Earned Complexity
+## 12. Respect Earned Complexity
 
 Some complexity is accidental and should be removed.
 Some complexity is earned because the system is protecting something real.
@@ -220,7 +273,7 @@ The burden is to explain what the complexity is buying.
 
 ---
 
-## 11. Revisit The Architecture When Assumptions Move
+## 13. Revisit The Architecture When Assumptions Move
 
 Architectural thinking is not one-and-done.
 
