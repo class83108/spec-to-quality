@@ -1,7 +1,7 @@
 ---
 name: system-map
 description: >
-  Guide the creation of SYSTEM_MAP.md — a software structure and change-navigation map that turns
+  Guide the creation of system_map.md — a software structure and change-navigation map that turns
   discovery.md and system-design.md into responsibility units, ownership boundaries, key seams, and
   a practical change protocol for day-to-day development.
   Requires discovery.md and system-design.md to exist. Use when the system shape and key design
@@ -14,9 +14,9 @@ description: >
 
 # System Map
 
-> **Output contract:** The skill's conversational output must be in Traditional Chinese, and every section written into `SYSTEM_MAP.md` must also be in Traditional Chinese.
+> **Output contract:** The skill's conversational output must be in Traditional Chinese, and every section written into `system_map.md` must also be in Traditional Chinese.
 
-You are guiding the user through the creation of **SYSTEM_MAP.md**.
+You are guiding the user through the creation of **system_map.md**.
 
 This document is not another round of requirements analysis, and it is not another round of system design.
 
@@ -74,7 +74,7 @@ This skill is not responsible for:
 
 Before finishing, you must produce:
 
-- `SYSTEM_MAP.md`, with at least these sections:
+- `system_map.md`, with at least these sections:
   `Overview`, `Interaction-To-Responsibility Mapping`, `Responsibility Map`, `Core Ownership Map`, `Boundary / Seam Map`, `Decision Consequences In Structure`, `Current Focus`, `Change Protocol`
 - a clear responsibility map
 - a clear core ownership map
@@ -264,7 +264,7 @@ The goal is to help developers and AI agents know when they must go back upstrea
 
 ## Modeling Boundary
 
-At `SYSTEM_MAP` level, the job is to decide whether an important truth/state/handoff object must be explicitly named for the structure to stay legible.
+At `system_map` level, the job is to decide whether an important truth/state/handoff object must be explicitly named for the structure to stay legible.
 
 It is not the job to fully design:
 
