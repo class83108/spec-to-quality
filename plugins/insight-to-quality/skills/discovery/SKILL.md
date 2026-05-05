@@ -39,6 +39,7 @@ This skill is responsible for:
 - clarifying the problem being solved
 - surfacing the first-version system requirements
 - sketching the system's top-level interactions or API shape
+- converging that sketch into a stable top-level command/query surface for downstream discussion
 - sketching the baseline flow or high-level design shape
 - translating that understanding into a stable `discovery.md`
 
@@ -58,6 +59,8 @@ Before this skill is complete, you must produce all of the following:
   first-version inputs/outputs, core interaction or processing model, required decisions/control points, state that must be preserved, required recovery/change behavior
 - A **Top-Level API / Interaction Sketch**:
   the major resources, commands, queries, or processing entry points the first version is likely to expose, plus which interactions are synchronous vs accepted-then-complete-later where that distinction matters
+- A **Top-Level Command / Query Surface Summary**:
+  a short normalized list of the stable command and query names the later skills should reuse, including which commands create or advance workflow truth and which queries are read-only projections
 - A **Baseline Flow / High-Level Design Sketch**:
   the current best-effort view of how the main interactions connect, what the main processing path looks like, and which major components or external capabilities seem to be involved
 - `discovery.md` with these sections:
@@ -199,6 +202,21 @@ Do not over-specify:
 - internal service boundaries
 
 The goal is that the next skill can ask "why this interaction shape?" instead of inventing the shape from scratch.
+
+Before leaving this phase, normalize the interaction sketch into a reusable command/query surface:
+
+- give each major command a stable, concise name
+- give each major query or read model a stable, concise name
+- note which commands create, advance, approve, rerun, or otherwise change workflow truth
+- note which interactions are strictly read-only
+
+Do not turn this into:
+
+- endpoint design
+- payload schema design
+- event contract design
+
+The goal is to prevent later skills from re-describing the same interaction shape with drifting vocabulary.
 
 #### Phase 2C: Baseline Flow / High-Level Design Sketch
 

@@ -58,6 +58,7 @@ This skill is responsible for:
 
 - defining the major responsibility units
 - making core ownership explicit
+- checking whether any high-pressure state, entity, or workflow truth still lacks a stable name at map level
 - identifying important seams and handoffs
 - establishing a practical change protocol
 - adding a high-level structure diagram when it materially improves clarity
@@ -77,6 +78,7 @@ Before finishing, you must produce:
   `Overview`, `Interaction-To-Responsibility Mapping`, `Responsibility Map`, `Core Ownership Map`, `Boundary / Seam Map`, `Decision Consequences In Structure`, `Current Focus`, `Change Protocol`
 - a clear responsibility map
 - a clear core ownership map
+- an explicit note of any important truth object that is still missing a stable map-level name, or a statement that none are missing
 - at least 2 meaningful seams, each with an explanation of what it protects
 - a **high-level structure diagram** when helpful
   - show only responsibility units, ownership, top-level handoffs, and facade-to-owner relationships
@@ -177,6 +179,19 @@ Keep these distinctions sharp:
 - queryable does not mean writable
 - projected does not mean source of truth
 
+Also check whether any high-pressure truth is currently described only as:
+
+- UI behavior
+- workflow prose
+- a seam risk without a named object
+- a vague "state" spread across multiple units
+
+If so, do not jump to feature-level schema design. Instead:
+
+- name the truth at map level
+- identify its likely owner
+- state whether the current map is sufficient or must be revised before feature slicing
+
 ### Phase 5: Build The Boundary / Seam Map
 
 Keep only the seams that actually matter.
@@ -195,6 +210,8 @@ Strong seams often come from:
 - workflow authority handoff
 - translation between current truth and historical truth
 - a gate before an expensive or irreversible downstream action
+
+When a seam remains hard to explain, ask whether the real problem is a missing named truth object rather than a missing unit boundary.
 
 ### Phase 6: Capture Decision Consequences In Structure
 
@@ -244,6 +261,22 @@ At minimum, distinguish:
 - implementation-only change
 
 The goal is to help developers and AI agents know when they must go back upstream instead of patching over structural problems in local code.
+
+## Modeling Boundary
+
+At `SYSTEM_MAP` level, the job is to decide whether an important truth/state/handoff object must be explicitly named for the structure to stay legible.
+
+It is not the job to fully design:
+
+- table schemas
+- field sets
+- endpoint contracts
+- feature-level state machines
+
+Use this rule:
+
+- if the system cannot discuss ownership or seams honestly without naming the object, name it now
+- if the object is already named clearly and only needs detailed fields or rules, leave that for `feature-slice` and downstream clarification
 
 ## Validation
 

@@ -28,6 +28,7 @@ Its job is to turn a feature idea into answers for:
 - which prior system-design decisions constrain it
 - which primary responsibility unit it lands in
 - which seams it is likely to touch
+- which already-named truth, state, or handoff objects it changes
 - what the actual first implementable slice should be
 - whether the earliest next step is upstream revision, spec clarification, or TDD readiness
 
@@ -65,6 +66,7 @@ Before finishing, you must produce:
 - [ ] mapping to relevant prior system-design decisions, or an explicit note that `system-design` may need to be revisited
 - [ ] the primary responsibility unit from `SYSTEM_MAP.md`
 - [ ] the likely touched seams from `SYSTEM_MAP.md`
+- [ ] the touched truth/state/handoff objects already recognized by `SYSTEM_MAP.md`, or an explicit note that `system-map` must be revisited because they are still unnamed
 - [ ] a created or updated `docs/features/<feature-slug>/work-card.md`
 - [ ] the selected next step:
   `spec-clarification`, `tdd-ready-check`, or route back to `discovery` / `system-design` / `system-map`
@@ -153,9 +155,10 @@ At minimum, answer:
 - which primary responsibility unit owns the work
 - which seams are likely to be touched
 - which state, entity, or workflow truth will change
+- whether those truths already have stable map-level names
 - whether the current ownership model is clear enough
 
-If `SYSTEM_MAP.md` cannot clearly point to an owner or seam, route back to `system-map`.
+If `SYSTEM_MAP.md` cannot clearly point to an owner, seam, or named truth object, route back to `system-map`.
 
 ### Phase 6: Define The Current Slice
 
@@ -175,6 +178,7 @@ The goal here is:
 
 - coarse but implementable
 - not yet a full spec
+- grounded in already-recognized map-level truth instead of inventing brand-new structural objects casually
 
 If the start, end, or main risk still cannot be stated clearly, the slice is not stable enough.
 
@@ -185,6 +189,7 @@ After anchoring, choose the earliest next missing layer.
 #### Route to `spec-clarification` when:
 
 - the slice is aligned upstream
+- the relevant truth objects are already named at map level
 - but surface, contract, or behavior still contains important unknowns
 
 #### Route to `tdd-ready-check` when:
@@ -197,7 +202,7 @@ After anchoring, choose the earliest next missing layer.
 
 - the feature no longer fits `discovery.md`
 - the feature no longer fits `system-design.md`
-- `SYSTEM_MAP.md` cannot support the owner or seam explanation
+- `SYSTEM_MAP.md` cannot support the owner, seam, or named-truth explanation
 
 ### Phase 8: Work Card Sync
 
@@ -221,6 +226,8 @@ Create or update `docs/features/<feature-slug>/work-card.md` with:
 - Primary responsibility unit: [...]
 - Related seams: [...]
 - Touched ownership areas: [...]
+- Touched named truths / states / handoff objects: [...]
+- Missing map-level naming?: no / [explain]
 
 ## Feature Slice
 - Flow id: [...]
