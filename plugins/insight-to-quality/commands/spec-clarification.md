@@ -1,5 +1,5 @@
 ---
-description: Clarify the missing surface, contract, and/or behavior details for one feature slice before Gherkin or TDD
+description: Legacy command. Prefer `feature-brief` for the current workflow unless an older work-card-based flow is still in use.
 ---
 
-Trigger the spec-clarification skill. Read the shared feature work card, determine which clarification views are actually blocking progress, update the same work card, and create only the detailed spec files that are truly needed.
+Trigger the legacy spec-clarification skill only when working with the older work-card-based flow. For the current workflow, prefer keeping clarification inside `feature-brief`.

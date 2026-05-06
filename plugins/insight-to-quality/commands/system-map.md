@@ -1,5 +1,5 @@
 ---
-description: Guide the creation of SYSTEM_MAP.md — a navigation map for development centered on interaction-to-owner mapping, responsibility units, key seams, and change protocol
+description: Guide the creation of system-map.md — an implementation-facing structure map covering responsibilities, core data, interactions, minimum data shape, seam contracts, and implementation cut
 ---
 
-Trigger the system-map skill. Synthesize discovery.md and system-design.md into a map from top-level interactions to owners, a responsibility map, a boundary map, and a change protocol that developers can use to navigate change safely.
+Trigger the system-map skill. Synthesize discovery.md and system-design.md into an implementation-facing structure map: responsibilities, core data / state areas, entity interactions, minimum data shape, seam contracts, implementation cut, and change protocol.

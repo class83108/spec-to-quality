@@ -5,22 +5,35 @@ Use this plugin as a layered flow, not as a bag of unrelated skills:
 1. `discovery`
 2. `system-design`
 3. `system-map`
-4. `feature-slice`
-5. `spec-clarification`
-6. `tdd-ready-check`
-7. `gherkin-extraction` or direct `tdd-workflow`
+4. `implementation-planning`
+5. `feature-brief`
+6. direct `tdd-workflow`
 8. `design-review`
+
+Optional tools:
+
+- `gherkin-extraction` when a slice truly benefits from acceptance-spec wording
+
+Legacy / transitional tools:
+
+- `feature-slice`
+- `spec-clarification`
+- `tdd-ready-check`
 
 This is not a rigid waterfall.
 Move upward when the uncertainty belongs to a higher layer.
 
 ## Shared Anchor
 
-For feature implementation work, the shared coordination document is:
+For project-level implementation ordering, the shared coordination document is:
 
-- `docs/features/<feature-slug>/work-card.md`
+- `docs/implementation-plan.md`
 
-Prefer updating the work card over scattering execution state into ad hoc notes.
+For current execution work, the shared coordination document is:
+
+- `docs/features/<feature-slug>/brief.md`
+
+Prefer updating these documents over scattering execution state into ad hoc notes.
 
 ## Routing Heuristic
 
@@ -29,9 +42,9 @@ When work is blocked or assumptions move, route to the layer where the problem a
 - system purpose, scope, top-level interaction, or baseline shape changed -> `discovery`
 - key design decision, alternative, trade-off, or deep-dive conclusion changed -> `system-design`
 - ownership, responsibility split, or seam shape changed -> `system-map`
-- the feature is still too broad or the first slice is wrong -> `feature-slice`
-- surface / contract / behavior is still unclear -> `spec-clarification`
-- test strategy or readiness is unclear -> `tdd-ready-check`
+- project stage order, enablement-vs-behavior sequencing, or exit criteria changed -> `implementation-planning`
+- the current work item is still too broad or the brief is not sharp enough -> `feature-brief`
+- acceptance-spec wording would materially help a user-visible slice -> `gherkin-extraction`
 
 Do not compensate for an upstream problem with local code.
 

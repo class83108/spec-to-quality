@@ -1,5 +1,5 @@
 ---
-description: Decide whether a feature slice is clear enough to move into `gherkin-extraction` or direct TDD
+description: Legacy command. Prefer the built-in readiness gate in `tdd-workflow` for the current workflow.
 ---
 
-Trigger the tdd-ready-check skill. Read the shared feature work card, assess readiness across slice clarity, responsibility/seam context, clarification status, and test intent, then record whether the slice should go to `gherkin-extraction`, direct TDD, or back for clarification.
+Trigger the legacy tdd-ready-check skill only when working with the older work-card-based flow. For the current workflow, prefer the lightweight readiness gate built into `tdd-workflow`.
