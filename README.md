@@ -331,6 +331,12 @@ brief 會包含：
 - scenario bullets
 - suggested primary layer
 
+補充一點：
+
+- 不是每一份 `feature-brief` 都需要先出現在 `implementation-planning`
+- 如果某個 implementation change 仍然落在 current stage 內，而且沒有改變 stage order / exit criteria / blockers，就可以直接開 brief
+- 只有當這個 brief 暴露出 stage-level 影響時，才需要回 `implementation-planning`
+
 核心做法：
 
 - brief 要短，但要能明確回答「現在到底做什麼」
@@ -513,6 +519,15 @@ current execution work 的共享協調文件是：
 進 `feature-brief`。
 
 這一層的工作不是再做整個專案規劃，而是把 current stage 中的當前工作壓成一份可以直接進 TDD 的 brief。
+
+這裡的「當前工作」不一定只能是原本 plan 裡明列的 feature。
+它也可以是：
+
+- implementation change
+- refactor slice
+- bugfix slice
+- seam correction
+- local enablement work
 
 如果 brief 寫完後還是很大、很模糊，通常表示：
 

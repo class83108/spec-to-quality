@@ -49,6 +49,7 @@ This skill is not responsible for:
 - re-cutting the system into new responsibilities or seams
 - producing full feature specs
 - producing full implementation tickets or low-level coding tasks
+- listing every implementation-sized change that may happen inside a stage
 
 ## Shared Document
 
@@ -57,6 +58,17 @@ Create or update:
 - `docs/implementation-plan.md`
 
 This document is the global development map for the project.
+
+It is not required to enumerate every future feature brief in advance.
+Use this plan to manage:
+
+- stage ordering
+- stage intent
+- exit criteria
+- blockers
+- current-stage focus
+
+Downstream feature briefs may still be opened during implementation, as long as they stay within the current stage assumptions.
 
 ## Required Outputs
 

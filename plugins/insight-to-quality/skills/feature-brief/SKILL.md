@@ -20,6 +20,18 @@ This skill exists to answer one question:
 This skill is not another round of implementation planning.
 It takes the current project-level plan and turns one concrete unit of work into a short execution brief.
 
+Not every feature brief has to be pre-listed explicitly in `docs/implementation-plan.md`.
+This skill may also be used for current-stage implementation work that emerges during development, such as:
+
+- an implementation correction
+- a seam cleanup
+- a refactor slice
+- a bugfix slice
+- a local enablement task
+
+Use this skill directly when the work still fits inside the current stage assumptions.
+If the work changes stage order, stage exit criteria, blockers, or enablement-vs-behavior sequencing, route back to `implementation-planning`.
+
 ## Purpose
 
 Use this skill to turn:
@@ -83,6 +95,9 @@ Extract at minimum:
 - current stage exit criteria
 
 If the implementation plan does not yet make the current focus clear enough, route back to `implementation-planning`.
+
+If the current work is not explicitly named in the implementation plan but still clearly belongs inside the current stage, you may proceed.
+In that case, note briefly in the feature brief how this work relates to the current stage.
 
 ### Phase 2: Anchor Upstream
 
@@ -202,6 +217,17 @@ If important unknowns remain, is it clear whether they belong in:
 - `system-map`
 
 If not, the brief is still too vague.
+
+### Stage-impact check
+
+Does this brief stay inside the current stage, or did it expose a stage-level change?
+
+Route back to `implementation-planning` when the work reveals:
+
+- a new blocker that changes sequencing
+- a missing prior enablement stage
+- changed current-stage exit criteria
+- a need to reorder later work
 
 ## Guardrails
 
