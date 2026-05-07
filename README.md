@@ -335,7 +335,7 @@ brief 會包含：
 
 - brief 要短，但要能明確回答「現在到底做什麼」
 - 風險先於測試工具或實作技巧
-- scenario bullets 用輕量 `Given / When / Then` 幫後續 TDD 對焦
+- scenario bullets 以「每個 scenario 一個簡短 bullet」為主；若用 `Given / When / Then`，也應維持在同一個 bullet 內
 
 ### `tdd-workflow`
 
