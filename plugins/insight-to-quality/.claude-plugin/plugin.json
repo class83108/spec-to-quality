@@ -1,5 +1,5 @@
 {
   "name": "insight-to-quality",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Structured discovery-to-delivery workflow built around discovery, system design, system mapping, implementation planning, feature briefs, TDD execution, and design review."
 }
