@@ -6,9 +6,9 @@ description: >
   system's shape, explain why those choices are being made, and capture the main trade-offs, risks,
   and follow-up deep-dive topics before system-map work. Treat the current baseline design as
   revisable: deep-dive findings may refine or change the baseline before structure is flattened in
-  system_map.md.
+  system-map.md.
   Do NOT use for: defining what the system does (use discovery), mapping component structure
-  in detail (use system-map), or implementation planning (use spec-backlog execution).
+  in detail (use system-map), or implementation planning (use implementation-planning).
 ---
 
 # System Design

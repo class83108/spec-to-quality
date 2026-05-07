@@ -13,10 +13,15 @@ Testing is not a substitute for clarity.
 
 Before writing tests, be able to explain:
 
-- what slice of work is being implemented
+- what current implementation focus is being implemented
 - what outcome matters
 - what risk the test is supposed to protect
 - where responsibility and seams are involved
+
+In the current workflow, that clarity usually comes from:
+
+- `docs/implementation-plan.md` for stage and sequencing context
+- `docs/features/<feature-slug>/brief.md` for the current work item
 
 If the team would still need to guess while writing tests, the work is not ready for implementation.
 
@@ -125,7 +130,7 @@ It does not mean:
 - adding speculative abstractions
 - solving adjacent problems "while you are here"
 
-If Green keeps growing, the slice is probably too large or the real risk was not isolated clearly enough.
+If Green keeps growing, the brief is probably too large or the real risk was not isolated clearly enough.
 
 ---
 
@@ -218,7 +223,8 @@ Local problems:
 
 Structural problems:
 
-- the slice was wrong
+- the current stage was wrong
+- the brief was wrong
 - the seam was wrong
 - ownership is unclear
 - the real pressure is different from what was assumed
@@ -297,11 +303,11 @@ These examples make two recurring anti-patterns concrete. Both come from real ro
 
 **Scenario.** A transcription system has a discovery-level goal to keep transcription cost predictable, and a prior system-design decision that treats failed reprocessing as high-cost. The cache currently stores `{audio-id: full-transcript}` only — successful results, never partial state. A user requests: "When transcription fails mid-run, resume from the failure point instead of restarting."
 
-**Tempting routing.** The request aligns with both the discovery intent and the prior system-design decision. Treat it as a normal feature slice and proceed.
+**Tempting routing.** The request aligns with both the discovery intent and the prior system-design decision. Treat it as a normal implementation item and proceed.
 
 **Hidden problem.** The request quietly requires the cache (or a new component) to store something it does not currently store: partial results plus a progress marker. That is a seam-shape change, not a feature implementation.
 
-**Better routing.** Enter `feature-slice` as the intake gate, but route up to `system-map` as soon as the slice surfaces the seam reshape. The work is structural before it is functional.
+**Better routing.** Enter `feature-brief` only after the current stage is clear enough, but route up to `system-map` as soon as the work surfaces the seam reshape. The work is structural before it is functional.
 
 **Lesson.** Discovery alignment and system-design alignment are necessary but not sufficient. Before continuing into spec or TDD, ask: *can the current system map hold this request without reshaping a seam?* If the answer is no, the work is structural before it is functional, and the routing should reflect that.
 

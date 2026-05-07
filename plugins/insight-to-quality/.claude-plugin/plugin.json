@@ -1,5 +1,5 @@
 {
   "name": "insight-to-quality",
-  "version": "0.9.0",
-  "description": "Structured discovery-to-delivery workflow built around discovery, system design, system mapping, feature slicing, clarification, risk-based TDD readiness, Gherkin extraction, and design review."
+  "version": "0.10.0",
+  "description": "Structured discovery-to-delivery workflow built around discovery, system design, system mapping, implementation planning, feature briefs, TDD execution, and design review."
 }

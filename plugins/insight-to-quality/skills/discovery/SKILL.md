@@ -7,7 +7,7 @@ description: >
   high-level design sketch so later design review starts from a visible, discussable initial system
   shape instead of abstract wish-list goals.
   Do NOT use for: early system design reasoning (use system-design), system mapping (use
-  system-map), or implementation planning (use spec-backlog execution).
+  system-map), or implementation planning (use implementation-planning).
 ---
 
 # Discovery

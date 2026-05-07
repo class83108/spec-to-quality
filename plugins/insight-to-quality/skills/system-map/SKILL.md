@@ -10,8 +10,8 @@ description: >
   decisions are clear enough that the team now needs a stable structural map for implementation and
   modification work.
   Do NOT use for: defining what the system does (use discovery), doing early system design
-  reasoning (use system-design), clarifying slice-level specs (use spec-clarification), or
-  implementation planning (use spec-backlog execution).
+  reasoning (use system-design), writing the current implementation brief (use feature-brief), or
+  implementation planning.
 ---
 
 # System Map
@@ -408,7 +408,7 @@ Use this rule:
 
 - if the system cannot discuss who main-manages a core data item or key state without naming the object, name it now
 - if implementation cannot be cleanly cut without naming the object or boundary now, name it now
-- if the object is already named clearly and only needs detailed fields or rules, leave that for `feature-slice` and downstream clarification
+- if the object is already named clearly and only needs detailed fields or local execution notes, leave that for `feature-brief`
 
 ## Validation
 

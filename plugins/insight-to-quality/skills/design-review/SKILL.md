@@ -1,10 +1,10 @@
 ---
 name: design-review
 description: >
-  Review a completed feature slice after implementation. Starting from the shared feature work
-  card, verify that the implemented code still matches the intended slice, responsibility units,
-  seams, test strategy, and manual validation expectations; then decide whether any upstream
-  writeback is required before the work is considered done.
+  Review completed implementation work against the current feature brief, implementation plan, and
+  upstream documents. Verify that the code still matches the intended brief, responsibility units,
+  seams, test strategy, and stage intent; then decide whether any upstream writeback is required
+  before the work is considered done.
 ---
 
 # Design Review
@@ -20,123 +20,125 @@ Read before proceeding:
 
 This skill exists to answer one question:
 
-**Did this implementation stay aligned with the intended slice and system design, or did it discover changes that must be written back upstream?**
+**Did this implementation stay aligned with the current brief and project plan, or did it discover changes that must be written back upstream?**
 
 This is not just a style review.
 
 It is the checkpoint between:
 
 - local implementation success
-- and system-level confidence that the slice still fits the design
+- and project-level confidence that the work still fits the intended stage, brief, and structure
 
 ## Working Style
 
-- **Review against the intended slice, not against a vague idea of cleanliness.**
+- **Review against the intended brief, not against a vague idea of cleanliness.**
 - **Check whether refactor stayed local or escaped upward.**
 - **Findings come first.** If there are meaningful risks or regressions, report them before any summary.
-- **Use the work card as the main review anchor.**
+- **Use the feature brief as the main local review anchor.**
+- **Use the implementation plan as the stage-level anchor.**
 - **When implementation changed assumptions, push the change to the right upstream layer.**
 
 ## Inputs
 
 This skill MUST read:
 
-- `docs/features/<feature-slug>/work-card.md`
+- `docs/implementation-plan.md`
+- `docs/features/<feature-slug>/brief.md`
 
 And may read when present:
 
-- `docs/features/<feature-slug>/<feature-slug>.feature`
-- `docs/features/<feature-slug>/surface.md`
-- `docs/features/<feature-slug>/contract.md`
-- `docs/features/<feature-slug>/behavior.md`
 - `discovery.md`
 - `system-design.md`
-- `system_map.md`
+- `system-map.md`
 
 ## Required Outputs
 
 Before declaring this skill complete, you MUST produce ALL of the following:
 
-- [ ] Work card read
+- [ ] Implementation plan read
+- [ ] Feature brief read
 - [ ] Findings reported first when risks or misalignments exist
-- [ ] Review of slice alignment, seam alignment, and test-strategy alignment completed
-- [ ] Manual validation and deferred coverage reviewed when present
-- [ ] Upstream writeback decision made (`none`, `work-card only`, `spec`, `system-map`, `system-design`, or `discovery`)
+- [ ] Review of brief alignment, seam alignment, and test-strategy alignment completed
+- [ ] Manual validation and unresolved gaps reviewed when present
+- [ ] Upstream writeback decision made (`none`, `brief`, `implementation-planning`, `system-map`, `system-design`, or `discovery`)
 
 ## Entry Preconditions
 
 This skill expects:
 
-- a feature work card exists
-- implementation for the slice has been attempted
+- a feature brief exists
+- implementation for the current work has been attempted
 
-If implementation has not started or the slice is not yet in execution, stop and route back to `tdd-workflow`.
+If implementation has not started or the current work is not yet in execution, stop and route back to `tdd-workflow`.
 
 ## Workflow
 
 ### Phase 1: Reconstruct Intended Scope
 
-From the work card, reconstruct:
+From the implementation plan and feature brief, reconstruct:
 
-- supported goal(s)
+- relevant discovery goal(s)
 - relevant prior system-design decision(s)
-- slice statement
-- primary responsibility unit
-- related seams
+- current stage
+- current focus statement
+- feature summary
 - main risk to protect
-- test strategy
-- manual validation expectations
-- deferred coverage
+- relevant responsibility units
+- relevant seams
+- suggested primary test layer
+- manual support expectations
+- known unresolved notes
 
 This is the baseline you review against.
 
-### Phase 2: Slice Alignment Review
+### Phase 2: Brief Alignment Review
 
 Ask:
 
-- Did the implementation stay inside the intended slice?
+- Did the implementation stay inside the intended brief?
 - Did it quietly absorb adjacent work?
 - Did it solve the intended risk, or drift into a different problem?
 
-If the code went beyond the slice, classify:
+If the code went beyond the brief, classify:
 
-- **local expansion** — still inside the same responsibility unit and seam assumptions
-- **scope creep** — touches work that should have been a separate slice
+- **local expansion** — still inside the same responsibility units and seam assumptions
+- **scope creep** — touches work that should have been a separate brief or a later stage
 
 ### Phase 3: Responsibility And Seam Review
 
-Review whether the code still matches the system structure assumed in `system_map.md`.
+Review whether the code still matches the system structure assumed in `system-map.md`.
 
 Check:
 
-- is the intended primary responsibility unit still the real owner?
+- are the intended responsibility units still the real ones carrying the work?
 - did the code create a new seam or bypass an existing seam?
 - did responsibility leak across boundaries?
 - did a helper or adapter quietly absorb business ownership it should not own?
+- was the minimum data shape or seam contract violated in a meaningful way?
 
 If the answer changes the system shape, the result is not just a local refactor. It needs writeback.
 
 ### Phase 4: Test Strategy Alignment Review
 
-Review whether the actual test execution matches the chosen strategy in the work card.
+Review whether the actual test execution matches the brief's validation intent.
 
 Check:
 
-- did the primary protection layer actually protect the main risk?
-- were supporting layers used where needed?
-- was manual validation done where declared?
-- is deferred coverage still acceptable and explicitly tracked?
+- did the actual primary layer protect the main risk?
+- were the scenario bullets meaningfully covered?
+- was manual support done where implied?
+- are unresolved gaps still acceptable and explicitly tracked?
 
 Typical misalignments:
 
 - unit tests exist, but the real seam risk was never tested
-- integration tests exist, but business behavior was never asserted
-- Gherkin exists, but the most important observable outcome is missing
-- manual validation was declared but skipped silently
+- integration tests exist, but the user-visible or operator-visible outcome was never asserted
+- scenario bullets existed, but the most important observable outcome was never covered
+- manual support was implied but skipped silently
 
 ### Phase 5: Refactor Safety Review
 
-Inspect the final code for refactor quality, especially the risks we called out during `tdd-workflow`.
+Inspect the final code for refactor quality, especially the risks called out during `tdd-workflow`.
 
 #### Repetition and drift
 
@@ -169,20 +171,22 @@ Check for:
 
 Decide whether the results stay local or need upstream updates.
 
-#### Work-card only
+#### Brief writeback
 
 Use when:
 
-- implementation stayed within the slice
+- the implementation stayed within the same stage
 - no system structure changed
-- only execution notes / manual validation / deferred coverage need sync
+- but the local brief, scenario bullets, or execution notes are now stale
 
-#### Spec writeback
+#### Implementation-planning writeback
 
 Use when:
 
-- surface / contract / behavior text is now stale
-- implementation exposed a clarification gap that should be captured durably
+- the current stage exit criteria changed
+- the stage order changed
+- a new blocker changes the implementation sequence
+- the work should really have been a different stage or a prior enablement stage
 
 #### System-map writeback
 
@@ -191,6 +195,7 @@ Use when:
 - responsibility ownership changed
 - a seam moved or a new seam emerged
 - change navigation assumptions are no longer correct
+- the minimum data shape or seam contract is now wrong
 
 #### System-design writeback
 
@@ -203,18 +208,19 @@ Use when:
 
 Use when:
 
-- the feature changed what the system is now expected to do
+- the work changed what the system is now expected to do
 - or the implementation revealed the original goal framing was wrong
 
 ### Phase 7: Completion Gate
 
-The slice is ready to be treated as complete only when:
+The work is ready to be treated as complete only when:
 
 - no critical findings remain unresolved
-- the implemented code still fits the intended slice
+- the implemented code still fits the intended brief
+- the current stage assumptions still hold or have been written back
 - the test strategy was actually honored or consciously adjusted
-- manual validation is either passed or explicitly blocked with reason
-- deferred coverage is visible, not forgotten
+- manual support is either passed or explicitly blocked with reason
+- unresolved gaps are visible, not forgotten
 - upstream writeback has either been applied or explicitly opened as follow-up
 
 ## Findings Format
@@ -233,17 +239,17 @@ If no findings are discovered, say so explicitly, then list residual risks or co
 
 After findings, summarize:
 
-- slice alignment: aligned / drifted
+- brief alignment: aligned / drifted
 - seam alignment: aligned / drifted
 - test strategy alignment: aligned / drifted
-- manual validation: pass / fail / blocked / none
-- deferred coverage: tracked / untracked / none
-- upstream writeback: none / work-card / spec / system-map / system-design / discovery
+- manual support: pass / fail / blocked / none
+- unresolved gaps: tracked / untracked / none
+- upstream writeback: none / brief / implementation-planning / system-map / system-design / discovery
 
 ## Key Rules
 
 - **A green test run is not enough by itself.**
-- **If refactor changed the slice assumptions, it is not "just local cleanup".**
-- **Manual validation is part of the design contract when declared.**
-- **Deferred coverage must stay visible.**
-- **When system shape changed, write it back upstream instead of relying on memory.**
+- **If refactor changed the brief or stage assumptions, it is not "just local cleanup".**
+- **Manual support is part of the execution contract when implied.**
+- **Unresolved gaps must stay visible.**
+- **When system shape or stage sequence changed, write it back upstream instead of relying on memory.**
