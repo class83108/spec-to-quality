@@ -352,8 +352,10 @@ brief 會包含：
 
 - summary
 - upstream anchor
+- implementation position
 - slice definition
 - execution notes
+- execution record
 - validation intent
 
 其中 validation intent 會先說清楚：
@@ -371,6 +373,7 @@ brief 會包含：
 核心做法：
 
 - brief 要短，但要能明確回答「現在到底做什麼」
+- brief 不該只像待辦事項；也要看得出它在 implementation timeline 的哪個位置
 - 風險先於測試工具或實作技巧
 - scenario bullets 以「每個 scenario 一個簡短 bullet」為主；若用 `Given / When / Then`，也應維持在同一個 bullet 內
 
@@ -601,7 +604,7 @@ current execution work 的共享協調文件是：
 
 常見回寫對象：
 
-- 只是 current work 的邊界、scenario bullets、execution notes 變了 -> 回 `feature-brief` 更新 `docs/features/<feature-slug>/brief.md`
+- 只是 current work 的邊界、implementation position、scenario bullets、execution notes / execution record 變了 -> 回 `feature-brief` 更新 `docs/features/<feature-slug>/brief.md`
 - stage 完成了，或 stage order / exit criteria / blocker 變了 -> 回 `implementation-planning` 更新 `docs/implementation-plan.md`
 - responsibility / seam / minimum data shape / implementation cut 變了 -> 回 `system-map` 更新 `system-map.md`
 - key decision / trade-off / design assumption 變了 -> 回 `system-design` 更新 `system-design.md`
@@ -620,6 +623,30 @@ current execution work 的共享協調文件是：
 - current work 太大或 brief 不夠清楚 -> 回 `feature-brief`
 
 不要直接用 local code 把上游問題吞掉。
+
+### brief 不該只靠 status
+
+如果 brief 只剩 `draft` / `done` 這類單一 status，通常仍然看不出：
+
+- 這份 brief 是 current stage 主線，還是較早 stage 的收尾 work
+- 是否已經實作過一輪，還是只是準備開始
+- Red 是從哪個測試層開始
+- 還剩哪些 gap 沒收斂
+- 是否需要回寫 upstream
+
+所以比較好的 brief 不是只補一個 status，而是至少同時保留：
+
+- `Implementation Position`
+- `Execution Notes`
+- `Execution Record`
+
+這樣同一份 `docs/features/<feature-slug>/brief.md` 才能同時表達：
+
+- 這刀 work 為什麼現在做
+- 它在整個 implementation timeline 的位置
+- 已經做過什麼
+- 剩下哪些 gap
+- 是否仍屬 current stage 主線
 
 ---
 

@@ -177,7 +177,7 @@ Use when:
 
 - the implementation stayed within the same stage
 - no system structure changed
-- but the local brief, scenario bullets, or execution notes are now stale
+- but the local brief, implementation position, scenario bullets, or execution record are now stale
 
 #### Implementation-planning writeback
 
@@ -220,6 +220,7 @@ The work is ready to be treated as complete only when:
 - the current stage assumptions still hold or have been written back
 - the test strategy was actually honored or consciously adjusted
 - manual support is either passed or explicitly blocked with reason
+- the brief makes the slice's implementation position legible enough that a future developer can tell whether it is current-stage work, prior-stage cleanup, or post-review follow-up
 - unresolved gaps are visible, not forgotten
 - upstream writeback has either been applied or explicitly opened as follow-up
 

@@ -174,6 +174,12 @@ Write or update `docs/features/<feature-slug>/brief.md` using this minimum shape
 - Relevant seams: ...
 - Implementation-plan stage: ...
 
+## Implementation Position
+- Stage relation: current stage mainline / prior-stage follow-up / post-review cleanup
+- Current relevance: ...
+- Depends on: ...
+- Unblocks: ...
+
 ## Slice Definition
 - Start: ...
 - End: ...
@@ -185,6 +191,15 @@ Write or update `docs/features/<feature-slug>/brief.md` using this minimum shape
 - Known: ...
 - Unknown: ...
 - Needs to be pinned down now: ...
+- Readiness: ready / blocked
+
+## Execution Record
+- Red started at: not started yet
+- Supporting layers used: none yet
+- Manual support: not run yet
+- Execution result: not implemented yet
+- Remaining gaps: none yet
+- Upstream follow-up: none yet
 
 ## Validation Intent
 - Main risk to protect: ...
@@ -199,6 +214,8 @@ Write or update `docs/features/<feature-slug>/brief.md` using this minimum shape
 ### Brief check
 
 Can a developer read this brief and know what to build now without reopening all upstream documents?
+
+Can a developer also tell whether this brief is still upcoming work, active work, completed work, or a follow-up slice?
 
 ### Scope check
 
@@ -236,3 +253,5 @@ Route back to `implementation-planning` when the work reveals:
 - Do not restate all upstream reasoning in long form.
 - Do not create a separate Gherkin file by default.
 - Do not keep unknowns hidden; record them briefly or route back upstream.
+- Do not rely on a single status word where execution position or follow-up pressure is what actually matters.
+- Do not leave lifecycle ambiguity hidden; the brief should make stage relation, execution state, and remaining gaps legible.

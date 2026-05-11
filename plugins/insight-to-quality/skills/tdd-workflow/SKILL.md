@@ -209,19 +209,33 @@ Do not compensate for an upstream problem by burying it in code.
 
 Update the feature brief with:
 
-- execution status
+- readiness / execution position updates if they changed
 - actual primary test layer used
 - manual support result
+- execution result summary
 - unresolved gaps
 - upstream follow-up needed
+
+If useful, also update:
+
+- stage relation or current relevance when the slice turned into prior-stage cleanup or post-review follow-up
+- depends on / unblocks notes when implementation exposed a real sequencing fact
 
 Recommended addition:
 
 ```markdown
+## Implementation Position
+- Stage relation: ...
+- Current relevance: ...
+
 ## Execution Notes
+- Readiness: ...
+
+## Execution Record
 - Red started at: ...
 - Supporting layers used: ...
 - Manual support: ...
+- Execution result: ...
 - Remaining gaps: ...
 - Upstream follow-up: ...
 ```
